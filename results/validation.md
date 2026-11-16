@@ -19,3 +19,7 @@ PYTHONPATH=src python -m webshop_lab.cli split --sft /path/to/webshop_sft.json -
 ## 未运行
 
 完整大包解压、Java/Lucene/WebShop 启动、5060 Ti CUDA kernel、量化加载、SFT 训练、真实 rollout、原神经 SPA、PPO。无真实成功率或性能提升结论。候选版本的兼容性以目标机 smoke 为准。
+
+## GitHub Actions
+
+首次完整提交 `e105f0e84fc47fd9f3454d56cd5a77933df75df6` 的 [CPU checks](https://github.com/Zqqq-qq/webshop-stepwise-rl/actions/runs/43848833958) 已通过：Ubuntu / Python 3.10 上安装项目、8 项测试、语法编译、链接/credential 检查和审计均成功。线上检查仍不包含 GPU 或真实模型训练。

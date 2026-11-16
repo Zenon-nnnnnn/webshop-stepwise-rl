@@ -25,3 +25,7 @@
 ## 更新规则
 
 首次目标机成功后，提交 evidence 路径和命令，再修改本表。不能因文件存在、脚本启动或合成测试通过就宣称训练/论文复现成功。详细验收见 TEAM 与 EXPERIMENTS。
+
+## 线上验收
+
+首次完整提交的 [GitHub Actions CPU checks](https://github.com/Zqqq-qq/webshop-stepwise-rl/actions/runs/43848833958) 已全部通过。五人分工与交付拆成 [6 个待认领任务](https://github.com/Zqqq-qq/webshop-stepwise-rl/issues)，没有虚构成员姓名或分配到未知账号。

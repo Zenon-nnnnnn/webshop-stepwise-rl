@@ -1,5 +1,7 @@
 # WebShop Stepwise RL：五人 LLM 课程项目
 
+[![CPU checks](https://github.com/Zqqq-qq/webshop-stepwise-rl/actions/workflows/checks.yml/badge.svg)](https://github.com/Zqqq-qq/webshop-stepwise-rl/actions/workflows/checks.yml)
+
 面向 **RTX 5060 Ti 16 GB / i5-13400F / 32 GB RAM** 的购物智能体训练与评估。基于 SPA-RL 的研究问题，先完成可信的 SFT 基线，再研究逐步奖励。项目计划日期：2026-11-22 proposal、2026-11-27 presentation、2026-12-15 report。课程 rubric 尚未提供，最终范围需与 rubric 对齐。
 
 > **当前状态：项目代码与团队文档已建立，CPU 工具已验证；目标 GPU、完整 WebShop 环境、训练成功率及 PPO 尚未完成验证。没有已训练模型，没有可宣称的性能提升。**
@@ -13,7 +15,7 @@
 3. GPU 机器负责人按 [安装指南](docs/SETUP.md) 配置两个隔离环境。
 4. 数据负责人按 [数据指南](docs/DATA.md) 导入材料、审计并冻结划分。
 5. 训练与评估负责人按 [实验手册](docs/EXPERIMENTS.md) 运行真实实验。
-6. 全组按 [分工和时间表](docs/TEAM.md)、[协作规则](CONTRIBUTING.md) 提交工作。
+6. 全组按 [分工和时间表](docs/TEAM.md)、[协作规则](CONTRIBUTING.md) 提交工作；到 [任务清单](https://github.com/Zqqq-qq/webshop-stepwise-rl/issues) 认领 A–E 与交付任务。
 
 ## 先在任何电脑跑起来
 
@@ -72,7 +74,7 @@ Python 3.10+ 可运行这些标准库工具；**GPU 与旧环境统一使用 Pyt
 
 ## 大文件与引用
 
-约 4 GB 的原始压缩包、约 9.3 GB 的解压资产、SFT 数据和模型权重不放入 Git。下载来源与本地导入方法见 [数据指南](docs/DATA.md)。不要将商业下载教程视频上传到本仓库；本项目仅提供独立编写的说明。
+约 4 GB 的原始压缩包、约 9.3 GB 的解压资产、SFT 数据和模型权重不放入 Git。下载来源与本地导入方法见 [数据指南](docs/DATA.md)。原始教程视频未上传；本项目提供独立编写的说明。
 
 - 原论文：[SPA-RL: Reinforcing LLM Agents via Stepwise Progress Attribution](https://arxiv.org/abs/2505.20732)
 - 原始仓库：[WangHanLinHenry/SPA-RL-Agent](https://github.com/WangHanLinHenry/SPA-RL-Agent)
