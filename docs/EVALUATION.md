@@ -105,23 +105,26 @@ webshop-lab check-parity --a-meta artifacts/b0-val.meta.json --b-meta artifacts/
 
 ## 4. 失败分类
 
-`evaluate --cases` 会按下面的优先级给失败 episode 打标签，并保留该 episode 的全部动作、观测、奖励与错误信息。
+`evaluate --cases` 会给失败 episode 打一个主标签和一个次要信号列表，并保留该 episode 的全部动作、观测、奖励与错误信息。主标签顺序如下：
 
 | 优先级 | 类别 | 判定规则（自动初筛） |
 |---|---|---|
 | 1 | `engineering` | 步骤里出现连接/超时/服务错误，或 `termination` 不是 `purchase`/`max_steps` |
-| 2 | `format` | 没有唯一可解析的 `Action:` 行（多动作、缺括号、截断），或动作解析成功但不在当前 `available` 列表 |
-| 3 | `budget` | 已购买且 `0<reward<1`，购买页 `Price: $x` 超过指令的 `price lower than` 预算 |
-| 4 | `specification` | 已购买、`0<reward<1`，价格在预算内 → 规格/选项不符 |
+| 2 | `budget` | 已购买且奖励 < 1，购买页 `Price: $x` 超过指令的 `price lower than` 预算 |
+| 3 | `specification` | 已购买且奖励 < 1，且价格未超预算：奖励 0 = 没有任何必需属性命中（买错商品或规格），0 < 奖励 < 1 = 部分命中 |
+| 4 | `format` | 没有唯一可解析的 `Action:` 行（多动作、缺括号、截断），或动作解析成功但不在当前 `available` 列表 |
 | 5 | `loop` | `max_steps` 结束且同一动作重复 ≥3 次，或同一"动作+观测"重复 ≥2 次 |
-| 6 | `retrieval` | 非购买结束，且所有 search 关键词与指令内容词零交集 |
+| 6 | `retrieval` | 所有 search 关键词与指令内容词零交集 |
 | 7 | `other` | 没有规则命中 → 必须人工看日志，不代表模型没问题 |
+
+购买结果优先于格式错误：WebShop 在被购买时返回 `done=True`，而**买错商品/规格时奖励常常正好是 0**，若让格式错误优先，这类"买了但没买对"会被记成格式问题而消失。因此同一 episode 可以同时有主标签与次要信号：主标签给购买结果，`format`/`loop`/`retrieval` 进 `secondary`。`evaluate` 的 `counts` 按主标签计数，`any_counts` 统计"只要出现过该信号"的 episode 数，报告里两者都要看。
 
 已知局限（写报告时必须承认）：
 
 - 这是**规则初筛**，不是人工标注。`retrieval` 依赖分词，"换个近义词就搜到"的正确行为可能被误判；`budget` 依赖页面上的 `Price: $x` 文本，自定义渲染会失效。
-- 一条 episode 可能同时具备多种问题，只按优先级记一个主类；案例表里保留了全部步骤，供人工改判。
+- `specification` 无法仅从文本区分"买错商品类型"与"商品对但规格/选项错"，两种情况合并在该类；报告措辞应写"选错商品或规格"。
 - 成功 episode 不进入分类；`engineering` 不计入方法差异，单独列出。
+- 上游附带的演示轨迹**不能**替代真实日志：见 `results/upstream-demo-data-check.json`（78 条轨迹、803/1170 个 assistant 回合不可解析、奖励只有 0/1），它只能用来校准"读得懂真实观测文本"。
 
 人工核对流程：从 `--cases` 生成的工作表里每类挑 1–2 条，打开 JSONL 原文确认"动作确实长这样、观测确实是这个页面、奖励确实是这个数"，然后把确认过的案例抄进 `results/failure-cases-<method>.md` 并在报告里引用。没有核对过的自动标签不能直接进报告。
 
@@ -138,6 +141,7 @@ invalid_action_rate,peak_vram_gb,evidence_path,notes
 规则：
 
 - 一行 = 一次真实 run。`status` 取 `planned/running/complete/failed`；只有 `complete` 行可进报告。
+- `method` 取 `B0/B1/P0/R-TG/R-PG`；旧标签 `R0/R1` 只用于 11/16 计划之前导出的结果，`check-register` 会给警告。
 - `complete` 行必须同时具备：`split_sha256`（所用 `*_ids.json` 的 sha256）、`goal_fingerprint`、`git_commit`（本仓库存在的 commit）、`config_path` + `config_sha256`、`episodes/successes/purchase_terminated`、`success_rate` 与区间、`evidence_path`。
 - `successes <= purchase_terminated <= episodes`，且 `success_rate` 必须等于 `successes/episodes`（1e-6 容差），区间必须包含该值。
 - 目前只有表头，`check-register` 通过是正常状态；**表头不是结果**。
@@ -157,7 +161,10 @@ webshop-lab evaluate --method B1 \
 ```bash
 webshop-lab check-register --register results/experiment-register.csv
 webshop-lab figures --register results/experiment-register.csv --output results/success-by-method.svg
+webshop-lab results-table --register results/experiment-register.csv --output results/summary.md
 ```
+
+指标定义的机器可读版本在 `results/metrics-definition.json`：冻结开发 val 时，把它与 `*_ids.json`、评估 config 的 SHA 一起写进该次 run 的记录，之后不要再改口径。
 
 结果表模板（等真实数据填，不要预填）：
 
@@ -180,21 +187,33 @@ webshop-lab rollout --config configs/eval-sft.json  --ids data/processed/val_ids
 复核机（E，CPU 即可）：
 
 ```bash
+webshop-lab preflight    --a-config configs/eval-base.json --b-config configs/eval-sft.json \
+                         --ids data/processed/val_ids.json --require-frozen --output artifacts/preflight.json
 webshop-lab check-run    --meta artifacts/b0-val.meta.json --jsonl artifacts/b0-val.jsonl --config configs/eval-base.json
 webshop-lab check-parity --a-meta artifacts/b0-val.meta.json --b-meta artifacts/b1-val.meta.json --require-frozen
 webshop-lab evaluate     --method B0 --meta artifacts/b0-val.meta.json --jsonl artifacts/b0-val.jsonl \
                          --config configs/eval-base.json --split-ids data/processed/val_ids.json \
                          --output artifacts/b0-val-evaluation.json --cases artifacts/b0-val-cases.md \
                          --figures-dir artifacts/figures --register-row artifacts/b0-val-row.csv
+webshop-lab compare      --a-jsonl artifacts/b0-val.jsonl --b-jsonl artifacts/b1-val.jsonl \
+                         --a-meta artifacts/b0-val.meta.json --b-meta artifacts/b1-val.meta.json \
+                         --a-label B0 --b-label B1 --output artifacts/b0-b1-compare.json
+python scripts/verify_metrics.py --jsonl artifacts/b0-val.jsonl --evaluation artifacts/b0-val-evaluation.json
 webshop-lab check-register --register results/experiment-register.csv
 webshop-lab check-register --register artifacts/b0-val-row.csv   # 贴入前先校验单行
 webshop-lab figures      --register results/experiment-register.csv --output results/success-by-method.svg
+webshop-lab results-table --register results/experiment-register.csv --output results/summary.md
 ```
+
+`compare` 只接受**同一批 (task, repeat)** 的两条 run，按配对样本算 McNemar 精确 p 值与配对 bootstrap 区间；任务集不同会直接报错，不把两组不同的任务当成对比。
 
 ## 7. 当前缺口
 
-- 没有真实 B0/B1 val 日志，因此没有成功率、没有区间、没有真实失败案例；本文第 1 节的数字只描述字段。
+- 没有真实 B0/B1 val 日志，因此没有成功率、没有区间、没有真实失败案例；本文第 1 节的数字只描述字段。手工复核 3 条轨迹、五类真实失败案例都要等目标机 `rollout`（11/19 那条任务因此仍是阻塞状态）。
+- 上游演示轨迹已被检查过，**不能**当案例来源：`results/upstream-demo-data-check.json` 记录 78 条轨迹中 803/1170 个 assistant 回合不可解析、奖励只有 0/1、没有逐步奖励。
+- `preflight` 现在对仓库里的 `configs/eval-sft.json` 会报 `adapter directory does not exist`，因为 SFT 产物还没进本地；这是预期行为，拿到 adapter 后再跑。
 - `rollout` 与真实 WebShop 服务的联调、`--repeats` 采样预算、test 集一次性评估都依赖目标机，尚未执行。
+- `compare` 的配对检验只回答"这两条 run 在这批任务上是否不同"，不覆盖多 seed 方差；12/05–06 的种子差异仍需单独汇总。
 - 图表目前是纯 SVG（无 matplotlib），方法对比图只有一个维度（success rate）；若后面要画奖励分布或步数分布，再扩展 `figures.py` 并补测试。
 - 自动化只覆盖"能算对"：任务与指令是否对齐、模型是否真的加载了 adapter，仍要靠 `doctor`、环境 `/health` 与人工抽查。
 
@@ -203,6 +222,11 @@ webshop-lab figures      --register results/experiment-register.csv --output res
 | 内容 | 位置 |
 |---|---|
 | 完整性核对、指标、失败分诊、公平性 | `src/webshop_lab/evaluation.py` |
-| 登记表校验与登记行生成 | `src/webshop_lab/register.py` |
+| 配对比较（McNemar + 配对 bootstrap） | `src/webshop_lab/comparison.py` |
+| 跑前闸门（config / ids / parity / 登记表） | `src/webshop_lab/preflight.py` |
+| 登记表校验、登记行与结果表 | `src/webshop_lab/register.py` |
 | SVG 图表 | `src/webshop_lab/figures.py` |
-| 单元测试（32 项，含端到端 fixture） | `tests/test_core.py`、`tests/test_evaluation.py` |
+| 独立指标复算（不 import 本包） | `scripts/verify_metrics.py` |
+| 上游演示数据可用性检查 | `scripts/check_upstream_demo_data.py` |
+| 指标定义 v1（机器可读） | `results/metrics-definition.json` |
+| 单元测试（43 项，含端到端 fixture） | `tests/test_core.py`、`tests/test_evaluation.py`、`tests/test_analysis_tools.py` |

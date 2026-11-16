@@ -44,3 +44,26 @@ PYTHONPATH=src python -m webshop_lab.cli figures --register <two-row.csv> --outp
 用 6 条**合成 episode**（非模型输出）跑通整条链路：`check-run` 判定 complete；B0 汇总购买结束 3、满奖励成功 1、`success_rate=0.166667`、Wilson `[0.030053, 0.563503]`；`--cases` 生成 5 类各 1 例的工作表；B0/B1 两个 meta 仅 adapter 不同时 `check-parity` 通过（同一任务顺序与 fingerprint），改 context 后拒绝；`--register-row` 生成的登记行通过 `check-register`；两行登记表生成 `methods.svg`。合成数字不得写入报告或 proposal。
 
 真实 B0/B1 日志、真实案例与 test 集评估仍未执行；汇总口径与人工核对清单见 [统一评估](../docs/EVALUATION.md)。
+
+## 2026-11-16 第二轮：跑前闸门、配对比较与独立复算
+
+同一台 Windows / Python 3.12.10 机器，CPU only。43 项测试通过（第一轮 32 项 + 新增 11 项）。
+
+```bash
+PYTHONPATH=src python -m unittest discover -s tests          # 43 tests OK
+python -m compileall -q src scripts tests
+python scripts/check_repository.py
+PYTHONPATH=src python -m webshop_lab.cli preflight --a-config configs/eval-base.json \
+    --b-config configs/eval-sft.json --ids <val_ids> --register results/experiment-register.csv
+PYTHONPATH=src python -m webshop_lab.cli compare --a-jsonl <b0.jsonl> --b-jsonl <b1.jsonl> \
+    --a-meta <b0.meta.json> --b-meta <b1.meta.json> --a-label B0 --b-label B1
+PYTHONPATH=src python -m webshop_lab.cli results-table --register results/experiment-register.csv --output <summary.md>
+python scripts/verify_metrics.py --jsonl <b0.jsonl> --evaluation <b0-evaluation.json>
+python scripts/check_upstream_demo_data.py --output results/upstream-demo-data-check.json
+```
+
+新增行为：`preflight` 对仓库里的 `configs/eval-sft.json` 正确报出 `adapter directory does not exist`（SFT 产物尚未进入本地），未冻结 fingerprint 只作警告、`--require-frozen` 时才阻塞；`compare` 在 6 条合成任务上给出 `risk_difference=0`、`mcnemar_exact_p=1`，任务集不同则拒绝；`verify_metrics.py` 与 `evaluate` 在 10 个字段上完全一致，篡改一个字段后返回 1；`results-table` 在空登记表上输出"暂无 complete 行"。
+
+失败分诊做了两处修正，均由真实数据检查触发：购买且奖励为 0 的 episode 现在归入 `specification`（原先只在 `0<reward<1` 时判断，会把"买了但没买对"错分到 loop/retrieval）；购买结果优先于格式错误，`format` 保留为次要信号，新增 `any_counts`。
+
+上游演示轨迹可用性：`results/upstream-demo-data-check.json` 记录 78 条轨迹、803/1170 个 assistant 回合不可解析、奖励只有 0/1（77 条为 0）、100 次 Buy Now 中 79 次前置观测含价格。结论：只能用于校准文本解析，**不能**作为我们的失败案例或成功率来源；真实案例仍等目标机 rollout。

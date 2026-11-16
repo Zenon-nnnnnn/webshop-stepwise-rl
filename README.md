@@ -65,6 +65,7 @@ Python 3.10+ 可运行这些标准库工具；**GPU 与旧环境统一使用 Pyt
 | `rollout` / `summarize` | 真实任务交互与指标 | 指标逻辑有测试；真实 rollout 待实机 |
 | `check-run` / `evaluate` | 完成度核对、购买/成功分开统计、失败案例与 SVG 图 | 合成 fixture 端到端测试；真实日志待实机 |
 | `check-parity` / `check-register` | B0/B1 公平性核对、结果登记表校验 | 逻辑测试通过；无真实登记行 |
+| `preflight` / `compare` / `results-table` | 跑前闸门、配对比较（McNemar+配对 bootstrap）、登记表转结果表 | 合成 fixture 测试；真实 run 待实机 |
 | `progress-train` / `progress-predict` | 低成本可加线性估计器 | 合成轨迹端到端测试；未宣称真实效果 |
 | `reward-export` | terminal / uniform / progress+grounding 奖励 | 逻辑测试通过；**不会执行 PPO** |
 | `upstream/ppo/` | 论文来源中的 PPO 实现 | 旧依赖、轨迹策略一致性、50 系显卡兼容性待验证 |
