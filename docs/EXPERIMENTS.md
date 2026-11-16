@@ -12,6 +12,8 @@
 | R0 | SFT + terminal-reward RL | 上游代码保留，适配与验证待完成 | 稀疏奖励对照 |
 | R1 | SFT + stepwise-reward RL | 上游代码保留，适配与验证待完成 | 逐步奖励效果 |
 
+最新主实验矩阵见 [逐日计划](DAILY_PLAN.md)：终局/逐步 RL 两臂固定相同 grounding，分别记为 R-TG / R-PG。该 TG 奖励路径和新 RL 入口仍需开发验证，不能把现有 reward-export 的 terminal 输出当成已完成控制。
+
 B0/B1 的基础模型、量化、提示词、上下文、动作上限和任务列表保持一致。R0/R1 还要控制采样预算、更新次数及初始化 checkpoint。不能将不同模型或不同训练预算混为奖励方法差异。
 
 默认配置是 Qwen 1.5B 的资源受限实验。使用 Llama 3B 时应复制并修改一整套训练、评估和探索配置；不能只改 SFT 而忘记 rollout。
