@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "webshop-stepwise-rl"
+version = "0.1.0"
+description = "Resource-constrained WebShop course experiments based on SPA-RL"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+webshop-lab = "webshop_lab.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+

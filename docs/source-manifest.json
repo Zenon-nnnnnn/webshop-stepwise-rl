@@ -1,0 +1,1714 @@
+{
+  "source": "User-provided SPA.zip",
+  "source_sha256": "e22a4df975708811122cbfe88938cbc69f935a97ba136f7074e51925abf0c2ab",
+  "upstream_url": "https://github.com/WangHanLinHenry/SPA-RL-Agent",
+  "included": [
+    {
+      "path": "LICENSE",
+      "sha256": "3ba2dd91406354ebef1012386f440e7f8c196a38ea0bbee12aed90d2dbdf932e",
+      "bytes": 1068
+    },
+    {
+      "path": "README.md",
+      "sha256": "69969b1b7d6bb4f6b92682fc6b99e68734c9730f6657f7928406bd31b557e7ab",
+      "bytes": 5819
+    },
+    {
+      "path": "assets/spa_rl_framework.png",
+      "sha256": "af1477e58ceed00eb8708f0a6a7bc413a0b3317b9ed6c2a9f22a9298cf14e56b",
+      "bytes": 215690
+    },
+    {
+      "path": "config/StepTool_ppo.json",
+      "sha256": "3c49751b5746784d31fa1c7e213417b5c9cb6e9e66c219a9813a641f0dc5f652",
+      "bytes": 503
+    },
+    {
+      "path": "envs/webshop/setup.py",
+      "sha256": "b729c85f39cb5ac99c32308bc001316857ed7d7a72acb07a2d791a284d0a9b67",
+      "bytes": 860
+    },
+    {
+      "path": "envs/webshop/src/webshop/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "envs/webshop/src/webshop/run_envs/run_web_agent_site_env.py",
+      "sha256": "b3fe44eb740229f37c8732906de70545aeaa5fa495eeacc94d8f9b00951576ca",
+      "bytes": 1234
+    },
+    {
+      "path": "envs/webshop/src/webshop/run_envs/run_web_agent_text_env.py",
+      "sha256": "1745b135e64f79cd9acb9c830852b12fccb96d4b4365c9a8233c5335394aa4dd",
+      "bytes": 981
+    },
+    {
+      "path": "envs/webshop/src/webshop/search_engine/lucene_searcher.py",
+      "sha256": "905be2081ffa4c9f93e1b106de4c012ac9677c8043dd264ae92a68dc2a287fa0",
+      "bytes": 326
+    },
+    {
+      "path": "envs/webshop/src/webshop/transfer/README.md",
+      "sha256": "a20b2a91a04ef3eab5d614f650b7719b6e6e4830613d7961039e7822ac135a83",
+      "bytes": 2172
+    },
+    {
+      "path": "envs/webshop/src/webshop/transfer/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "envs/webshop/src/webshop/transfer/app.py",
+      "sha256": "36d0c7cbcb797e4c44bc5c0b62c4198ef34a429d1e849d2d61c23ae13b17ad87",
+      "bytes": 14368
+    },
+    {
+      "path": "envs/webshop/src/webshop/transfer/predict_help.py",
+      "sha256": "e432ad05c362b017bac808c16ee129674e9cc925958dc3d5e83754057374ca61",
+      "bytes": 16740
+    },
+    {
+      "path": "envs/webshop/src/webshop/transfer/webshop_lite.py",
+      "sha256": "629ea797989e858b94db65e4d68077c747a9bc17f85fa92c1e3a71d4b0d5abe5",
+      "bytes": 3250
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/app.py",
+      "sha256": "906c336147986f79b712994581947cf8cbac8781f37b5fc9b9bf6724e6026260",
+      "bytes": 8336
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/attributes/annotate.py",
+      "sha256": "f64f3f8be3af15794821506014b97c1abc75424973ab9b06d4af4b9c2dec4a45",
+      "bytes": 1923
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/attributes/generate_attrs.py",
+      "sha256": "b6e079d6765966e1c244e7de31d444c17423d912d24f0ef08844c32daa2efe3a",
+      "bytes": 5151
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/engine/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/engine/engine.py",
+      "sha256": "214d1fa4f93d8fa9da7c067a4a109803a8357abbd970d34f2e389ccec27fc415",
+      "bytes": 12552
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/engine/goal.py",
+      "sha256": "bae4e3ad4c2c8e4f43eec146e337de8033774fb37da4b0eaa4f8eb68617cc3e7",
+      "bytes": 9975
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/engine/normalize.py",
+      "sha256": "1962113ac9e209a636d4f181b2c70544bbea59b03adca9847e48287158d794fb",
+      "bytes": 3819
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/envs/__init__.py",
+      "sha256": "ebe27e7b9d1d5b2d43c55d32dd1a2149da144712a4dfed4dac4a1d85fadcd99e",
+      "bytes": 325
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/envs/web_agent_site_env.py",
+      "sha256": "dffe282af6705ff7005c56064d68c9610557be6caecbd027139849379c9d1cd9",
+      "bytes": 7880
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/envs/web_agent_text_env.py",
+      "sha256": "1854bbf5443c731d42eacc3d74cb5a091f974f66ed2893c0ab78642a86496802",
+      "bytes": 32177
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/models/__init__.py",
+      "sha256": "c50ac68cc36fa14064088d655d3d807038da174fd97d557191619fd97d4b0700",
+      "bytes": 59
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/models/models.py",
+      "sha256": "229b2f2fb0feedcac84a8e7ed6484c976e4c0ccb026e22996052215c427445a7",
+      "bytes": 1295
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/static/images/no-image-available.png",
+      "sha256": "ee79d06e254dcbcd3cc319b7e78993468c402af0234eeafbeb835a5fe0ce1b1b",
+      "bytes": 37283
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/static/style.css",
+      "sha256": "61e4efb527c75e545d212ee2857c3df15da5880c022c22407e1807e3e2cdbb04",
+      "bytes": 3514
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/templates/attributes_page.html",
+      "sha256": "f19f4e58656e3be297f9cc86b98cb04b571d84114114c07404f81e0079e3875f",
+      "bytes": 2567
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/templates/description_page.html",
+      "sha256": "77bdb3e51c647a1b009f17ff5e40c7df62c2c8fb16c43cd0f84783e20f3b2a7a",
+      "bytes": 1745
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/templates/done_page.html",
+      "sha256": "6da5b494522666f0644b948e5c2c5a0e5c5104926f3c643c7828ff653d5e8eb9",
+      "bytes": 2653
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/templates/features_page.html",
+      "sha256": "d10df82cad8c34d698a8c1e267ffd97631fe4edfcc39a89ed187362573872ac0",
+      "bytes": 1888
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/templates/item_page.html",
+      "sha256": "f6a11e5a3ffbada7cc5fbb26568ae971be84811d5d4f0d0a7043218a52906987",
+      "bytes": 5553
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/templates/results_page.html",
+      "sha256": "4d448f7ee6c21f55bc4dfcf4952e37d3594f59996988c431d23db9cd38ea2777",
+      "bytes": 4164
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/templates/review_page.html",
+      "sha256": "c1238f7ef89e186ec5817f04d6727c90ba1d41ad7481255e673920eb4804f464",
+      "bytes": 2506
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/templates/search_page.html",
+      "sha256": "fb4cdae0b21f17a33ac56a47389e96595991838461502f2fad140ef53521a601",
+      "bytes": 1468
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/utils.py",
+      "sha256": "66d05bad17f3f9b0d1f5aff94bffc7d6f1d3a70636d5e68764c5f9329cf1053a",
+      "bytes": 1743
+    },
+    {
+      "path": "envs/webshop/src/webshop.egg-info/PKG-INFO",
+      "sha256": "b90130fb71ea03bfaea99076da341a1b695f070fa61548acb5880e1b28f9b114",
+      "bytes": 858
+    },
+    {
+      "path": "envs/webshop/src/webshop.egg-info/SOURCES.txt",
+      "sha256": "ccaf4eb618778d6156ed44944546a129e9529b4467b168eb286cdd71d78f4be8",
+      "bytes": 871
+    },
+    {
+      "path": "envs/webshop/src/webshop.egg-info/dependency_links.txt",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "bytes": 1
+    },
+    {
+      "path": "envs/webshop/src/webshop.egg-info/requires.txt",
+      "sha256": "1b28749664a502de0c4c654cac6c1a18ece55b2eb2fd548566ff110f5723a039",
+      "bytes": 240
+    },
+    {
+      "path": "envs/webshop/src/webshop.egg-info/top_level.txt",
+      "sha256": "3a800f176638f799a9598aa061c7c0157bbf3055e7ea5c8a029ac0cd5d23e5dc",
+      "bytes": 8
+    },
+    {
+      "path": "eval/llama3_2_3b_eval_alfworld.sh",
+      "sha256": "264701bf9c5fc0600c10e19db322240b57b9e1c9280bd58d79c29073b13bfabe",
+      "bytes": 941
+    },
+    {
+      "path": "eval/llama3_2_3b_eval_virtualhome.sh",
+      "sha256": "bd9c5ddc750b52717e763bb1d895be322c0d4e9b3f3207b3a77ab59826404e9b",
+      "bytes": 1065
+    },
+    {
+      "path": "eval/llama3_2_3b_eval_webshop.sh",
+      "sha256": "45519462871d16963ec5679bc2e9d50c21fcd361e6172ebdd1297cf2f6093be2",
+      "bytes": 938
+    },
+    {
+      "path": "eval/run_eval.sh",
+      "sha256": "85d7a88b16d2a856444cbd560137872a1fb1211eab2cc6548caa2d62345568ea",
+      "bytes": 218
+    },
+    {
+      "path": "eval/run_eval_control.sh",
+      "sha256": "5d0d64b54b22e9a589ac05c514fc3906b910032f56ef5a14585476bcc79cef2c",
+      "bytes": 166
+    },
+    {
+      "path": "eval/run_eval_worker.sh",
+      "sha256": "10324353e58d3729b98b5b43a14ce207d253c3111c7b8313925d46044f5ef52b",
+      "bytes": 288
+    },
+    {
+      "path": "eval_agent/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "eval_agent/agents/__init__.py",
+      "sha256": "8a3ad4f5e77fca399bd288510bfc23f7c28688d61d0360342d3e7564f946b631",
+      "bytes": 113
+    },
+    {
+      "path": "eval_agent/agents/base.py",
+      "sha256": "af3ea2732a81a2b6dde709a39f5e871789c0201ab5ff8803d51f54f117f898b2",
+      "bytes": 997
+    },
+    {
+      "path": "eval_agent/agents/fastchat_agent.py",
+      "sha256": "e66a2aafccd3c1780c73b5923ba67947e46cfaeddda906ec080ea0aa3c89238a",
+      "bytes": 3254
+    },
+    {
+      "path": "eval_agent/agents/openai_lm_agent.py",
+      "sha256": "fda87bf2ae6371e5f9947e5c6ee90c0a3bdd78b0c427a74ea35fe63871e28d1e",
+      "bytes": 1223
+    },
+    {
+      "path": "eval_agent/configs/model/fastchat.json",
+      "sha256": "ae65c063f7be098a60f19df6dc6ce024a5626a4c2e7120c4d804c53f1102c29a",
+      "bytes": 213
+    },
+    {
+      "path": "eval_agent/configs/model/fastchat_explore.json",
+      "sha256": "7a816d07eff989bb8a318961c764f450c7fcad4f4bc96e4dbfb8ad6d64845f9b",
+      "bytes": 213
+    },
+    {
+      "path": "eval_agent/configs/model/openai.json",
+      "sha256": "19d16395678605f4473274cc9ae6b7a8b4614e30d8f26446f2a5a7a69681b007",
+      "bytes": 285
+    },
+    {
+      "path": "eval_agent/configs/task/alfworld.json",
+      "sha256": "0d89f1b3c9ca0eaf4214741e4d2fef217557d244a9a87c7606ecd4b61b88b100",
+      "bytes": 476
+    },
+    {
+      "path": "eval_agent/configs/task/intercode_sql.json",
+      "sha256": "71ad3fd1ac87b2ffdc33526e022f922225e89988eaaac60576afab810fc89081",
+      "bytes": 356
+    },
+    {
+      "path": "eval_agent/configs/task/virtualhome.json",
+      "sha256": "b2f836b4f2f978e274c43762436fb6b64f3fe526e696a11fe044a7e0142577dc",
+      "bytes": 386
+    },
+    {
+      "path": "eval_agent/configs/task/webshop.json",
+      "sha256": "d4d1d3d45091b9608e052b91952fc1028b526a923e2cd87ec8247e9a6acbd0aa",
+      "bytes": 334
+    },
+    {
+      "path": "eval_agent/data/webshop/test_indices.json",
+      "sha256": "8ccc37a8b89392359d2d124e321b0dd47d6072bf4410847f606762a211a0f189",
+      "bytes": 1223
+    },
+    {
+      "path": "eval_agent/data/webshop/test_indices_500.json",
+      "sha256": "470de709d4e7beef58407e7dc725824b2a6a727f2d0ecf16bc20daa9deaa3587",
+      "bytes": 3068
+    },
+    {
+      "path": "eval_agent/data/webshop/train_indices.json",
+      "sha256": "a2dff632a2e730830e8398411141004104e00cac5b5329847316514d91fc0dac",
+      "bytes": 9585
+    },
+    {
+      "path": "eval_agent/envs/__init__.py",
+      "sha256": "951dfab4baf3c6f753ea67082ea932b28cc7bbba1b67862285616580de0db34e",
+      "bytes": 214
+    },
+    {
+      "path": "eval_agent/envs/alfworld_env.py",
+      "sha256": "eabf48ec870eaec6f143cdfb049474902b09c3ebf0f3ecb5338361d273a22bb6",
+      "bytes": 7419
+    },
+    {
+      "path": "eval_agent/envs/base.py",
+      "sha256": "91afd0c81d4b4b925e6d6262d5eef36b4b53dd18635e937e17a3c5aca8c8e63e",
+      "bytes": 688
+    },
+    {
+      "path": "eval_agent/envs/virtualhome_env.py",
+      "sha256": "d9a1063aaa5eb4f07b6cf740c0e7166e7924049e16fd16980b3a28c18a454b97",
+      "bytes": 26841
+    },
+    {
+      "path": "eval_agent/envs/webshop_env.py",
+      "sha256": "f08e81a75981fc6b3eacb4960510852da2547b2b80bc823307f20ea7b0bb0e04",
+      "bytes": 3375
+    },
+    {
+      "path": "eval_agent/main.py",
+      "sha256": "f17a562e69dc5bee7482350bf58cc2f901d0752d37cd68ca29ba8c69eb52da5c",
+      "bytes": 8995
+    },
+    {
+      "path": "eval_agent/main_vh.py",
+      "sha256": "2f2c9289582bc592a515625d403927869c28dde6256ba24e8cd7bcecf674ccbe",
+      "bytes": 25416
+    },
+    {
+      "path": "eval_agent/main_webshop.py",
+      "sha256": "f17a562e69dc5bee7482350bf58cc2f901d0752d37cd68ca29ba8c69eb52da5c",
+      "bytes": 8995
+    },
+    {
+      "path": "eval_agent/prompt/__init__.py",
+      "sha256": "ccc3faf0633c95fbb7a2ab6488b08c108295e3d7bca977a5b63a0be43ef7297d",
+      "bytes": 38
+    },
+    {
+      "path": "eval_agent/prompt/icl_examples/alfworld_icl.json",
+      "sha256": "e4fd175ebb24016540dab0b6780937cdbbd0b04ba241eb7137837ad422fbdd0c",
+      "bytes": 2105
+    },
+    {
+      "path": "eval_agent/prompt/icl_examples/intercode_sql_icl.json",
+      "sha256": "a8141421a2e8a90dc52837bca354ff96785de0482948f2b42d23131d5e32d74c",
+      "bytes": 5468
+    },
+    {
+      "path": "eval_agent/prompt/icl_examples/virtualhome_icl.json",
+      "sha256": "9d5b2f76318e3e1017a56ef0e643c16d1e6400dd0361c90e90742eff9d905c11",
+      "bytes": 1973
+    },
+    {
+      "path": "eval_agent/prompt/icl_examples/webshop_icl.json",
+      "sha256": "bb59e41bc6909d475919f9c77d1a7c552c1747f64eeb7b5835102713b9ffec7e",
+      "bytes": 3284
+    },
+    {
+      "path": "eval_agent/prompt/instructions/alfworld_inst.txt",
+      "sha256": "1315010838ff752b1d8b715534f61bf41eae2d2d9f419072ca6913dd92cab1d5",
+      "bytes": 1249
+    },
+    {
+      "path": "eval_agent/prompt/instructions/intercode_sql_inst.txt",
+      "sha256": "bb1ac3150720be7324420c541090d11d24da5a8c666e52bcba3571b891dca435",
+      "bytes": 1263
+    },
+    {
+      "path": "eval_agent/prompt/instructions/virtualhome_inst.txt",
+      "sha256": "eb135779347397e85c39bb762189f8920783ee638dc3204fe9d11304aeb79e23",
+      "bytes": 1328
+    },
+    {
+      "path": "eval_agent/prompt/instructions/webshop_inst.txt",
+      "sha256": "073c199aa1418863a4c5fd815d38db7cadaccc9697dd49a4f1accba406c70529",
+      "bytes": 737
+    },
+    {
+      "path": "eval_agent/prompt/templates.py",
+      "sha256": "568c0184d8dd6c6ff62a3301fa12dab4f0785a65713c1d54f29ecde87d8b7107",
+      "bytes": 2094
+    },
+    {
+      "path": "eval_agent/requirements.txt",
+      "sha256": "66c394dea3f51bcc0bfbe7fe80a424bb894fac68335cf999f055febf71dccd46",
+      "bytes": 32
+    },
+    {
+      "path": "eval_agent/tasks/__init__.py",
+      "sha256": "7240ba83adb381a2be76199fa34d209becc79884c5efa4e1527eedd5f990fb92",
+      "bytes": 138
+    },
+    {
+      "path": "eval_agent/tasks/alfworld.py",
+      "sha256": "3b25ca3c285efdcbc7134c4e011c7ede0b5ae4a7c35e3db044379b2fc21964a6",
+      "bytes": 2508
+    },
+    {
+      "path": "eval_agent/tasks/base.py",
+      "sha256": "c00f2baed56f1e98b0efc03a691eba3656b6693039ac6e1b1a76b6841cb644dd",
+      "bytes": 487
+    },
+    {
+      "path": "eval_agent/tasks/intercode_sql.py",
+      "sha256": "1cdab72a65daa7be418ca6ae88c14844f0f75dca15f64a9f277e26b805ebc09b",
+      "bytes": 1767
+    },
+    {
+      "path": "eval_agent/tasks/webshop.py",
+      "sha256": "1c13e0cc89a127149b0434d0520b61fbffbf28b8721e6fbb20a305bfd1f882fa",
+      "bytes": 1188
+    },
+    {
+      "path": "eval_agent/utils/__init__.py",
+      "sha256": "9099ba475370677af11587d68c74c93a15a05372a2610786013ffd7aceb6ed50",
+      "bytes": 275
+    },
+    {
+      "path": "eval_agent/utils/datatypes.py",
+      "sha256": "e8679b0c5a38324777661af3042594f9bbc6844553352f5c4690a64c31bbf382",
+      "bytes": 2856
+    },
+    {
+      "path": "eval_agent/utils/replace_sciworld_score.py",
+      "sha256": "377d4c06110e207b718360df762cb717ec13a28cf55fa8fd06a80bab4c7c044f",
+      "bytes": 1500
+    },
+    {
+      "path": "exploration/webshop/exploration_outputs/exploration.json",
+      "sha256": "59b8f675092364d4cd5afa04445a4bd37c9d2d4790a49a1b372266ea9745f92a",
+      "bytes": 593163
+    },
+    {
+      "path": "exploration/webshop/exploration_outputs/exploration_tiny.json",
+      "sha256": "59b8f675092364d4cd5afa04445a4bd37c9d2d4790a49a1b372266ea9745f92a",
+      "bytes": 593163
+    },
+    {
+      "path": "exploration/webshop/exploration_outputs/explore/webshop_traj_0.json",
+      "sha256": "ff6bd3f5b21411e91887f6677a28e01ba2ad6ea9263fc25fc9d281a1c5df5080",
+      "bytes": 898468
+    },
+    {
+      "path": "exploration/webshop/generate_response_webshop.py",
+      "sha256": "e8c250c9b6f5aac4e1051b578993f0aaea7d43845f14e321b1736b1a3eef3782",
+      "bytes": 17962
+    },
+    {
+      "path": "exploration/webshop/my_generate_response_webshop.sh",
+      "sha256": "f8adc86cabbeb23fb688219ddfb2bda9c1870f98578707b97b19a9059ec8b37d",
+      "bytes": 3482
+    },
+    {
+      "path": "exploration/webshop/run_controller.sh",
+      "sha256": "1ca02c47fe0187c810949af938a188fb4db0fa4cde7416fdacf7f46c4dee2786",
+      "bytes": 63
+    },
+    {
+      "path": "exploration/webshop/run_explo.sh",
+      "sha256": "e356095edf283ab5c3b8cf74b53f13f038ddfdba553f5d1f7877a735a49014ea",
+      "bytes": 279
+    },
+    {
+      "path": "exploration/webshop/run_vllm.sh",
+      "sha256": "f7d9bd831ed943a09f2b98818c2425e9fb7edcf74526053e0286e8b042443d0e",
+      "bytes": 307
+    },
+    {
+      "path": "fastchat/__init__.py",
+      "sha256": "e539f072bb62652e1ce89fd01fd67a09e64dd4b8e7fd93aa6cd560f43c365ec9",
+      "bytes": 23
+    },
+    {
+      "path": "fastchat/constants.py",
+      "sha256": "a6a28d33f26e8869cf10230054d910ae1d3760c32a2f1f556bbf0f96b0ff4deb",
+      "bytes": 2122
+    },
+    {
+      "path": "fastchat/conversation.py",
+      "sha256": "36742ed21e9b9807e4b7bd856f0d4a5e2ef828f894d050697e7a3e878b455f7a",
+      "bytes": 50895
+    },
+    {
+      "path": "fastchat/llm_judge/README.md",
+      "sha256": "1d9b024400e673378b19fee788bf96e0f1215d81a42cd27493e445df4aa22d1f",
+      "bytes": 6907
+    },
+    {
+      "path": "fastchat/llm_judge/clean_judgment.py",
+      "sha256": "e40a2aa80bb549edf97244736ca7a2ac602d46f14e95db8e1f84a7a524a476d2",
+      "bytes": 2251
+    },
+    {
+      "path": "fastchat/llm_judge/common.py",
+      "sha256": "a762e82252e7aabf506e7a58fadaf75bc3ff66df64bff27bc1fd18a1083cd972",
+      "bytes": 22222
+    },
+    {
+      "path": "fastchat/llm_judge/compute_agreement.py",
+      "sha256": "458f83de49c2284ee8baf65cfc67c60a46544c00131dea7eab083259467c465b",
+      "bytes": 4420
+    },
+    {
+      "path": "fastchat/llm_judge/download_mt_bench_pregenerated.py",
+      "sha256": "c286ebe3847f354fc4de7280cf15f27c26fc4dd2ec4b1b986fd26da68611afd8",
+      "bytes": 2247
+    },
+    {
+      "path": "fastchat/llm_judge/gen_api_answer.py",
+      "sha256": "e933ff34bea94f6eb0261d3859aea0ad2f60bfd472b7df28873106d4f8d939ab",
+      "bytes": 4705
+    },
+    {
+      "path": "fastchat/llm_judge/gen_judgment.py",
+      "sha256": "b6d74c050f91d93eb8c3e339ccc11f230032b4c6093c65f3683e0eba1c13b2ea",
+      "bytes": 9560
+    },
+    {
+      "path": "fastchat/llm_judge/gen_model_answer.py",
+      "sha256": "8feb3c19262b8f8567b49c1cd45b0adfd83f199bdcd17e891a05dd608300c7c6",
+      "bytes": 9659
+    },
+    {
+      "path": "fastchat/llm_judge/qa_browser.py",
+      "sha256": "bd3669fd1aae3321222dfdedb0696c29898576ea22e4f3e564ce51c3792f7d90",
+      "bytes": 12665
+    },
+    {
+      "path": "fastchat/llm_judge/show_result.py",
+      "sha256": "c96416259853da00935c639051828760a02084a415696f984237ceb172cdc7e0",
+      "bytes": 4644
+    },
+    {
+      "path": "fastchat/model/__init__.py",
+      "sha256": "66123554635ffbdc7d4329589982e89728b4c1416d4472ce418d36aea95d120d",
+      "bytes": 112
+    },
+    {
+      "path": "fastchat/model/apply_delta.py",
+      "sha256": "d3dbdbd8c450748e8b646e04a17be1ce1749ff002db0bac5d13ce9fe04d08590",
+      "bytes": 5999
+    },
+    {
+      "path": "fastchat/model/apply_lora.py",
+      "sha256": "42053f91982352cc8ffb1aac2cde9d65570c7fc3853f4888a3ad28300bd983df",
+      "bytes": 1565
+    },
+    {
+      "path": "fastchat/model/compression.py",
+      "sha256": "6af3e014cf0add193272d426e92cb1c2a7e523f4885f3a59b716632a822cfb04",
+      "bytes": 10416
+    },
+    {
+      "path": "fastchat/model/convert_fp16.py",
+      "sha256": "eeed2ed84db101db874d95dcf40709aba48f8924ac3ce59200ef6673c8e76cf1",
+      "bytes": 846
+    },
+    {
+      "path": "fastchat/model/llama_condense_monkey_patch.py",
+      "sha256": "d39d82e316a7c516933596074fea185ddbdb9720df2020100434bf0e5d074ace",
+      "bytes": 2864
+    },
+    {
+      "path": "fastchat/model/make_delta.py",
+      "sha256": "8d92ee0557fe24a353a9f9a7ae434990633e3f442199f20db32905b729951394",
+      "bytes": 1835
+    },
+    {
+      "path": "fastchat/model/model_adapter.py",
+      "sha256": "940dbb5835acc4abe3c792690a22120402fb686ed47199f5b1df62d41cd8a642",
+      "bytes": 75238
+    },
+    {
+      "path": "fastchat/model/model_chatglm.py",
+      "sha256": "117b38172be067540c3cbb72e23913ee7f9351e0aa13acea9b81a28c198589cc",
+      "bytes": 3074
+    },
+    {
+      "path": "fastchat/model/model_codet5p.py",
+      "sha256": "97c4c0aa1fcf690a77808387e63f74d891703c4906afe4a3c4ca5326ae852f32",
+      "bytes": 3197
+    },
+    {
+      "path": "fastchat/model/model_exllama.py",
+      "sha256": "dfda97fcaa63fb6c75ab10e8d33f2762839d0b64cdbf96ddaa5180e9ede612ec",
+      "bytes": 2222
+    },
+    {
+      "path": "fastchat/model/model_falcon.py",
+      "sha256": "cb39f75518aaac3567afea86e86d1b8c93950cdc20696584170f733c2578c265",
+      "bytes": 4414
+    },
+    {
+      "path": "fastchat/model/model_registry.py",
+      "sha256": "37e100802cd996b9adaeb85624610eebcb0f8344a7ee98b1f9fc373d3c3437d8",
+      "bytes": 14759
+    },
+    {
+      "path": "fastchat/model/model_xfastertransformer.py",
+      "sha256": "fff8d9c543eb1f6d7d629cfb77c86b78d27ed1c392c4ff37325b4a27bac62e19",
+      "bytes": 2352
+    },
+    {
+      "path": "fastchat/model/monkey_patch_non_inplace.py",
+      "sha256": "51dd6bf17c1e45e4910ae526bd091bc870b4d757e541e3ef3b6b4d6e323196d5",
+      "bytes": 4216
+    },
+    {
+      "path": "fastchat/model/rwkv_model.py",
+      "sha256": "f83d111ca66e2c8b79248ff2b9879f72af09e0862416564c5b952b9cce8443f6",
+      "bytes": 2537
+    },
+    {
+      "path": "fastchat/model/upload_hub.py",
+      "sha256": "3c63e8ea7c00a06e58c95a36d3147c4400481bcea5bf114204571cf7475a9ac9",
+      "bytes": 1521
+    },
+    {
+      "path": "fastchat/modules/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "fastchat/modules/awq.py",
+      "sha256": "797a2aee0955111f856b430dddf6684c9bfe1197d12bf7fa8200db13193051dd",
+      "bytes": 2638
+    },
+    {
+      "path": "fastchat/modules/exllama.py",
+      "sha256": "f5965a6cfaedff82dbdedb84ec54457bc57187085daaaa68e291177350ab90ee",
+      "bytes": 1469
+    },
+    {
+      "path": "fastchat/modules/gptq.py",
+      "sha256": "bde8d22d599a2cd9713a5fa8cd5a37ed44942699692c9050153fedd562fb77d8",
+      "bytes": 2266
+    },
+    {
+      "path": "fastchat/modules/xfastertransformer.py",
+      "sha256": "e2bd39c11697e5f41581792eac90b921976580be5a756468a5161326536f23ab",
+      "bytes": 1298
+    },
+    {
+      "path": "fastchat/protocol/api_protocol.py",
+      "sha256": "eb580ac611a8bcd1dd3ff3a44fdd94828850b555899681973986fc51bd73818f",
+      "bytes": 4677
+    },
+    {
+      "path": "fastchat/protocol/openai_api_protocol.py",
+      "sha256": "1737899e899dea56e7fd7893eaed0b1fce96d8e0c5385ff8160ec624428e3f56",
+      "bytes": 5327
+    },
+    {
+      "path": "fastchat/pyproject.toml",
+      "sha256": "a0a5d38e924db4882b24932c86976133ba35e046f606ec592229a259e3262b69",
+      "bytes": 1341
+    },
+    {
+      "path": "fastchat/serve/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "fastchat/serve/api_provider.py",
+      "sha256": "4088d134a80e1330f62efe417caeb88aeea67996635416e446d640a02c8daead",
+      "bytes": 3882
+    },
+    {
+      "path": "fastchat/serve/base_model_worker.py",
+      "sha256": "247f749108e6268a805203330dbf02f00d54f674b24d624c866a3c4589e61372",
+      "bytes": 6801
+    },
+    {
+      "path": "fastchat/serve/cli.py",
+      "sha256": "acaad3ad0709b36994b4073923980000516e610b522a4c6e7fe02925453de073",
+      "bytes": 10936
+    },
+    {
+      "path": "fastchat/serve/controller.py",
+      "sha256": "efdc5ff6cebd82ebc2ae80a0600a25ccf1e0f361c46ab1badf93a5a355b501f8",
+      "bytes": 11047
+    },
+    {
+      "path": "fastchat/serve/gateway/README.md",
+      "sha256": "27bc7ad4149cccf26ebcb09110ebdb3540c61cd62fcefafa69335b0797242ff2",
+      "bytes": 1735
+    },
+    {
+      "path": "fastchat/serve/gateway/nginx.conf",
+      "sha256": "3c1f83a0a62600196f251213454f6b36ef13f5f482dfc2a64e408b78f9c26cb4",
+      "bytes": 3998
+    },
+    {
+      "path": "fastchat/serve/gradio_block_arena_anony.py",
+      "sha256": "40cd7b2a3ac291cdc4343f1d6c06853e1bafae7c2115392717741f00c8521a73",
+      "bytes": 19315
+    },
+    {
+      "path": "fastchat/serve/gradio_block_arena_named.py",
+      "sha256": "e33e2df6da4456e020b8f03197f388620281c380db383852b0e9c6acb076856f",
+      "bytes": 13668
+    },
+    {
+      "path": "fastchat/serve/gradio_web_server.py",
+      "sha256": "f0a33223350dd55b99a1bc3fc268005056e7922e5651fdb30a3283cdffcae60c",
+      "bytes": 27502
+    },
+    {
+      "path": "fastchat/serve/gradio_web_server_multi.py",
+      "sha256": "c96d5fabcfcd9d7a73a682ac02e8dc0b3a60c08c39ae7d0a58b6a7c3b4b7338c",
+      "bytes": 8293
+    },
+    {
+      "path": "fastchat/serve/huggingface_api.py",
+      "sha256": "2ad06fb53ab04af14a42e24a350d8789a2aad9dc8d11120518280e02a5b77d5e",
+      "bytes": 2295
+    },
+    {
+      "path": "fastchat/serve/huggingface_api_worker.py",
+      "sha256": "ce704da644f79d5a229a3f51486d89ac92a3c4a7b00dc5c7d6e01b4d78287c1c",
+      "bytes": 12469
+    },
+    {
+      "path": "fastchat/serve/inference.py",
+      "sha256": "231a2c0081c5eada0e92233ee8c7edfe249338588263564cbfa675f3714ee903",
+      "bytes": 18802
+    },
+    {
+      "path": "fastchat/serve/launch_all_serve.py",
+      "sha256": "3955e1c2d6a687c05ab794c11bcdb5fa3f482c1e868cd4b1609272a9bb7b7fd4",
+      "bytes": 8448
+    },
+    {
+      "path": "fastchat/serve/model_worker.py",
+      "sha256": "1d973dad9007661f4818acaab002d5d15ed3da07b95dbf10e267776699434954",
+      "bytes": 13236
+    },
+    {
+      "path": "fastchat/serve/monitor/basic_stats.py",
+      "sha256": "1fa61fb751a02a28fa07af7df44048a87c50d866152fe3e7a70c5952e5517c3e",
+      "bytes": 6864
+    },
+    {
+      "path": "fastchat/serve/monitor/clean_battle_data.py",
+      "sha256": "66b111812adb147f48f468765ab3a31ed74fd5a35e9e1bb4e1066d07e592ec81",
+      "bytes": 7844
+    },
+    {
+      "path": "fastchat/serve/monitor/clean_chat_data.py",
+      "sha256": "7e3c1886cf18a5016b3698c61d59ec2a5ca6be41d56c3c3759be0ec2c0a46308",
+      "bytes": 5149
+    },
+    {
+      "path": "fastchat/serve/monitor/dataset_release_scripts/arena_33k/count_unique_users.py",
+      "sha256": "145b0bf4aeb014f35fc3fa417813b4d562af95a932f7f5933f6ca93455956e66",
+      "bytes": 647
+    },
+    {
+      "path": "fastchat/serve/monitor/dataset_release_scripts/arena_33k/filter_bad_conv.py",
+      "sha256": "e654ff16bbda816b5db2189818d158bb99ed495f11b2f0808dc2ba33870f1196",
+      "bytes": 4554
+    },
+    {
+      "path": "fastchat/serve/monitor/dataset_release_scripts/arena_33k/merge_field.py",
+      "sha256": "9d01b09ae8c46eb6cac35ef4d01ea670a4d89f1d6169f534b11638cac93dcbc7",
+      "bytes": 722
+    },
+    {
+      "path": "fastchat/serve/monitor/dataset_release_scripts/arena_33k/sample.py",
+      "sha256": "48bee0656f0af04e1e523e137ab5f480ead94e3cbd10d19602015c1b8442cf52",
+      "bytes": 785
+    },
+    {
+      "path": "fastchat/serve/monitor/dataset_release_scripts/arena_33k/upload_hf_dataset.py",
+      "sha256": "a142bc7cb54f388615025194be1eecc94e3b2f12b209725803bb41ff7fa7278d",
+      "bytes": 281
+    },
+    {
+      "path": "fastchat/serve/monitor/dataset_release_scripts/lmsys_chat_1m/approve_all.py",
+      "sha256": "c4f39e55fc7716fd069f1a904b0e7040b02de0c4966a94e485c9b51d49a2bd9f",
+      "bytes": 471
+    },
+    {
+      "path": "fastchat/serve/monitor/dataset_release_scripts/lmsys_chat_1m/compute_stats.py",
+      "sha256": "24a5c21289f3b850deaaacf4cbd467bf11bf6162744c2cb5fa4051090a2912f0",
+      "bytes": 2897
+    },
+    {
+      "path": "fastchat/serve/monitor/dataset_release_scripts/lmsys_chat_1m/filter_bad_conv.py",
+      "sha256": "23a587c514c6645afd02472e4a1776a7b59bb1ca4304260ccae9b40b46a89520",
+      "bytes": 4278
+    },
+    {
+      "path": "fastchat/serve/monitor/dataset_release_scripts/lmsys_chat_1m/final_post_processing.py",
+      "sha256": "9606a343f4eb73246c3388e702a782b9f4421bc811b15434eb2c66d8e04cf12d",
+      "bytes": 670
+    },
+    {
+      "path": "fastchat/serve/monitor/dataset_release_scripts/lmsys_chat_1m/instructions.md",
+      "sha256": "f301fbd7a8ceb176c7ab7cd1b736c0aefebe131ea2297af086be044306deb00a",
+      "bytes": 587
+    },
+    {
+      "path": "fastchat/serve/monitor/dataset_release_scripts/lmsys_chat_1m/merge_oai_tag.py",
+      "sha256": "785b3333ee11e3cfb4b956125106eeb68e5f523fa301822f1c246f2884acc8a5",
+      "bytes": 1385
+    },
+    {
+      "path": "fastchat/serve/monitor/dataset_release_scripts/lmsys_chat_1m/process_all.sh",
+      "sha256": "b5a00ebd621e4bb892689487be75c4c92de0013bfd68855191d29b314ef16315",
+      "bytes": 516
+    },
+    {
+      "path": "fastchat/serve/monitor/dataset_release_scripts/lmsys_chat_1m/sample.py",
+      "sha256": "723179027e147f4fcd15df1635f40a660e443997913a23d87c43db65d274a17f",
+      "bytes": 786
+    },
+    {
+      "path": "fastchat/serve/monitor/dataset_release_scripts/lmsys_chat_1m/upload_hf_dataset.py",
+      "sha256": "ebaaf4bec9c0184006f7b4e0d021effec512616dfa4096931d5684c9ef6f09e6",
+      "bytes": 445
+    },
+    {
+      "path": "fastchat/serve/monitor/elo_analysis.py",
+      "sha256": "be8d78b1f380f60d63b6d9f1509d7be372a61aab41ebe06fac3458a95e97fd03",
+      "bytes": 9399
+    },
+    {
+      "path": "fastchat/serve/monitor/inspect_conv.py",
+      "sha256": "75b92fbf9d26c032459de0de8df0890fcd3be184656684ce9393acc03f5e84ce",
+      "bytes": 2784
+    },
+    {
+      "path": "fastchat/serve/monitor/intersect_conv_file.py",
+      "sha256": "b6f68172837ab69d06b22035afce5a3020ee71fadea1a9102a491d5209281b63",
+      "bytes": 861
+    },
+    {
+      "path": "fastchat/serve/monitor/leaderboard_csv_to_html.py",
+      "sha256": "c483fdb52ba46ace6358f537e0257abee0aae5847cf17935657e56c65ca5e61c",
+      "bytes": 1303
+    },
+    {
+      "path": "fastchat/serve/monitor/monitor.py",
+      "sha256": "22a11fe93a1bf052d845f8e1a693079e16bd124ffdaec4a92690841b61cd36f7",
+      "bytes": 11348
+    },
+    {
+      "path": "fastchat/serve/monitor/summarize_cluster.py",
+      "sha256": "e4bcbdc1ef74d1d32fb70b500e156ea051dd48e97b7bd1995f03a21a3605c413",
+      "bytes": 2701
+    },
+    {
+      "path": "fastchat/serve/monitor/tag_openai_moderation.py",
+      "sha256": "7ee272cdcf4e3a4327fb453fe8eb5537146e681f7e3fc38f56a11ab53ad40dca",
+      "bytes": 1662
+    },
+    {
+      "path": "fastchat/serve/monitor/topic_clustering.py",
+      "sha256": "6355cc5279d26c2c8ec22e8fbc0e499745ae1ade3a2ee0be2ae09cd8074fc1d0",
+      "bytes": 8928
+    },
+    {
+      "path": "fastchat/serve/multi_model_worker.py",
+      "sha256": "cb7f792e1adc3f6e25820327e8104f2c872f20a293b7cf52af12232603c3db36",
+      "bytes": 9944
+    },
+    {
+      "path": "fastchat/serve/openai_api_server.py",
+      "sha256": "4752615dea1b2eef647769772e5b5d4de62149ede428ef66bca612bc4aa7404d",
+      "bytes": 31632
+    },
+    {
+      "path": "fastchat/serve/register_worker.py",
+      "sha256": "ebd9ba00aa2b511d3bed8145bf6713fb93e884f2032ede37c361a9b46f8f9ed4",
+      "bytes": 734
+    },
+    {
+      "path": "fastchat/serve/shutdown_serve.py",
+      "sha256": "ee4f5343cf06a0cfcb4d2f5707d45cbdb2ac4eb41fa9c6ed1934daf8296448c8",
+      "bytes": 755
+    },
+    {
+      "path": "fastchat/serve/test_message.py",
+      "sha256": "f17991836c2579d9c4f2cf9507c7af8073e93de23f2cccd321ea559bfda0ed40",
+      "bytes": 2469
+    },
+    {
+      "path": "fastchat/serve/test_throughput.py",
+      "sha256": "c4fa35d5a4fe8a0bfc2536f04091ac9dfc735496e3bda47944db3d41b785683b",
+      "bytes": 3981
+    },
+    {
+      "path": "fastchat/serve/vllm_worker.py",
+      "sha256": "6b58470eb8ff82b217df8a136d60d8ad23d4b0e5ccd15fd1572d406ccadba3e2",
+      "bytes": 9772
+    },
+    {
+      "path": "fastchat/serve/vllm_worker_lora.py",
+      "sha256": "8e312ccc1705af3043a7d7ba3e5ac30eb0b9872498eddf5e04b62e6e4b398ecb",
+      "bytes": 9771
+    },
+    {
+      "path": "fastchat/train/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "fastchat/train/dpo_trainer.py",
+      "sha256": "9657b9855cc36b201b27cb4a1f2f80dd8860ca41ae5b795bbc7de3e0d23053d5",
+      "bytes": 59620
+    },
+    {
+      "path": "fastchat/train/llama2_flash_attn_monkey_patch.py",
+      "sha256": "de6b3211ea8a7a860f3bea6fc1529c5f0f58732421a156f1b8e62881b58afe6e",
+      "bytes": 8321
+    },
+    {
+      "path": "fastchat/train/llama_flash_attn_monkey_patch.py",
+      "sha256": "905f6f46835f129d0c27ae1438f13529c8b9d0880630e263e8f19f6a3ab8a3ba",
+      "bytes": 4054
+    },
+    {
+      "path": "fastchat/train/llama_xformers_attn_monkey_patch.py",
+      "sha256": "9fa5e222e76722fd3325ef0dd77d5e47378f6b6b6084b5c0f41eab90829d6fe9",
+      "bytes": 4916
+    },
+    {
+      "path": "fastchat/train/ppo_trainer.py",
+      "sha256": "003e8c7b37699c89b489bc69e953c6753581e0ec470dbc664d646dfd2cb3e4c4",
+      "bytes": 62240
+    },
+    {
+      "path": "fastchat/train/reward_trainer.py",
+      "sha256": "53665343ba699550d71d649f470cf66650db8da5ced48ea497d627f5aab488bb",
+      "bytes": 18268
+    },
+    {
+      "path": "fastchat/train/train.py",
+      "sha256": "50698abe4546e69596cd7af632a1f23fa08c91ece5b55307b6c0c66c8f7f13a5",
+      "bytes": 19498
+    },
+    {
+      "path": "fastchat/train/train_baichuan.py",
+      "sha256": "a2af9f3117a972ea43b62ccd0e891b17cebec4fbeefc57a033aef39194bca991",
+      "bytes": 11481
+    },
+    {
+      "path": "fastchat/train/train_dpo.py",
+      "sha256": "e349499c6b63906fcf6862d1d92ee4cddb050ebc0ba812116769f6668f1ec662",
+      "bytes": 13924
+    },
+    {
+      "path": "fastchat/train/train_dpo_mistral.py",
+      "sha256": "00ddcde9d07622c624f03301f251407231cf3d9894d9e1f5789607fe6d13757e",
+      "bytes": 11946
+    },
+    {
+      "path": "fastchat/train/train_flant5.py",
+      "sha256": "2e66b59a5416d7ffff2b9984163975a98475f504830b6e05b2c09c03e60c052c",
+      "bytes": 14992
+    },
+    {
+      "path": "fastchat/train/train_lora.py",
+      "sha256": "75005b8fb163c584ff2bec51da1ed436819b2b6117273bedd0758bf87c46e8e5",
+      "bytes": 7803
+    },
+    {
+      "path": "fastchat/train/train_lora_llama.py",
+      "sha256": "35755687af06943ad40d4e41c5b275d634357d5f0eaf824a051e397d5f93a72a",
+      "bytes": 18120
+    },
+    {
+      "path": "fastchat/train/train_lora_t5.py",
+      "sha256": "8e5562234aa7a00ac37cd266015158b754bc288cfc8267f21f85e9f9a8af6754",
+      "bytes": 7637
+    },
+    {
+      "path": "fastchat/train/train_mem.py",
+      "sha256": "5f2aec3be6c847557a122cbaedf7b5023768baa7150659844744cee5d38f34c7",
+      "bytes": 416
+    },
+    {
+      "path": "fastchat/train/train_mistral.py",
+      "sha256": "3d428a417379d89512ebd43369fb61104577bddde46b1cc0b790a757b0e49a8d",
+      "bytes": 11362
+    },
+    {
+      "path": "fastchat/train/train_ppo.py",
+      "sha256": "59ad27aba702a53ee19c371215074cc8ada47f5ab9145dd0cbf5c37fd2947d35",
+      "bytes": 12925
+    },
+    {
+      "path": "fastchat/train/train_reward.py",
+      "sha256": "cc55fbb8b67df3d99bc1015c71da55dd049908b40ae1cecd434d0c4906cfa719",
+      "bytes": 12043
+    },
+    {
+      "path": "fastchat/train/train_xformers.py",
+      "sha256": "be9fb35e7ca4be34be610a526fe3b9b6db46f676078e7e45f60ca4fc86bf40f6",
+      "bytes": 372
+    },
+    {
+      "path": "fastchat/utils.py",
+      "sha256": "68bc97dd5f6746ff68a179cf0e03b1708610f1b8de0af300ac66c01099a590c8",
+      "bytes": 10834
+    },
+    {
+      "path": "ppo/merge.py",
+      "sha256": "8792ef65daf6b12e6ff4e8f72cf35d8d9579cdbb23a35313486814bb0c7e9477",
+      "bytes": 1308
+    },
+    {
+      "path": "ppo/requirements.txt",
+      "sha256": "d1bc6feb0468bfcd36682bccc45e6bb6eae5178fa81db6915afa9a94ea3711d5",
+      "bytes": 136
+    },
+    {
+      "path": "ppo/step_ppo.py",
+      "sha256": "d8e04be3170711c7fd96a3ca62e75c993f6ee9fc56609db8892c33d9abbfa387",
+      "bytes": 9927
+    },
+    {
+      "path": "ppo/step_ppotrainer.py",
+      "sha256": "c3c3f70c08e8a5bb3411f53a5ade6c3e4a947384cd004c9e539ff0a21152206c",
+      "bytes": 21342
+    },
+    {
+      "path": "ppo/train_ppo.sh",
+      "sha256": "cb0e3e20920e96073e182008810f2341533c43ce4ab5bd8ef8e1fd147a3def57",
+      "bytes": 599
+    },
+    {
+      "path": "prm/data_org.py",
+      "sha256": "bbd1215baf3692f0ae09aa3df57188f9a50a2ec0cca7fa05e1b13f9541bda118",
+      "bytes": 2751
+    },
+    {
+      "path": "prm/exploration_inference_results_webshop.json",
+      "sha256": "583486b456fa926e5e80f42bd72a0ce1f6c917c42a2c9db5daa1a3612902046b",
+      "bytes": 564574
+    },
+    {
+      "path": "prm/inference_prm.py",
+      "sha256": "69ce185fda690e95ded36969555d4cc21ba335803f518f091250fd69dd31a81e",
+      "bytes": 18366
+    },
+    {
+      "path": "prm/rl_data_org.py",
+      "sha256": "4bce53198528e2ccb47ef659e36f1a2478c6a2006f43dde236199ce05211b42c",
+      "bytes": 5486
+    },
+    {
+      "path": "prm/sampled_data_rl_training_webshop.json",
+      "sha256": "cc914d441c009d3afbbe03cdd59d4df4f11b2ba24b74c81f15fa190f98afddf4",
+      "bytes": 210373
+    },
+    {
+      "path": "prm/sampled_data_rl_training_webshop_flatten.json",
+      "sha256": "ba0cdc60764f48ee0322af7923c0f97a829d432f5e3018ba260c6c31f77067a0",
+      "bytes": 211957
+    },
+    {
+      "path": "prm/train_our_progress_model.py",
+      "sha256": "62f185dbf318050a467d131fb9a8883bc554aab561d4e5e9b73b0fc2b62df151",
+      "bytes": 19004
+    },
+    {
+      "path": "prm/train_our_progress_model_fp16.py",
+      "sha256": "fa897c0dee8f9cffc2b074d2f7d2437dbd5524fd01a3c0d812f0a36369c4f443",
+      "bytes": 17707
+    },
+    {
+      "path": "prm/train_our_progress_model_lora.py",
+      "sha256": "1ead8382220baa4025872946400f9b798336dc909afc981e41e4a38d2edbe690",
+      "bytes": 18311
+    },
+    {
+      "path": "prm/train_our_progress_model_lora_fp16.py",
+      "sha256": "3f169f9d7e52453d2996cb260565dbc653c1b50df074c0dd03f239d3d5e964a3",
+      "bytes": 18623
+    },
+    {
+      "path": "requirements.txt",
+      "sha256": "eeb1a31d6381129e6ee3a2ff360ad3e6de7d9e526be1ad370a29cb74bcf39e37",
+      "bytes": 950
+    },
+    {
+      "path": "sft/alfworld_llama3b.sh",
+      "sha256": "99b6790320c8c2a7bc9e8b6a2ea3b223ff7ea776fb5ec6f64bf87ca24e675daa",
+      "bytes": 1187
+    },
+    {
+      "path": "sft/merge_lora.py",
+      "sha256": "c4cebf0e896592384ecec3ed1d43479f999822743981c75a00d94dce7803cb05",
+      "bytes": 1282
+    },
+    {
+      "path": "sft/virtualhome_llama3b.sh",
+      "sha256": "f1edc89416d320afd3375bb31e484c7f585b6332f1782a7d6ed80fbb5a70f3f0",
+      "bytes": 1235
+    },
+    {
+      "path": "sft/webshop_llama3b.sh",
+      "sha256": "e3f5e73e929a87db54eaddc0eaf97ef86b32d54435054c84f33fa29100442bf9",
+      "bytes": 1337
+    }
+  ],
+  "excluded": [
+    {
+      "path": ".DS_Store",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "envs/webshop/.ipynb_checkpoints/setup-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "envs/webshop/src/webshop/__pycache__/__init__.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/__pycache__/__init__.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/__pycache__/utils.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/engine/__pycache__/__init__.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/engine/__pycache__/engine.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/engine/__pycache__/goal.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/engine/__pycache__/normalize.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/envs/__pycache__/__init__.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/envs/__pycache__/web_agent_site_env.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/envs/__pycache__/web_agent_text_env.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "envs/webshop/src/webshop/web_agent_site/envs/chromedriver",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval/.ipynb_checkpoints/llama3_2_3b_eval_webshop-checkpoint.sh",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval/.ipynb_checkpoints/run_eval-checkpoint.sh",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval/.ipynb_checkpoints/run_eval_control-checkpoint.sh",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval/.ipynb_checkpoints/run_eval_worker-checkpoint.sh",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/.DS_Store",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/.ipynb_checkpoints/main-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/__pycache__/__init__.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/__pycache__/main.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/agents/.ipynb_checkpoints/__init__-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/agents/__pycache__/__init__.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/agents/__pycache__/base.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/agents/__pycache__/fastchat_agent.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/agents/__pycache__/openai_lm_agent.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/envs/.ipynb_checkpoints/__init__-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/envs/.ipynb_checkpoints/base-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/envs/__pycache__/__init__.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/envs/__pycache__/alfworld_env.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/envs/__pycache__/base.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/envs/__pycache__/intercode_sql_env.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/envs/__pycache__/virtualhome_env.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/envs/__pycache__/webshop_env.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/prompt/__pycache__/__init__.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/prompt/__pycache__/templates.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/tasks/.ipynb_checkpoints/__init__-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/tasks/.ipynb_checkpoints/base-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/tasks/__pycache__/__init__.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/tasks/__pycache__/alfworld.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/tasks/__pycache__/base.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/tasks/__pycache__/intercode_sql.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/tasks/__pycache__/webshop.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/utils/__pycache__/__init__.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "eval_agent/utils/__pycache__/datatypes.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "exploration/webshop/exploration_outputs/.ipynb_checkpoints/exploration-checkpoint.json",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "exploration/webshop/exploration_outputs/.ipynb_checkpoints/exploration_tiny-checkpoint.json",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "exploration/webshop/exploration_outputs/explore/.ipynb_checkpoints/webshop_traj_0-checkpoint.json",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "exploration/webshop/exploration_outputs/logs/.ipynb_checkpoints/worker_pid-checkpoint.txt",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/.DS_Store",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/.ipynb_checkpoints/__init__-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/.ipynb_checkpoints/conversation-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/.ipynb_checkpoints/pyproject-checkpoint.toml",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/__pycache__/__init__.cpython-310.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/__pycache__/__init__.cpython-312.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/__pycache__/__init__.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/__pycache__/constants.cpython-310.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/__pycache__/constants.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/__pycache__/conversation.cpython-310.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/__pycache__/conversation.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/__pycache__/utils.cpython-310.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/__pycache__/utils.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/fschat.egg-info/PKG-INFO",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/fschat.egg-info/SOURCES.txt",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/fschat.egg-info/dependency_links.txt",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/fschat.egg-info/requires.txt",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/fschat.egg-info/top_level.txt",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/model/.DS_Store",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/model/.ipynb_checkpoints/model_adapter-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/model/__pycache__/__init__.cpython-310.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/model/__pycache__/__init__.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/model/__pycache__/compression.cpython-310.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/model/__pycache__/compression.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/model/__pycache__/llama_condense_monkey_patch.cpython-310.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/model/__pycache__/llama_condense_monkey_patch.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/model/__pycache__/model_adapter.cpython-310.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/model/__pycache__/model_adapter.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/model/__pycache__/model_chatglm.cpython-310.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/model/__pycache__/model_chatglm.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/model/__pycache__/model_codet5p.cpython-310.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/model/__pycache__/model_codet5p.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/model/__pycache__/model_exllama.cpython-310.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/model/__pycache__/model_exllama.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/model/__pycache__/model_falcon.cpython-310.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/model/__pycache__/model_falcon.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/model/__pycache__/model_xfastertransformer.cpython-310.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/model/__pycache__/model_xfastertransformer.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/model/__pycache__/monkey_patch_non_inplace.cpython-310.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/model/__pycache__/monkey_patch_non_inplace.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/modules/__pycache__/__init__.cpython-310.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/modules/__pycache__/__init__.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/modules/__pycache__/awq.cpython-310.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/modules/__pycache__/awq.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/modules/__pycache__/exllama.cpython-310.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/modules/__pycache__/exllama.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/modules/__pycache__/gptq.cpython-310.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/modules/__pycache__/gptq.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/modules/__pycache__/xfastertransformer.cpython-310.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/modules/__pycache__/xfastertransformer.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/serve/.ipynb_checkpoints/base_model_worker-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/serve/.ipynb_checkpoints/vllm_worker-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/serve/.ipynb_checkpoints/vllm_worker_lora-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/serve/__pycache__/__init__.cpython-310.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/serve/__pycache__/__init__.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/serve/__pycache__/base_model_worker.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/serve/__pycache__/controller.cpython-310.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/serve/__pycache__/controller.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/serve/__pycache__/inference.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/serve/__pycache__/model_worker.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/serve/__pycache__/vllm_worker.cpython-310.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/serve/__pycache__/vllm_worker.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/train/.ipynb_checkpoints/train-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/train/.ipynb_checkpoints/train_lora-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/train/.ipynb_checkpoints/train_lora_llama-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/train/.ipynb_checkpoints/train_lora_t5-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/train/__pycache__/__init__.cpython-312.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/train/__pycache__/__init__.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/train/__pycache__/dpo_trainer.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/train/__pycache__/train.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/train/__pycache__/train_lora.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/train/__pycache__/train_lora_llama.cpython-312.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "fastchat/train/__pycache__/train_lora_llama.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "ppo/.DS_Store",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "ppo/.ipynb_checkpoints/merge-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "ppo/.ipynb_checkpoints/step_ppo-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "ppo/.ipynb_checkpoints/train_ppo-checkpoint.sh",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "ppo/__pycache__/step_ppotrainer.cpython-310.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "prm/.DS_Store",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "prm/.ipynb_checkpoints/data_org-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "prm/.ipynb_checkpoints/inference_prm-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "prm/.ipynb_checkpoints/rl_data_org-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "prm/.ipynb_checkpoints/sampled_data_rl_training_webshop-checkpoint.json",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "prm/.ipynb_checkpoints/sampled_data_rl_training_webshop_flatten-checkpoint.json",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "prm/.ipynb_checkpoints/train_our_progress_model-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "prm/.ipynb_checkpoints/train_our_progress_model_fp16-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "prm/.ipynb_checkpoints/train_our_progress_model_lora-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "prm/.ipynb_checkpoints/train_our_progress_model_lora_fp16-checkpoint.py",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "prm/__pycache__/inference_prm.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "prm/__pycache__/train_our_progress_model.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "prm/__pycache__/train_our_progress_model_fp16.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    },
+    {
+      "path": "prm/__pycache__/train_our_progress_model_lora.cpython-39.pyc",
+      "reason": "generated/cache or obsolete platform-specific browser binary"
+    }
+  ],
+  "sanitized": [
+    {
+      "path": "eval_agent/configs/model/openai.json",
+      "change": "Removed embedded API credential; supply environment-managed credentials locally if needed."
+    }
+  ]
+}

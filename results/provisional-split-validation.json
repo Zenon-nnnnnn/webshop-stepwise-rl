@@ -1,0 +1,14 @@
+{
+  "status": "provisional_offline_only",
+  "train_rows": 1451,
+  "val_rows": 160,
+  "reserved_test_tasks": 200,
+  "excluded_rows": 13,
+  "seed": 42,
+  "source_sha256": "721e46dba410cff900e187bccea91a456c38b105b6d14d068d7762afb7791de3",
+  "train_val_id_overlap": 0,
+  "train_test_id_overlap": 0,
+  "val_test_id_overlap": 0,
+  "train_val_instruction_hash_overlap": 0,
+  "note": "Environment goal-map must be checked before training; these are data checks, not model results."
+}
