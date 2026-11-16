@@ -10,6 +10,8 @@
 
 ## 新组员从这里开始
 
+**Tutor 计划：** [每天五人的任务与验收](docs/DAILY_PLAN.md) · [学习资源与动手练习](docs/LEARNING_GUIDE.md) · [每日报告模板](reports/daily-update-template.md)。按组内要求，以完成质量验收，不设每日工时上限。
+
 1. 阅读 [项目定位与方法](docs/PROJECT.md)，知道研究问题及哪些结果尚未产生。
 2. 按 [快速上手](docs/QUICKSTART.md) 安装 CPU 工具并运行测试，无需显卡或大数据。
 3. GPU 机器负责人按 [安装指南](docs/SETUP.md) 配置两个隔离环境。
