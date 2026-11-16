@@ -1,18 +1,30 @@
 # 五人分工、里程碑与验收
 
-日期基于 Asia/Shanghai，2026 年。这是按模块依赖制定的第一轮分工，未假定成员已有特定经验，也未确认谁拥有此前提到的 5060 Ti。账号与角色先按下表执行；如果组内调整，需同时更新对应 Issue 和本表。
+日期基于 Asia/Shanghai，2026 年。当前已知算力顺序：HowseaonLink > Yuxiao-Liu233 > Jun040504 > Zqqq-qq ≈ QiuQiu-xuan。设备具体型号、显存和内存仍需各人记录，不把这个排序等同于任何任务必然能跑。账号与角色先按下表执行；如果组内调整，需同时更新对应 Issue 和本表。
 
 ## 负责人
 
 | 角色 / GitHub | 主责 | 具体产物 | 任务 |
 |---|---|---|---|
-| A：HowseaonLink | 环境与集成、Colab 适配 | 可从头执行的 notebook/安装步骤；依赖版本、GPU 检查、WebShop health、启动日志 | [#1](https://github.com/Zqqq-qq/webshop-stepwise-rl/issues/1) |
+| A：HowseaonLink | 主算力、环境集成、正式训练执行 | 稳定运行环境；执行 C 提供的 SFT 作业及重评估；保存完整训练日志、adapter、资源记录 | [#1](https://github.com/Zqqq-qq/webshop-stepwise-rl/issues/1) |
 | B：Zqqq-qq（你） | 数据协议、实验设计、进度协调 | 数据审计、split manifest、研究问题与对照表、proposal 主稿、提交核对 | [#2](https://github.com/Zqqq-qq/webshop-stepwise-rl/issues/2)、[#6](https://github.com/Zqqq-qq/webshop-stepwise-rl/issues/6) |
-| C：Jun040504 | 基础策略与 SFT | 基础模型运行、2-step 短训练、正式 SFT adapter、config/run.json、资源记录 | [#3](https://github.com/Zqqq-qq/webshop-stepwise-rl/issues/3) |
-| D：Yuxiao-Liu233 | 进度模型、奖励与 RL | 论文方法说明、奖励测试、独立进度验证、PPO 兼容与策略更新实验 | [#4](https://github.com/Zqqq-qq/webshop-stepwise-rl/issues/4) |
-| E：QiuQiu-xuan | 评估与实验分析 | 指标核对、固定评估任务、结果表与图、真实失败案例、实验登记 | [#5](https://github.com/Zqqq-qq/webshop-stepwise-rl/issues/5) |
+| C：Jun040504 | SFT 代码与实验配置、短训练验证 | 数据/标签检查、训练配置、短训练与重载检查；将正式作业交 A 执行并分析训练结果 | [#3](https://github.com/Zqqq-qq/webshop-stepwise-rl/issues/3) |
+| D：Yuxiao-Liu233 | 第二算力、进度模型、奖励与 RL | 论文方法说明、奖励测试、独立进度验证、PPO 兼容与策略更新实验 | [#4](https://github.com/Zqqq-qq/webshop-stepwise-rl/issues/4) |
+| E：QiuQiu-xuan | 评估代码、CPU 统计与实验分析 | 指标核对、评估任务/配置、结果表与图、真实失败案例；GPU 批量推理由 A/D 执行 | [#5](https://github.com/Zqqq-qq/webshop-stepwise-rl/issues/5) |
 
-你使用 Mac，可以直接承担审计、划分、实验设计和写作；完整环境资产解压/运行由 A 协助。GPU 任务由 A/C/D 协调使用已验证的组员机器或 Colab，不要求每人自备 GPU。当前仓库尚无已验证的一键 Colab notebook，A 的适配属于待完成任务；谁拥有 5060 Ti 不影响模块负责人安排。
+## 算力使用与职责边界
+
+| 人员 | 优先执行的计算任务 | 不必在自己设备硬跑的任务 |
+|---|---|---|
+| HowseaonLink（主算力） | 完整环境集成、正式 SFT、大批量推理/轨迹采集、最终重评估；RL 超出 D 设备能力时承接 | 不需要包办数据分析、SFT 方法设计、RL 代码和报告 |
+| Yuxiao-Liu233（第二算力） | 进度模型训练、RL 短实验和消融；A 忙时承担可容纳的推理/采集任务 | 显存不够的作业交 A 排队，不强行同时加载多个模型 |
+| Jun040504（第三算力） | 模型/标签检查、少量推理、2-step SFT 与重载验证；在可用资源内做小规模配置对比 | 正式长训练和大规模参数搜索 |
+| Zqqq-qq（你） | Mac 上的数据审计、划分、协议检查、实验设计、写作协调 | 本地 CUDA 训练；完整环境的大内存工作由 A 协助 |
+| QiuQiu-xuan | 本地评估代码、日志解析、CPU 统计、图表与失败案例 | 大批量模型推理；交 A/D 执行后拿完整日志分析 |
+
+**模块负责人负责代码、配置和结果解释，计算执行人负责按冻结配置运行并返回产物。** 例如 Jun040504 仍负责 SFT 方法与实现，HowseaonLink 负责在主设备执行正式训练；不是把全部训练开发工作转给 A。QiuQiu-xuan 负责评估协议和结果质量，即使推理在 A/D 的设备上执行。
+
+先使用组内现有设备建立稳定主流程。Colab 作为资源不足、排队或本地兼容性受阻时的备选，不要求五个人各装一套完整训练环境。当前没有已验证的一键 Colab notebook；需要时由 A/C 一起适配。每台执行设备先做版本、CUDA kernel、显存与内存检查，再决定具体模型/任务规模。
 
 ## 本周：proposal 前每个人交什么
 
@@ -20,11 +32,11 @@
 
 | 人员 | 这周先做 | 交给谁 / 怎么验收 |
 |---|---|---|
-| A | 确认实际可用计算资源；准备 Colab/本机运行路线，做 CUDA kernel 与模型加载短检查；尝试 WebShop 启动 | C 能按步骤重新加载模型；B 能拿到环境任务映射。未跑通则提交错误日志和明确阻塞 |
+| A | 建立主设备环境并记录资源；做 CUDA kernel、模型加载与 WebShop 启动检查；接收 C 的短训练作业，准备正式训练 | C 能按步骤重新加载模型；B 能拿到环境任务映射。未跑通则提交错误日志和明确阻塞 |
 | B | 整理课程 rubric、研究问题、原论文引用和对照实验；在 Mac 重算 audit 与离线 split；与 A 核对完整环境后冻结划分 | C/E 使用同一份 train/val/test ID、split SHA 和环境 fingerprint；合并全组 proposal 段落 |
-| C | 阅读 sft.py 和模型配置，先检查数据/标签与短训练流程；资源可用后跑 2 个优化步骤并保存重载 adapter | E 能加载同一个基础模型及 adapter；完整训练依赖 A 的环境和 B 的正式划分 |
-| D | 读懂 SPA 的逐步归因、grounding 和 PPO；用小样例核对奖励公式；列出旧 PPO 迁移点与最小策略更新验收 | 全组看懂方法图和公式；C/E 知道训练数据、checkpoint 与奖励接口，不把奖励导出当作策略训练 |
-| E | 明确 success/reward/steps/invalid action 定义；手工核对合成/示例日志，准备评估命令与空白结果表 | B 确认实验设计可比较；真实模型可用后能直接执行评估，示例数字不进正式成绩表 |
+| C | 检查 sft.py 的数据/标签与配置；在自己的可用资源或 A 的主设备跑 2 个优化步骤并重载；提供正式训练命令给 A | E 能加载同一个基础模型及 adapter；完整训练依赖 A 的环境和 B 的正式划分 |
+| D | 读懂 SPA 的逐步归因、grounding 和 PPO；核对奖励公式与迁移点；准备第二设备环境，制定能容纳的进度/RL 短实验 | 全组看懂方法图和公式；C/E 知道训练数据、checkpoint 与奖励接口，不把奖励导出当作策略训练 |
+| E | 明确 success/reward/steps/invalid action 定义；手工核对合成/示例日志，准备评估命令与空白结果表 | B 确认实验设计可比较；真实模型可用后将冻结的批量评估配置交 A/D 执行；本地核对日志与指标，示例数字不进正式成绩表 |
 
 **11/21 汇总并互审，11/22 提交 proposal。** B 负责整合，A/C/D/E 各写自己的技术段落，不能只报口头进度。
 
@@ -38,7 +50,7 @@
 
 ## 依赖和交接
 
-A（运行环境）与 B（正式数据协议）→ C（SFT checkpoint）→ D（采集/奖励/RL）→ E（同协议评估）；E 的评估工具、D 的方法核对、B 的审计与写作从第一天就可以并行。
+A（运行环境）与 B（正式数据协议）→ C（SFT 代码/配置）＋A（正式训练产物）→ D（采集/奖励/RL）→ E（评估协议/分析，A/D 执行重推理）；E 的评估工具、D 的方法核对、B 的审计与写作从第一天就可以并行。
 
 交接至少包含：Git commit、配置、输入 SHA、split/goal fingerprint、命令、日志、产物位置与已知限制。检查通过再给下游，不只发一句“跑好了”。模型和大日志放团队共享存储，Git 提交代码与脱敏汇总。
 
@@ -59,9 +71,11 @@ A（运行环境）与 B（正式数据协议）→ C（SFT checkpoint）→ D�
 | 12/11–12/14 | report、引用、图表、复现清单 | 所有结果可追踪到 run / config / commit |
 | 12/15 | report 提交 | 按课程实际提交规则执行，不由本仓库自动提交 |
 
-## GPU 预约建议
+## GPU 排队与交接
 
-在 GitHub issue 评论里认领时间段，写预计开始/结束、任务和显存需求。任何长任务先通过短检查。不要同时加载环境 CUDA torch 与训练模型；环境使用 CPU torch。训练结束立即登记日志与 adapter 路径，避免只有一个人知道模型存在哪里。
+A 主设备优先排：首次短检查 → 正式 SFT → 固定 val 对照 → 正式采集/最终评估。D 的第二设备优先排：进度训练 → RL 短实验 → 消融。无法容纳的 RL 作业移到 A，暂停次要采集任务。
+
+在相应 GitHub issue 记录预计时间段、任务、配置、显存需求和依赖；同一块 GPU 默认一次只跑一个重任务。相同环境服务只允许一个 rollout 客户端，不同时采集。任何长任务先通过短检查。不要同时加载环境 CUDA torch 与训练模型；环境使用 CPU torch。训练结束立即登记日志与 adapter 路径，避免只有一个人知道模型存在哪里。
 
 ## 周会 15 分钟
 
