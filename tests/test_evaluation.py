@@ -171,6 +171,13 @@ class FailureTriageTests(unittest.TestCase):
         budget = episode(5, .6, steps=[
             step(0, 'Search', 'search[red shoes]'),
             step(1, 'red shoes [SEP] Price: $45.00 [SEP] Buy Now', 'click[buy now]', reward=.6)])
+        # WebShop gives reward 0 when a purchase matches no required attribute; it is still a purchase.
+        zero_budget = episode(8, 0., steps=[
+            step(0, 'Search', 'search[red shoes]'),
+            step(1, 'red shoes [SEP] Price: $45.00 [SEP] Buy Now', 'click[buy now]')])
+        zero_spec = episode(9, 0., steps=[
+            step(0, 'Search', 'search[red shoes]'),
+            step(1, 'red boots [SEP] Price: $20.00 [SEP] Buy Now', 'click[buy now]')])
         loop = episode(6, 0., done=False, steps=[step(0, 'Search', 'search[red shoes]'),
                                                  step(1, 'No results', 'search[red shoes]'),
                                                  step(2, 'No results', 'search[red shoes]')])
@@ -178,10 +185,27 @@ class FailureTriageTests(unittest.TestCase):
                                                         step(1, 'Search', None, grounding=0,
                                                              error='connection refused by server')])
         expected = {1: 'format', 2: 'format', 3: 'retrieval', 4: 'specification',
-                    5: 'budget', 6: 'loop', 7: 'engineering'}
-        for row in (format_row, unavailable, retrieval, specification, budget, loop, engineering):
+                    5: 'budget', 6: 'loop', 7: 'engineering', 8: 'budget', 9: 'specification'}
+        for row in (format_row, unavailable, retrieval, specification, budget, loop, engineering,
+                    zero_budget, zero_spec):
             self.assertEqual(evaluation.classify_episode(row)['class'], expected[row['task_id']],
                              msg=f'task {row["task_id"]}')
+
+    def test_purchase_outcome_outranks_format_noise(self):
+        mess = episode(10, 0., steps=[
+            step(0, 'Search', None, grounding=0,
+                 error='Expected exactly one Action: search[...] or Action: click[...] line'),
+            step(1, 'red boots [SEP] Price: $20.00 [SEP] Buy Now', 'click[buy now]')])
+        verdict = evaluation.classify_episode(mess)
+        self.assertEqual(verdict['class'], 'specification')
+        self.assertIn('format', verdict['secondary'])
+        breakdown = evaluation.failure_breakdown([mess, episode(11, 0., done=False, steps=[
+            step(0, 'Search', 'search[red shoes]'),
+            step(1, 'Search', None, grounding=0, error='Expected exactly one Action line')])])
+        self.assertEqual(breakdown['counts']['specification'], 1)
+        self.assertEqual(breakdown['counts']['format'], 1)
+        self.assertEqual(breakdown['any_counts']['format'], 2)
+        self.assertEqual(breakdown['any_counts']['specification'], 1)
 
     def test_successful_episode_is_not_classified(self):
         breakdown = evaluation.failure_breakdown([episode(1, 1.)])

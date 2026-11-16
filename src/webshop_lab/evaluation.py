@@ -85,7 +85,7 @@ def is_success(row):
     return bool(row['done']) and float(row['final_reward']) >= 1 - SUCCESS_EPS
 
 
-def _percentile(values, quantile):
+def percentile(values, quantile):
     ordered = sorted(values)
     if not ordered:
         return None
@@ -119,7 +119,7 @@ def cluster_bootstrap_ci(rows, resamples=2000, seed=42):
             total += len(sample)
             hits += sum(sample)
         rates.append(hits / total)
-    return [round(_percentile(rates, .025), 6), round(_percentile(rates, .975), 6)]
+    return [round(percentile(rates, .025), 6), round(percentile(rates, .975), 6)]
 
 
 def summarize_episodes(rows):
@@ -251,73 +251,126 @@ def _budget(instruction):
     return float(match.group(1)) if match else None
 
 
-def classify_episode(row):
-    """Heuristic triage of one failed episode. Returns {'class', 'reason'}."""
-    steps = row.get('steps') or []
-    if not steps:
-        return {'class': 'engineering', 'reason': 'episode recorded no steps'}
-    if row.get('termination') not in {'purchase', 'max_steps'}:
-        return {'class': 'engineering', 'reason': f"unexpected termination {row.get('termination')!r}"}
-    errors = [str(step.get('error')) for step in steps if step.get('error')]
-    if any(INFRASTRUCTURE_ERROR.search(error) for error in errors):
-        return {'class': 'engineering', 'reason': 'a step log contains an infrastructure error'}
+def _format_reason(steps):
     parse_failures = [step for step in steps if not step.get('grounding') and step.get('action') is None]
     if parse_failures:
-        first = parse_failures[0]
-        return {'class': 'format',
-                'reason': f'{len(parse_failures)} step(s) had no single parseable Action line; '
-                          f'first error: {first.get("error")}'}
+        return (f'{len(parse_failures)} step(s) had no single parseable Action line; '
+                f'first error: {parse_failures[0].get("error")}')
     unavailable = [step for step in steps if not step.get('grounding')]
     if unavailable:
-        return {'class': 'format',
-                'reason': f'{len(unavailable)} parsed action(s) were not executable on the current page; '
-                          f'first: {unavailable[0].get("action")!r} ({unavailable[0].get("error")})'}
-    reward = float(row['final_reward'])
-    if row.get('done') and 0 < reward < 1 - SUCCESS_EPS:
-        budget = _budget(row.get('instruction', ''))
-        purchases = [step for step in steps if str(step.get('action', '')).startswith('click[buy now]')]
-        bought = purchases[-1] if purchases else steps[-1]
-        prices = _prices(bought.get('observation', ''))
-        if budget is not None and any(price > budget + 1e-9 for price in prices):
-            return {'class': 'budget',
-                    'reason': f'purchased an item priced above the {budget:.2f} budget'}
-        return {'class': 'specification',
-                'reason': 'purchased within budget but the final reward is partial: attributes/options mismatch'}
+        return (f'{len(unavailable)} parsed action(s) were not executable on the current page; '
+                f'first: {unavailable[0].get("action")!r} ({unavailable[0].get("error")})')
+    return None
+
+
+def _purchase_outcome(row, steps):
+    """Classify a completed purchase. WebShop can return reward 0 even when an item was bought."""
     if not row.get('done'):
-        actions = [str(step.get('action')) for step in steps if step.get('action')]
-        pairs = collections.Counter((str(step.get('action')), _observation_signature(step.get('observation', '')))
-                                    for step in steps if step.get('action'))
-        if actions and (max(collections.Counter(actions).values()) >= 3 or max(pairs.values()) >= 2):
-            return {'class': 'loop', 'reason': 'the same action was repeated without a new observation'}
-        searches = [action[action.index('[') + 1:-1] for action in actions if action.startswith('search[')]
-        goal_tokens = _tokens(normalize_instruction(row.get('instruction', '')))
-        if searches and goal_tokens and all(not (_tokens(query) & goal_tokens) for query in searches):
-            return {'class': 'retrieval',
-                    'reason': 'no search query shared a content word with the shopping instruction'}
-    return {'class': 'other', 'reason': 'no rule matched; inspect this log manually'}
+        return None, None
+    reward = float(row['final_reward'])
+    if reward >= 1 - SUCCESS_EPS:
+        return None, None
+    budget = _budget(row.get('instruction', ''))
+    purchases = [step for step in steps if str(step.get('action', '')).startswith('click[buy now]')]
+    bought = purchases[-1] if purchases else steps[-1]
+    if budget is not None and any(price > budget + 1e-9 for price in _prices(bought.get('observation', ''))):
+        return 'budget', f'purchased an item priced above the {budget:.2f} budget'
+    if reward <= 0:
+        return ('specification',
+                'purchased, but the reward is 0: no required attribute matched '
+                '(wrong product type or wrong specification)')
+    return ('specification',
+            'purchased with partial reward: some attributes match, at least one is wrong')
+
+
+def _loop_reason(steps):
+    actions = [str(step.get('action')) for step in steps if step.get('action')]
+    pairs = collections.Counter((str(step.get('action')), _observation_signature(step.get('observation', '')))
+                                for step in steps if step.get('action'))
+    if actions and (max(collections.Counter(actions).values()) >= 3 or max(pairs.values()) >= 2):
+        return 'the same action was repeated without a new observation'
+    return None
+
+
+def _retrieval_reason(row, steps):
+    searches = [str(step.get('action')) for step in steps if str(step.get('action', '')).startswith('search[')]
+    queries = [action[action.index('[') + 1:-1] for action in searches]
+    goal_tokens = _tokens(normalize_instruction(row.get('instruction', '')))
+    if queries and goal_tokens and all(not (_tokens(query) & goal_tokens) for query in queries):
+        return 'no search query shared a content word with the shopping instruction'
+    return None
+
+
+def classify_episode(row):
+    """Heuristic triage of one failed episode.
+
+    Returns ``{'class', 'reason', 'secondary'}``. One episode can carry several signals (a run can
+    emit unparsable actions and still end with a wrong purchase), so the purchase outcome is the
+    primary label and the remaining signals are kept in ``secondary`` instead of being dropped.
+    """
+    steps = row.get('steps') or []
+    if not steps:
+        return {'class': 'engineering', 'reason': 'episode recorded no steps', 'secondary': []}
+    if row.get('termination') not in {'purchase', 'max_steps'}:
+        return {'class': 'engineering', 'reason': f"unexpected termination {row.get('termination')!r}",
+                'secondary': []}
+    errors = [str(step.get('error')) for step in steps if step.get('error')]
+    if any(INFRASTRUCTURE_ERROR.search(error) for error in errors):
+        return {'class': 'engineering', 'reason': 'a step log contains an infrastructure error',
+                'secondary': []}
+    signals = {}
+    format_reason = _format_reason(steps)
+    if format_reason:
+        signals['format'] = format_reason
+    purchase_class, purchase_reason = _purchase_outcome(row, steps)
+    if purchase_class:
+        signals[purchase_class] = purchase_reason
+    if not row.get('done'):
+        loop_reason = _loop_reason(steps)
+        if loop_reason:
+            signals['loop'] = loop_reason
+    retrieval_reason = _retrieval_reason(row, steps)
+    if retrieval_reason:
+        signals['retrieval'] = retrieval_reason
+    for name in ('budget', 'specification', 'format', 'loop', 'retrieval'):
+        if name in signals:
+            return {'class': name, 'reason': signals[name],
+                    'secondary': sorted(other for other in signals if other != name)}
+    return {'class': 'other', 'reason': 'no rule matched; inspect this log manually', 'secondary': []}
 
 
 def failure_breakdown(rows, per_class=1):
-    """Count failed episodes per class and keep representative cases for the report."""
+    """Count failed episodes per class and keep representative cases for the report.
+
+    ``counts`` uses one primary label per episode; ``any_counts`` counts every episode that shows
+    the signal, so a purchase failure that also produced unparsable actions is visible in both.
+    """
     failures = [row for row in rows if not is_success(row)]
     counts = {name: 0 for name in FAILURE_CLASSES}
+    any_counts = {name: 0 for name in FAILURE_CLASSES}
+    labelled = []
     for row in failures:
-        counts[classify_episode(row)['class']] += 1
-    cases = collections.defaultdict(list)
-    ordered = sorted(failures, key=lambda row: (int(row['task_id']), int(row.get('repeat', 0))))
-    for row in ordered:
         verdict = classify_episode(row)
+        labelled.append((row, verdict))
+        counts[verdict['class']] += 1
+        for name in {verdict['class'], *verdict.get('secondary', [])}:
+            any_counts[name] += 1
+    cases = collections.defaultdict(list)
+    ordered = sorted(labelled, key=lambda pair: (int(pair[0]['task_id']), int(pair[0].get('repeat', 0))))
+    for row, verdict in ordered:
         if len(cases[verdict['class']]) < per_class:
             cases[verdict['class']].append(_case_record(row, verdict))
     denominator = len(failures) or 1
     return {
         'episodes': len(rows), 'failed_episodes': len(failures),
         'counts': counts,
+        'any_counts': any_counts,
         'rates_of_failures': {name: round(count / denominator, 6) for name, count in counts.items()},
-        'unclassified_tasks': sorted(int(row['task_id']) for row in failures
-                                     if classify_episode(row)['class'] == 'other'),
+        'unclassified_tasks': sorted(int(row['task_id']) for row, verdict in labelled
+                                     if verdict['class'] == 'other'),
         'cases': [case for name in FAILURE_CLASSES for case in cases[name]],
         'notes': [
+            'counts assigns one primary label per episode; any_counts also counts secondary signals.',
             'Labels are heuristic triage from recorded steps; confirm each case manually before quoting it.',
             'An "other" class means no rule matched, not that the model behaved well.',
             'engineering episodes are infrastructure problems and must be excluded from method comparison.',
@@ -338,6 +391,7 @@ def _case_record(row, verdict):
         })
     return {
         'class': verdict['class'], 'reason': verdict['reason'],
+        'secondary': verdict.get('secondary', []),
         'task_id': int(row['task_id']), 'repeat': int(row.get('repeat', 0)),
         'instruction': row.get('instruction', ''),
         'termination': row.get('termination'), 'done': bool(row['done']),
@@ -360,7 +414,8 @@ def write_case_report(cases, path, source):
                       f"termination={case['termination']}, done={case['done']}, "
                       f"final_reward={case['final_reward']:.3f}", '',
                       f"指令：{case['instruction']}", '',
-                      f"分诊理由：{case['reason']}", '',
+                      f"分诊理由：{case['reason']}",
+                      f"其他信号：{', '.join(case.get('secondary') or []) or '无'}", '',
                       '| step | action | grounding | env reward | error | observation (truncated) |',
                       '|---|---|---|---|---|---|']
             for step in case['steps']:
@@ -501,7 +556,8 @@ def evaluate(args):
                                   ('episodes', 'purchase_terminated', 'full_reward_successes',
                                    'purchase_without_full_reward', 'success_rate',
                                    'success_rate_ci95', 'mean_final_reward', 'mean_steps')},
-                      'failures': failures['counts']}, ensure_ascii=False, indent=2))
+                      'failures': {'counts': failures['counts'],
+                                   'any_counts': failures['any_counts']}}, ensure_ascii=False, indent=2))
 
 
 def audit_row_config(args):

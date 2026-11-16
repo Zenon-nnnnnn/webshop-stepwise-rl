@@ -102,7 +102,7 @@ def write_run_figures(metrics, failure_counts, directory, label='run'):
 
 def method_figure(rows, path, title='Success rate by method (frozen val, 95% interval)'):
     """Compare registered methods. ``rows`` are register rows with status=complete."""
-    order = ('B0', 'B1', 'P0', 'R0', 'R1')
+    order = ('B0', 'B1', 'P0', 'R-TG', 'R-PG', 'R0', 'R1')
     grouped = {}
     for row in rows:
         if (row.get('status') or '').strip() != 'complete':

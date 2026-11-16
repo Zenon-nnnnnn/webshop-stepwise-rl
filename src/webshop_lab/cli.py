@@ -49,7 +49,7 @@ def main():
     s.add_argument("--figures-dir", help="Write SVG figures into this directory")
     s.add_argument("--allow-partial", action="store_true", help="Summarize an interrupted run and label it partial")
     s.add_argument("--cases-per-class", type=int, default=1)
-    s.add_argument("--method", choices=["B0", "B1", "P0", "R0", "R1"])
+    s.add_argument("--method", choices=["B0", "B1", "P0", "R-TG", "R-PG", "R0", "R1"])
     s.add_argument("--split-ids", help="Frozen task ID list used by the run; required with --register-row")
     s.add_argument("--register-row", help="Write one results/experiment-register.csv row for this run")
     s.add_argument("--peak-vram-gb", type=float)
@@ -66,6 +66,26 @@ def main():
     s.add_argument("--output")
     s.add_argument("--no-git-check", action="store_true", help="Skip git commit existence checks")
     s = sub.add_parser("figures", help="Draw the method comparison chart from the register")
+    s.add_argument("--register", default=str(ROOT / "results/experiment-register.csv"))
+    s.add_argument("--output", required=True)
+    s = sub.add_parser("preflight", help="Check configs, IDs, parity and register before a GPU run")
+    s.add_argument("--a-config")
+    s.add_argument("--b-config")
+    s.add_argument("--ids", help="Frozen task ID list for this split")
+    s.add_argument("--register", default=None)
+    s.add_argument("--root", default=str(ROOT))
+    s.add_argument("--require-frozen", action="store_true")
+    s.add_argument("--no-git-check", action="store_true")
+    s.add_argument("--output")
+    s = sub.add_parser("compare", help="Paired comparison of two runs on the same tasks")
+    s.add_argument("--a-meta")
+    s.add_argument("--a-jsonl", required=True)
+    s.add_argument("--b-meta")
+    s.add_argument("--b-jsonl", required=True)
+    s.add_argument("--a-label", default="a")
+    s.add_argument("--b-label", default="b")
+    s.add_argument("--output")
+    s = sub.add_parser("results-table", help="Render the register as a Markdown results table")
     s.add_argument("--register", default=str(ROOT / "results/experiment-register.csv"))
     s.add_argument("--output", required=True)
     s = sub.add_parser("reward-export", help="Convert annotated episodes to step-reward training records")
@@ -93,7 +113,8 @@ def main():
         "progress-train": ("progress", "train"), "progress-predict": ("progress", "predict"),
         "check-run": ("evaluation", "check_run"), "evaluate": ("evaluation", "evaluate"),
         "check-parity": ("evaluation", "parity"), "check-register": ("register", "run"),
-        "figures": ("figures", "run")}
+        "figures": ("figures", "run"), "preflight": ("preflight", "run"),
+        "compare": ("comparison", "run"), "results-table": ("register", "table")}
     module, func = mapping[args.command]
     getattr(importlib.import_module(f"webshop_lab.{module}"), func)(args)
 

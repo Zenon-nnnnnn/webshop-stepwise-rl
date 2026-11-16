@@ -20,7 +20,10 @@ COLUMNS = (
     'evidence_path', 'notes',
 )
 STATUSES = ('planned', 'running', 'complete', 'failed')
-METHODS = ('B0', 'B1', 'P0', 'R0', 'R1')
+# R-TG / R-PG are the current reward arms (terminal+G and stepwise+G, same grounding weight).
+# R0 / R1 stay accepted only for exports produced before the 11/16 plan; new runs use R-TG/R-PG.
+METHODS = ('B0', 'B1', 'P0', 'R-TG', 'R-PG', 'R0', 'R1')
+LEGACY_METHODS = ('R0', 'R1')
 HEX64 = re.compile(r'[0-9a-f]{64}')
 HEX_COMMIT = re.compile(r'[0-9a-f]{7,40}')
 CI95 = re.compile(r'\[\s*(?:0(?:\.\d+)?|1(?:\.0+)?)\s*,\s*(?:0(?:\.\d+)?|1(?:\.0+)?)\s*\]')
@@ -133,6 +136,8 @@ def validate(fieldnames, rows, root=ROOT, check_git=True):
         method = (row.get('method') or '').strip()
         if method not in METHODS:
             problem(f'method must be one of {METHODS} (found {method!r})')
+        elif method in LEGACY_METHODS:
+            warnings.append(f'{label}: {method} is a legacy label; current arms are R-TG / R-PG')
         if not (row.get('model') or '').strip():
             problem('model is empty')
         seed = _int_field(row, 'seed', problem, required=status == 'complete', minimum=0)
@@ -280,3 +285,38 @@ def run(args):
     print(json.dumps(result, ensure_ascii=False, indent=2))
     if result['errors']:
         raise SystemExit(1)
+
+
+def results_table(fieldnames, rows, commit=None, source='results/experiment-register.csv'):
+    """Markdown result table. Only ``status=complete`` rows are quoted; nothing is recomputed."""
+    if list(fieldnames or []) != list(COLUMNS):
+        raise ValueError('Register header does not match register.COLUMNS; run check-register first')
+    complete = [row for row in rows if (row.get('status') or '').strip() == 'complete']
+    order = {name: index for index, name in enumerate(METHODS)}
+    complete.sort(key=lambda row: (order.get(str(row.get('method')).strip(), len(order)),
+                                   str(row.get('run_id', ''))))
+    lines = [f'生成自 `{source}`（commit `{commit or "unknown"}`）。只含 `status=complete` 行；'
+             '数值来自登记表，未重新计算，区间含义见 docs/EVALUATION.md。', '',
+             '| method | model | episodes | purchases | successes | success_rate | 95% CI | invalid action | seed | config | notes |',
+             '|---|---|---|---|---|---|---|---|---|---|---|']
+    for row in complete:
+        lines.append('| {method} | {model} | {episodes} | {purchases} | {successes} | {rate} | {ci} | '
+                     '{invalid} | {seed} | `{config}` | {notes} |'.format(
+                         method=row.get('method', ''), model=row.get('model', ''),
+                         episodes=row.get('episodes', ''), purchases=row.get('purchase_terminated', ''),
+                         successes=row.get('successes', ''), rate=row.get('success_rate', ''),
+                         ci=row.get('success_rate_ci95', ''), invalid=row.get('invalid_action_rate', ''),
+                         seed=row.get('seed', ''), config=row.get('config_path', ''),
+                         notes=(row.get('notes') or '').replace('|', '\\|')))
+    if not complete:
+        lines.append('| — | — | — | — | — | — | — | — | — | — | 暂无 complete 行；真实结果出来后再填 |')
+    return '\n'.join(lines) + '\n'
+
+
+def table(args):
+    fieldnames, rows = read_register(args.register)
+    text = results_table(fieldnames, rows, git_head(), source=str(args.register))
+    output = Path(args.output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(text, encoding='utf-8')
+    print(f'Wrote {output} from {len(rows)} register rows')
