@@ -28,4 +28,4 @@
 
 ## 线上验收
 
-首次完整提交的 [GitHub Actions CPU checks](https://github.com/Zqqq-qq/webshop-stepwise-rl/actions/runs/43848833958) 已全部通过。五人分工与交付拆成 [6 个待认领任务](https://github.com/Zqqq-qq/webshop-stepwise-rl/issues)，没有虚构成员姓名或分配到未知账号。
+首次完整提交的 [GitHub Actions CPU checks](https://github.com/Zqqq-qq/webshop-stepwise-rl/actions/runs/43848833958) 已全部通过。五人分工与交付拆成 [6 个任务](https://github.com/Zqqq-qq/webshop-stepwise-rl/issues)，已按已知 GitHub 账号制定第一轮模块分工，具体见 TEAM.md；真实姓名与学号由组内补充。

@@ -15,7 +15,7 @@
 3. GPU 机器负责人按 [安装指南](docs/SETUP.md) 配置两个隔离环境。
 4. 数据负责人按 [数据指南](docs/DATA.md) 导入材料、审计并冻结划分。
 5. 训练与评估负责人按 [实验手册](docs/EXPERIMENTS.md) 运行真实实验。
-6. 全组按 [分工和时间表](docs/TEAM.md)、[协作规则](CONTRIBUTING.md) 提交工作；到 [任务清单](https://github.com/Zqqq-qq/webshop-stepwise-rl/issues) 认领 A–E 与交付任务。
+6. 全组按 [分工和时间表](docs/TEAM.md)、[协作规则](CONTRIBUTING.md) 提交工作；到 [任务清单](https://github.com/Zqqq-qq/webshop-stepwise-rl/issues) 查看五人分工与各自交付任务。
 
 ## 先在任何电脑跑起来
 
