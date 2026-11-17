@@ -73,6 +73,14 @@ HowseaonLink 在 issue #5 同步了首批真实日志与 `goal_fingerprint`，�
 
 同时给 HowseaonLink 回了批量规格（B0：冻结 val 160 任务 × 1 repeat、greedy、`max_steps=10`、按 `val_ids` 顺序，预计 45–60 分钟），并明确这 3 条 smoke **不登记**到 experiment-register，等全量 B0 跑完再登记一行。
 
+## 补充三：晚间一轮评审（收到 Jun 的评审 + 复审 #9/#10 + 审 #13）
+
+- **我的 PR #8 被 Jun040504 要求修改**，三条都成立：①`compare_runs` 把 `(task, repeat)` 当独立配对，重复轨迹会放大显著性；②run_id/fingerprint 不一致仍判 complete；③`--split-ids` 不覆盖实际评估任务也能登记。已在 `6ec9089` 修复：按任务聚合、有重复轨迹不报 McNemar、溯源不一致判 `mismatched`、config 哈希不符与 split 不覆盖都硬拒绝；新增 6 个负向用例，测试 54 项通过；并已重新请求 Jun 复审。
+- **PR #9 复审通过**：文档已改成"Release 已解决"，8 项测试标注为历史值，来源与边界写清。
+- **PR #10 复审通过**：终端奖励 supplement（`mean_terminal_reward=0.0`、源 JSONL SHA `fe32f847…`、52.39 秒）、耗时口径、summary 版本都处理了；三份 ID 的 blob 哈希与 PR #11 一致，交叉验证扎实。Zqqq 的旧 `CHANGES_REQUESTED` 还挂着，已提醒他复审。
+- **PR #13（proposal 实验协议）要求修改**：R 与"平均最终购物得分"仍写 `final_reward`，会把页面匹配分当任务奖励；要求改为 `terminal_reward`，并补 `max_steps` 截断规则、预算登记字段、Wilson 措辞。奖励累积分反例我复现了（3 步 2.3 vs 5 步 3.3）。
+
+
 ## 下一个学习问题
 
 同一批 160 个 val 任务上，"每任务 1 条"的 Wilson 区间和"重复采样后"的任务簇 bootstrap 会差多少？报告里该报哪一个、怎么措辞才不夸大一个种子的差异？这直接关系到 12/03 两臂对比表的写法。
