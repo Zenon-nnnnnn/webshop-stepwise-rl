@@ -20,7 +20,7 @@ import random
 import re
 from pathlib import Path
 
-from .common import file_hash, git_head, normalize_instruction, read_json, wilson, write_json
+from .common import file_hash, file_hash_lf, git_head, normalize_instruction, read_json, wilson, write_json
 
 SUCCESS_EPS = 1e-6
 FAILURE_CLASSES = ('format', 'budget', 'specification', 'loop', 'retrieval', 'other', 'engineering')
@@ -85,6 +85,18 @@ def is_success(row):
     return bool(row['done']) and float(row['final_reward']) >= 1 - SUCCESS_EPS
 
 
+def terminal_reward(row):
+    """Task-level reward: the recorded score if the episode ended with a purchase, else 0.
+
+    The environment returns a page-match score at every step (upstream
+    ``web_agent_text_env.py`` sets ``self.reward = search_max`` on search pages and ``maxr`` on
+    item pages, and only ``done()`` returns the purchase score). So ``final_reward`` alone is not
+    a task reward: a run that never buys can still end on a page scoring 0.9. Task reward must be
+    0 for anything that did not purchase.
+    """
+    return float(row['final_reward']) if bool(row['done']) else 0.0
+
+
 def percentile(values, quantile):
     ordered = sorted(values)
     if not ordered:
@@ -145,6 +157,7 @@ def summarize_episodes(rows):
         'ci_method': 'wilson (one episode per task)' if independent
         else 'cluster bootstrap over tasks, 2000 resamples, seed 42',
         'conditional_success_given_purchase': (successes / purchase_terminated) if purchase_terminated else None,
+        'mean_terminal_reward': sum(terminal_reward(row) for row in rows) / n,
         'mean_final_reward': sum(float(row['final_reward']) for row in rows) / n,
         'mean_steps': step_count / n,
         'invalid_action_rate': invalid / step_count,
@@ -154,6 +167,8 @@ def summarize_episodes(rows):
         'goal_fingerprint': rows[0].get('goal_fingerprint'),
         'notes': [
             'Success requires done=true AND final_reward approximately 1; a purchase alone is not success.',
+            'mean_terminal_reward is the task reward: the recorded score only when the episode purchased, else 0.',
+            'mean_final_reward is the last recorded environment score; for max_steps episodes it is a page-match score, not task completion.',
             'success_rate uses every attempted episode as the denominator, including max_steps terminations.',
             'Independent-task Wilson interval omitted for repeated trajectories; a task-cluster bootstrap is reported instead.',
             'Check metadata selected_ids against completed IDs (webshop-lab check-run) before quoting a run.',
@@ -194,9 +209,13 @@ def inspect_run(jsonl_path, meta_path, config_path=None):
         candidate = Path(config_path)
         if not candidate.exists():
             raise FileNotFoundError(f'Config not found: {candidate}')
-        actual = file_hash(candidate)
-        config_file = {'path': str(candidate), 'sha256': actual,
-                       'matches_metadata': actual == meta.get('config_sha256'),
+        raw, normalized = file_hash(candidate), file_hash_lf(candidate)
+        expected_sha = meta.get('config_sha256')
+        canonical = expected_sha if expected_sha in {raw, normalized} else raw
+        config_file = {'path': str(candidate), 'sha256': canonical,
+                       'raw_sha256': raw, 'lf_sha256': normalized,
+                       'newline_normalized': canonical != raw,
+                       'matches_metadata': canonical == expected_sha,
                        'matches_embedded': read_json(candidate) == meta.get('config')}
     summary = (f'{len(completed)} of {len(expected)} expected episodes '
                f'({len(selected)} tasks x {repeats} repeats)')
@@ -548,14 +567,16 @@ def evaluate(args):
                           label=getattr(args, 'method', None) or audit['run_id'][:8])
     if getattr(args, 'register_row', None):
         from .register import row_from_run, write_register_row
-        row = row_from_run(args, audit, audit_row_config(args), metrics)
+        snapshot = audit['config_file'] or audit_row_config(args)
+        row = row_from_run(args, audit, {'path': snapshot['path'], 'sha256': snapshot['sha256']}, metrics)
         write_register_row(args.register_row, row)
         print(f'Register row written to {args.register_row}')
     print(json.dumps({'completeness': {'status': audit['status'], 'summary': audit['summary']},
                       'metrics': {key: metrics[key] for key in
                                   ('episodes', 'purchase_terminated', 'full_reward_successes',
                                    'purchase_without_full_reward', 'success_rate',
-                                   'success_rate_ci95', 'mean_final_reward', 'mean_steps')},
+                                   'success_rate_ci95', 'mean_terminal_reward',
+                                   'mean_final_reward', 'mean_steps')},
                       'failures': {'counts': failures['counts'],
                                    'any_counts': failures['any_counts']}}, ensure_ascii=False, indent=2))
 

@@ -26,6 +26,12 @@ WebShop 在点击 `Buy Now` 时就返回 `done=True`，但最终奖励可以是 
 
 对应代码：`evaluation.is_success()` 与 `evaluation.summarize_episodes()`；`tests/test_evaluation.py::MetricTests` 固定了该行为。
 
+**注意 `final_reward` 不是任务奖励。** 上游 `web_agent_text_env.py` 在搜索页把 `self.reward` 设为 `search_max`、在商品页设为 `maxr`，只有点 `Buy Now` 触发 `done()` 时才返回购买得分。所以一条**从未购买**、只是停在某个匹配度高的页面的 episode，`final_reward` 可能是 0.9 甚至 1.0（2026-11-17 的首批真实日志里，3 条 `max_steps` episode 的 `final_reward` 均值是 0.9167，购买数却是 0）。因此：
+
+- **任务奖励**用 `terminal_reward`：购买结束记 `final_reward`，否则记 0；汇总为 `mean_terminal_reward`，登记表的 `mean_reward` 列用的就是它。
+- `mean_final_reward` 只作诊断：它混合了"购买得分"和"最后一页的页面匹配分"。
+- 任何用 `final_reward` 当终局回报的训练（进度模型目标、terminal 奖励导出）都必须先转成 `terminal_reward`，否则会学到"停在高分页面"而不是"买到对的东西"。
+
 ### 1.2 字段与分母
 
 | 字段 | 定义 | 分母 |
@@ -38,7 +44,8 @@ WebShop 在点击 `Buy Now` 时就返回 `done=True`，但最终奖励可以是 
 | `max_steps_terminated` | `episodes - purchase_terminated` | episodes |
 | `success_rate` | **主指标**：`full_reward_successes / episodes`，失败也进分母 | episodes |
 | `conditional_success_given_purchase` | `successes / purchase_terminated`，仅诊断"买了但没买对"占比 | purchase_terminated |
-| `mean_final_reward` | 所有 episode 的 `final_reward` 均值，含失败 | episodes |
+| `mean_terminal_reward` | **任务奖励**：只有购买结束的 episode 记 `final_reward`，其余记 0 | episodes |
+| `mean_final_reward` | 最后一步记录到的环境分数。**非购买 episode 这是页面匹配分，不是任务奖励** | episodes |
 | `mean_steps` | 实际交互轮数均值，非法动作也消耗步数 | episodes |
 | `invalid_action_rate` | `grounding=0` 的步数 / 总步数 | steps |
 | `grounding_accuracy` | `1 - invalid_action_rate` | steps |
@@ -230,5 +237,5 @@ webshop-lab results-table --register results/experiment-register.csv --output re
 | SVG 图表 | `src/webshop_lab/figures.py` |
 | 独立指标复算（不 import 本包） | `scripts/verify_metrics.py` |
 | 上游演示数据可用性检查 | `scripts/check_upstream_demo_data.py` |
-| 指标定义 v1（机器可读） | `results/metrics-definition.json` |
+| 指标定义 v1.1（机器可读） | `results/metrics-definition.json` |
 | 单元测试（43 项，含端到端 fixture） | `tests/test_core.py`、`tests/test_evaluation.py`、`tests/test_analysis_tools.py` |

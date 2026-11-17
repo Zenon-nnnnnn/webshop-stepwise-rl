@@ -30,6 +30,8 @@ class HandCheckTests(unittest.TestCase):
         self.assertEqual(metrics['mean_steps'], 2.25)                        # 9 / 4
         self.assertAlmostEqual(metrics['invalid_action_rate'], 2 / 9)        # 2 invalid of 9 steps
         self.assertAlmostEqual(metrics['grounding_accuracy'], 7 / 9)
+        # No episode here ends on a high page score without buying, so terminal and final agree.
+        self.assertEqual(metrics['mean_terminal_reward'], metrics['mean_final_reward'])
         self.assertEqual(metrics['episodes_with_invalid_actions'], 2)
         self.assertEqual(metrics['conditional_success_given_purchase'], 0.5)  # 1 / 2
         self.assertEqual(metrics['termination_counts'], {'purchase': 2, 'max_steps': 2})

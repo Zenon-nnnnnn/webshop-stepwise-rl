@@ -43,6 +43,24 @@
 - 给 Yuxiao-Liu233：指标口径的一页说明可直接用 `results/hand-check-metrics.md` 第 1–3 节，图注写"任务数 + 区间"。
 - 给 Zqqq-qq：proposal 的指标段可以直接引用 `results/metrics-definition.json` 与这份手算样例。
 
+## 补充：评审 PR #9 / #10 / #11 与真实日志的第一课
+
+下午的评审请求来自三个 PR，我用独立复现而不是读描述的方式核对：
+
+- **PR #11（Zqqq-qq 的离线审计与候选划分）：通过。** 我从私有 Release `data-v1` 下载 `webshop_sft.json`（9,312,587 字节，SHA-256 `721e46db…`）重跑 `audit` 与两次 `split --seed 42`：audit 输出与其 `audit.json` 完全一致；`train_ids` / `val_ids` / `test_ids` / `split-manifest` 的 **git blob 哈希与提交文件逐一相同**，两次划分也逐字节一致（1451 / 160 / 200，排除 13）。`1746` 与 `5413` 确实只差预算（380 vs 370 美元），但这两个字符串没有进仓库，建议补进 README 以便别人不拿原始文件也能核。
+- **PR #10（HowseaonLink 的目标机环境与首批真实 rollout）：要求修改。** 正面项：`ids_sha256`/`config_sha256` 与 blob 哈希一致；健康检查 `alignment_checked=1624`、`mismatches=0`、`split_status.verified=true`；**冻结划分的 ID 与 PR #11 的候选划分逐字节相同**（说明 goal-map 重划没有改变成员）；GPU 钉版与 `requirements/gpu.txt` 一致。阻塞项两条：①`final_reward` 的语义（见下）；②README 写"65 秒"，而 JSONL 的 `seconds` 合计 52.4 秒。
+- **PR #9（Jun040504 的数据阻塞说明）：要求修改。** 内容本身准确，但标题里的"缺少 `webshop_sft.json`"已被 Release `data-v1` 解决，直接合并会留下过期结论。
+
+**真实日志带来的第一个重要修正：`final_reward` 不是任务奖励。** 三条真实 episode 全部 `max_steps`、购买数为 0，但 `mean_final_reward = 0.9167`（任务 75/104 的 `final_reward` 是 1.0）。查上游 `web_agent_text_env.py`：搜索页把 `self.reward` 设为 `search_max`（约 478 行）、商品页设为 `maxr`（约 558 行），只有 `done()` 才返回购买得分。所以非购买 episode 的 `final_reward` 是"最后停留页面的匹配分"。
+
+这也解释了为什么不能直接用 `final_reward` 当终局回报：进度模型目标与 terminal 奖励都会学到"停在高分页面"而不是"买到对的东西"。已在评估侧修正（`results/metrics-definition.json` 升到 v1.1）：
+
+- `evaluation.terminal_reward(row)`：购买结束记 `final_reward`，否则记 0；
+- 汇总新增 `mean_terminal_reward`，登记表的 `mean_reward` 列改用它；
+- 对真实日志重算：`mean_terminal_reward = 0.0`，`mean_final_reward = 0.9167`，购买 0、成功 0。
+
+顺带修掉两个工具问题：①配置哈希在 Windows 检出（CRLF）下会误报"config 被改"，现在接受 LF 归一化后的匹配并给出警告；②我自己改这段代码时把 `expected`（期望 episode 列表）覆盖成了配置哈希，导致 `3 of 64` 的错误摘要——因为每次都用真实产物核数字才在提交前发现，已修复并加了断言。测试从 45 增到 **48 项**，全部通过。
+
 ## 下一个学习问题
 
 同一批 160 个 val 任务上，"每任务 1 条"的 Wilson 区间和"重复采样后"的任务簇 bootstrap 会差多少？报告里该报哪一个、怎么措辞才不夸大一个种子的差异？这直接关系到 12/03 两臂对比表的写法。

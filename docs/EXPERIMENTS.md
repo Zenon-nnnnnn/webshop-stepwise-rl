@@ -98,7 +98,7 @@ webshop-lab rollout --config configs/explore-sft.json --ids data/processed/val_i
 ## 5. 指标与结果记录
 
 - **Success rate**：`done=true` 且最终奖励 ≥ `1-1e-6` 的任务比例。
-- **Mean final reward**：全部已完成记录的最终奖励均值，包括失败。
+- **Mean final reward**：全部已完成记录的最终奖励均值，包括失败。注意 `final_reward` 对未购买的 episode 是页面匹配分，任务奖励要看 `mean_terminal_reward`（见 [统一评估](EVALUATION.md) 第 1.1 节）。
 - **Mean steps**：每个 episode 实际交互轮数均值，非法动作也消耗步数。
 - **Invalid action rate**：所有尝试动作中格式错误或当前不可执行的比例。
 - **Grounding accuracy**：1 − invalid action rate。

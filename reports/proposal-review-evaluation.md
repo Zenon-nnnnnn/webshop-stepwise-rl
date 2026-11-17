@@ -37,10 +37,10 @@
 | `results/provisional-split-validation.json` | `e700af7b9fc7daf494bddafc39a2e47144cd1f4e1a8d4ff655f36c32ccdd2bdb` | 1451/160/200 划分、排除 13 条、seed 42、ID 与指令哈希交叉为 0 | 离线划分，未与真实环境 goal-map 核对 |
 | `results/dependency-availability.json` | `1d5c348b64c286de2059d1480442904f13d02682c62b68a4834d438742a14174` | 候选依赖版本在官方源存在 | 不证明互相兼容，也不证明能装上 50 系显卡 |
 | `results/upstream-demo-data-check.json` | `006200ca2155699f33baa8151a1960a9aba1a4684d730b974a5c4b2e53dec913` | 上游演示轨迹 78 条、803/1170 个 assistant 回合不可解析、奖励只有 0/1、79/100 次购买前置观测含价格 | 证明它**不能**当本组失败案例或成功率 |
-| `results/metrics-definition.json` | `02ed87c53359ca059a956333051b4b0b870a89eea1757a28ba1808b0da21ba67` | 指标 v1 的机器可读定义，与代码字段一致（有测试守住） | 不含任何结果 |
+| `results/metrics-definition.json` | `de186a5989f75faa93d25dcfa1488c5e4bf2eef7023e603e91b8fa501670c0c7` | 指标 v1.1 的机器可读定义（含 `terminal_reward` 与页面分数的区分），与代码字段一致（有测试守住） | 不含任何结果 |
 | `results/validation.md` | `06c77eb94f57c989d82735f2433c6493fde1ac9cbf62dda2d1f0363909107df0` | 本地 CPU 检查记录：43 项测试、合成 fixture 端到端、分诊修正 | 不含 GPU / 真实 rollout 证据 |
 | `results/experiment-register.csv` | `13bd48654f4cc449e8820951062b93e695110f714128777454b8b873c727233f` | 登记表结构与校验规则；当前只有表头 | 表头不是结果 |
-| `docs/EVALUATION.md` | `65eeb17704033ac111b6ba85a65ef66943d47fa81bf8cee1a7438d40d9c01f29` | 分母、区间、公平性、失败分诊与人工核对流程 | 不含模型结论 |
+| `docs/EVALUATION.md` | `f8c271c9b0cdbea9e863c9ac24b55f8c83b5c29e3eea32b2a2b73fc9d8244b59` | 分母、区间、公平性、失败分诊与人工核对流程 | 不含模型结论 |
 
 数据与模型侧：
 

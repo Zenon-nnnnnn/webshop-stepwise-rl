@@ -27,6 +27,18 @@ def file_hash(path):
     return h.hexdigest()
 
 
+def file_hash_lf(path):
+    """Hash with CRLF normalized to LF.
+
+    Git stores text as LF; a Windows checkout rewrites it to CRLF, so the raw digest of the
+    working copy stops matching the digest recorded on the machine that produced the run. This
+    variant lets the audit recognise a line-ending-only difference instead of reporting a
+    config edit that never happened.
+    """
+    data = Path(path).read_bytes().replace(b"\r\n", b"\n")
+    return hashlib.sha256(data).hexdigest()
+
+
 def git_head(cwd=ROOT):
     """Best-effort HEAD commit; None when this is not a checkout or git is unavailable."""
     import subprocess

@@ -114,6 +114,8 @@ class CompletionAuditTests(unittest.TestCase):
             jsonl = write_jsonl(root / 'run.jsonl', [episode(1, 1.)])
             audit = evaluation.inspect_run(jsonl, meta_path, config_path)
             self.assertTrue(audit['config_file']['matches_metadata'])
+            self.assertEqual(audit['expected_episodes'], 1)
+            self.assertEqual(audit['selected_tasks'], 1)
             edit = dict(CONFIG, max_steps=12)
             write_json(config_path, edit)
             audit = evaluation.inspect_run(jsonl, meta_path, config_path)

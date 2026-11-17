@@ -11,6 +11,7 @@ import unittest
 from pathlib import Path
 
 from webshop_lab import comparison, evaluation, preflight, register
+from webshop_lab.common import file_hash
 
 REPO = Path(__file__).resolve().parents[1]
 FINGERPRINT = 'a' * 64
@@ -168,6 +169,54 @@ class MetricsDefinitionTests(unittest.TestCase):
         missing = sorted(set(names) - set(summary))
         self.assertEqual(missing, [], msg='metrics-definition.json documents fields the code does not return')
         self.assertEqual(set(definition['failure_classes']), set(evaluation.FAILURE_CLASSES))
+
+
+class TerminalRewardTests(unittest.TestCase):
+    def test_page_score_is_not_task_reward(self):
+        rows = [episode(1, 1.), episode(2, 0.9, done=False)]
+        metrics = evaluation.summarize_episodes(rows)
+        self.assertAlmostEqual(metrics['mean_final_reward'], 0.95)
+        self.assertAlmostEqual(metrics['mean_terminal_reward'], 0.5)
+        self.assertEqual(evaluation.terminal_reward(rows[1]), 0.0)
+
+    def test_register_row_records_the_terminal_reward(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            config = write_json(root / 'config.json', BASE_CONFIG)
+            split = write_json(root / 'val_ids.json', [1, 2])
+            jsonl = write_jsonl(root / 'run.jsonl', [episode(1, 1.), episode(2, 0.9, done=False)])
+            args = argparse.Namespace(method='B0', split_ids=str(split), jsonl=str(jsonl),
+                                      peak_vram_gb=None)
+            audit = {'complete': True, 'run_id': 'run-1', 'goal_fingerprint': FINGERPRINT,
+                     'summary': '2 of 2'}
+            metrics = {'episodes': 2, 'full_reward_successes': 1, 'purchase_terminated': 1,
+                       'success_rate': 0.5, 'success_rate_ci95': [0.09, 0.9],
+                       'mean_terminal_reward': 0.5, 'mean_final_reward': 0.95,
+                       'mean_steps': 2.0, 'invalid_action_rate': 0.0}
+            row = register.row_from_run(args, audit, {'path': config, 'sha256': 'a' * 64}, metrics)
+            self.assertEqual(row['mean_reward'], '0.500000')
+            self.assertIn('task reward', row['notes'])
+
+    def test_config_hash_accepts_a_windows_checkout(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            config = root / 'configs/eval-base.json'
+            config.parent.mkdir(parents=True)
+            text = json.dumps(BASE_CONFIG, indent=2) + '\n'
+            config.write_text(text, encoding='utf-8', newline='\n')
+            lf_hash = file_hash(config)
+            config.write_bytes(text.encode('utf-8').replace(b'\n', b'\r\n'))
+            row = {'run_id': 'r', 'status': 'complete', 'method': 'B0',
+                   'model': BASE_CONFIG['model'], 'seed': '42', 'split_sha256': 'b' * 64,
+                   'goal_fingerprint': FINGERPRINT, 'git_commit': 'a' * 40,
+                   'config_path': 'configs/eval-base.json', 'config_sha256': lf_hash,
+                   'episodes': '4', 'successes': '1', 'purchase_terminated': '2',
+                   'success_rate': '0.25', 'success_rate_ci95': '[0.05, 0.6]',
+                   'mean_reward': '0.4', 'mean_steps': '2.25', 'invalid_action_rate': '0.1',
+                   'peak_vram_gb': '', 'evidence_path': 'artifacts/run.jsonl', 'notes': 'n'}
+            result = register.validate(list(register.COLUMNS), [row], root, check_git=False)
+            self.assertEqual(result['status'], 'ok', msg=result['errors'])
+            self.assertTrue(any('CRLF' in warning for warning in result['warnings']))
 
 
 class IndependentMetricCheckTests(unittest.TestCase):

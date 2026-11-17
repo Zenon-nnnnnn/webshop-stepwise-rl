@@ -11,7 +11,7 @@ import re
 import subprocess
 from pathlib import Path
 
-from .common import ROOT, file_hash, git_head, read_json, write_json
+from .common import ROOT, file_hash, file_hash_lf, git_head, read_json, write_json
 
 COLUMNS = (
     'run_id', 'status', 'method', 'model', 'seed', 'split_sha256', 'goal_fingerprint', 'git_commit',
@@ -86,12 +86,13 @@ def row_from_run(args, audit, config_snapshot, metrics):
         'purchase_terminated': str(metrics['purchase_terminated']),
         'success_rate': f"{metrics['success_rate']:.6f}",
         'success_rate_ci95': f'[{interval[0]:.6f}, {interval[1]:.6f}]',
-        'mean_reward': f"{metrics['mean_final_reward']:.6f}",
+        'mean_reward': f"{metrics['mean_terminal_reward']:.6f}",
         'mean_steps': f"{metrics['mean_steps']:.2f}",
         'invalid_action_rate': f"{metrics['invalid_action_rate']:.6f}",
         'peak_vram_gb': '' if peak is None else f'{float(peak):.2f}',
         'evidence_path': _relative(args.jsonl),
-        'notes': f'{method} on the frozen val list; purchase terminations and full-reward successes split',
+        'notes': f'{method} on the frozen val list; mean_reward is the task reward '
+                 '(0 unless the episode purchased); purchase and success counts are split',
     }
 
 
@@ -173,7 +174,11 @@ def validate(fieldnames, rows, root=ROOT, check_git=True):
             elif config_hash:
                 actual = file_hash(candidate)
                 if actual != config_hash:
-                    problem(f'config_sha256 does not match {config_path}')
+                    if file_hash_lf(candidate) == config_hash:
+                        warnings.append(f'{label}: config_sha256 matches after normalizing CRLF line '
+                                        'endings (Windows checkout of an LF-stored file)')
+                    else:
+                        problem(f'config_sha256 does not match {config_path}')
         elif status == 'complete':
             problem('config_path is empty for a complete run')
         if config_hash and not HEX64.fullmatch(config_hash):
