@@ -18,7 +18,7 @@
 
 ## 实际完成与证据
 
-- **Commit / PR / Issue**：Issue #1；分支 `env/setup-howseaonlink`；PR 编号创建后补记于本行。
+- **Commit / PR / Issue**：Issue #1；分支 `env/setup-howseaonlink`；PR #10（`env/setup-howseaonlink` → `main`，评审人 Jun040504、Zqqq-qq）。
 - **环境 / 模型 / 配置 / 输入与划分 SHA**：
   - 主机 Windows 11 build 26200.9974；WSL 3.0.1.0，Linux 内核 6.18.40.1-1，默认版本 2；发行版 Ubuntu 22.04.5 LTS。
   - Ubuntu rootfs 来源 `https://mirrors.ustc.edu.cn/ubuntu-cloud-images/wsl/jammy/current/ubuntu-jammy-wsl-amd64-ubuntu22.04lts.rootfs.tar.gz`，341,130,963 字节，SHA-256 `1483cc5c1dce13064f774834cbffdff226559fd522a67a381a8ea77d63fb4109`，gzip 完整性校验通过，用 `wsl --import` 导入。
