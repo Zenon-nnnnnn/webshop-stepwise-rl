@@ -1,0 +1,15 @@
+{
+  "repo": "Qwen/Qwen2.5-1.5B-Instruct",
+  "revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+  "quantization": "nf4-4bit-doublequant",
+  "load_seconds": 4.68,
+  "vram_allocated_gb": 1.076,
+  "vram_reserved_gb": 1.473,
+  "prompt_tokens": 40,
+  "new_tokens": 24,
+  "generate_seconds": 1.879,
+  "tokens_per_second": 12.77,
+  "peak_vram_gb": 1.438,
+  "sample_output": "Certainly! Here's a list of some popular brands and styles that offer rubber soles at or below $50:\n\n",
+  "dtype": "torch.float16"
+}

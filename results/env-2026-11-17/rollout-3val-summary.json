@@ -1,0 +1,24 @@
+{
+  "episodes": 3,
+  "unique_tasks": 3,
+  "successes": 0,
+  "success_rate": 0.0,
+  "success_rate_wilson_95": [
+    5.551115123125783e-17,
+    0.5614970317550454
+  ],
+  "mean_final_reward": 0.9166666666666666,
+  "mean_steps": 10.0,
+  "invalid_action_rate": 0.26666666666666666,
+  "grounding_accuracy": 0.7333333333333334,
+  "termination_counts": {
+    "max_steps": 3
+  },
+  "input_sha256": "fe32f8478c1c72740f6deadc14faa89e83650ab1b45e555bde40d66d95a36483",
+  "goal_fingerprint": "e69c9ae2a0aad88977c44a7baf49f1f5ef7918ba8317923c4ae24dcc1f5638d8",
+  "notes": [
+    "Success requires both done=true and final_reward approximately 1; purchase alone is not success.",
+    "Independent-task Wilson interval omitted for repeated trajectories; use task-cluster bootstrap for repeated-task inference.",
+    "Check metadata selected_ids against completed IDs before calling a run complete."
+  ]
+}
