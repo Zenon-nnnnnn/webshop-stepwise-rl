@@ -31,7 +31,9 @@
 | `rollout-3val-ids.json` | 本次选用的 3 个 val 任务 ID |
 | `rollout-3val.jsonl` | 3 个真实 episode 的逐步原文：observation、available、action、grounding、error、environment_reward |
 | `rollout-3val.meta.json` | run_id、config 与 ids 的 SHA-256、selected_ids、repeats、health 快照、torch 版本、起始 UTC |
-| `rollout-3val-summary.json` | `summarize` 输出的指标原文 |
+| `rollout-3val-summary.json` | `summarize` 输出的指标原文（**PR #8 合并前版本**，见下文指标文件版本说明） |
+| `rollout-3val-terminal-supplement.json` | 独立派生件：逐 episode 的页面分与 `terminal_reward`、`purchase_terminated`、任务级均值、episode 耗时合计，附定义、上游行号引用与源 JSONL 的 SHA-256 |
+| `run-model-revision.json` | run_id 到模型 revision 的旁证件：repo、revision、权重 SHA-256、下载 endpoint、原 meta 的 SHA-256。原 meta 未修改，此件供结果登记行取用 |
 
 `goal-instructions.json`（12087 条任务指令映射，1.97 MB）未入库，其 SHA-256 记于 `split-manifest.json` 的 `goal_map_sha256`；需要原文可向环境负责人索取。
 
@@ -67,19 +69,60 @@
 |---|---|
 | episodes / unique_tasks | 3 / 3 |
 | successes / success_rate | 0 / 0.0 |
-| success_rate_wilson_95 | [0.0, 0.5615] |
-| mean_final_reward | 0.9167 |
+| success_rate_wilson_95 | [0.0, 0.5615]（旧 `summarize` 输出下界为 `5.55e-17`，是 0.0 的浮点残差，见下文口径说明） |
+| **purchase_terminated** | **0** |
+| mean_final_reward（**页面匹配分，非任务奖励**） | 0.9167 |
+| **mean_terminal_reward（任务级）** | **0.0** |
 | mean_steps | 10.0 |
 | invalid_action_rate | 0.2667 |
 | grounding_accuracy | 0.7333 |
 | termination_counts | `max_steps: 3` |
-| 3 个 episode 总耗时 | 65 秒 |
+| **3 个 episode 耗时合计（JSONL `seconds` 字段之和）** | **52.39 秒** |
 
-`final_reward` 是环境逐步返回的累计属性匹配分，购买并非其前提；三个 episode 的 `done` 均为 false，即**均未点击 `buy now`**，尽管该值在每步 available 列表中。三者末段均重复同一动作（任务 16 `click[sea change]`、任务 75 `click[size: 4 fl. oz (pack of 3)]`、任务 104 `click[white]`），属 loop 类失败；任务 75 的动作因自行添加 `size:` 前缀且 `fl. oz` 与环境值 `fl oz` 不符而全部非法，同时属 grounding/format 类。
+### `final_reward` 与 `terminal_reward` 的区别（重要，勿误读）
+
+`rollout.py` 记录的 `final_reward` 是**环境最后一次返回的奖励**，而上游 `upstream/envs/webshop/src/webshop/web_agent_site/envs/web_agent_text_env.py` 在搜索页把 `self.reward` 设为 `search_max`（第 478 行）、在商品页设为 `maxr`（第 558 行），只有购买路径（第 630 行）才产生任务分，并经第 733 行作为 `status['reward']` 返回。**所以 `final_reward` 是页面匹配分，不是任务奖励。**
+
+本次三个 episode 全部 `done=false`、`termination=max_steps`，即**从未点击 `buy now`**，但任务 75/104 的页面分已达 1.0，使 `mean_final_reward` 呈 0.9167。**这个数不能被读成「几乎做成了」**。按 `terminal_reward = reward if done else 0.0` 计算，三个 episode 的任务级奖励**全为 0.0**，`mean_terminal_reward = 0.0`，`purchase_terminated = 0`。
+
+逐 episode 的两种奖励、耗时与推导定义见 [`rollout-3val-terminal-supplement.json`](rollout-3val-terminal-supplement.json)，其中记录了源 JSONL 的 SHA-256 与字节数以便追溯。**原始 `rollout-3val.jsonl` 与 `rollout-3val.meta.json` 未作任何修改**，以保持评审人已核对的哈希链；补充文件是独立派生件，不替代评估器输出。
+
+### 耗时口径
+
+**52.39 秒**是 JSONL 中三个 episode `seconds` 字段之和（12.866 + 20.571 + 18.953），即纯 episode 交互时间。先前口头/评论中提到的 **65 秒是外层 shell 两次 `date` 之间的墙钟差**，**另含模型加载与进程启动**，不是 episode 时间。两者不可混用；引用 episode 耗时请用 52.39 秒。
+
+### 指标文件版本说明
+
+`rollout-3val-summary.json` 由 **PR #8 合并前**的 `summarize` 生成，因此缺 `purchase_terminated` 与 `terminal_reward` 字段，且 Wilson 下界为 `5.551115123125783e-17`（应为 `0.0`）。**PR #8 合并后须用 `evaluate` 重新生成该文件**，使产物与报告采用的指标定义一致。在该重生成完成前，任务级口径以本 README 与补充文件为准。
+
+### 失败模式
+
+三个 episode 的 `done` 均为 false，即**均未点击 `buy now`**，尽管该值在每步 available 列表中。三者末段均重复同一动作（任务 16 `click[sea change]`、任务 75 `click[size: 4 fl. oz (pack of 3)]`、任务 104 `click[white]`），属 loop 类失败；任务 75 的动作因自行添加 `size:` 前缀且 `fl. oz` 与环境值 `fl oz` 不符而全部非法，同时属 grounding/format 类。评估负责人已用其 triage 独立复核，给出三条全 `loop`、任务 75 另加 `format`，与此处定性描述一致。
+
+## 读表注意事项
+
+- **两份 doctor JSON 里 `assets` 六项全为 `false`，那是导入前的状态快照**，不代表运行时资产缺失。doctor 分别在 `import-assets` 之前执行；导入后 `data/raw/webshop_sft.json`、`upstream/envs/webshop/data/items_*.json`、`upstream/envs/webshop/search_index/indexes/segments_1` 均已就位，环境启动与 `/health` 的 `alignment_checked=1624` 即为运行时资产可用的证据。
+- **`doctor-env.json` 里 `transformers` 为 5.20.2，与 GPU 环境的 4.56.2 不同版**。它由 pyserini 0.17.0 的 `transformers>=4.6.0` 间接带入，CPU 环境不使用 transformers 做训练或推理，故无害；但**不要据此认为两套环境的钉版一致**。GPU 环境的钉版以 `gpu-pip-freeze.txt` 与 `requirements/gpu.txt` 为准。
+- **`rollout-3val.meta.json` 只记 `torch_version`，不含模型 revision**，因为 `src/webshop_lab/model.py` 的 `load()` 不接受也不透传 revision（已在 Issue #3 提出）。revision 见 `run-model-revision.json` 与 `base-model-manifest.json`。原 meta 保持未修改，以维持评审人已核对的 `config_sha256` / `ids_sha256` 哈希链。
+
+## 与 PR #11 的独立交叉验证
+
+评估负责人比对后指出：**本目录的冻结划分与 PR #11（Zqqq-qq 在 macOS 上的离线候选划分）逐字节相同**。我已独立复核，用 `git hash-object` 计算本目录三份 ID 文件的 blob 哈希，与 PR #11 所提交的 blob SHA 逐个对照：
+
+| 文件 | 本目录 blob SHA | PR #11 blob SHA | 一致 |
+|---|---|---|---|
+| `train_ids.json` | `448e74dcee7d771ef14e4c5ac6723c8d5791d582` | `448e74dcee7d771ef14e4c5ac6723c8d5791d582` | 是 |
+| `val_ids.json` | `dbb1ec46ca488e47fe3ce0e550ad545a3a60cd78` | `dbb1ec46ca488e47fe3ce0e550ad545a3a60cd78` | 是 |
+| `test_ids.json` | `a77927f148020866d25ab55c03a7e7d09a6cd0cf` | `a77927f148020866d25ab55c03a7e7d09a6cd0cf` | 是 |
+
+含义有两层：一是**两台不同机器、不同操作系统（WSL2 Ubuntu 22.04 / macOS）、不同 Python 版本（3.10.22 / 3.13.16）独立跑出了逐字节一致的划分**，说明 seed=42 的分组划分是可复现的；二是**我做的 goal-map 重划没有改变任何成员归属**，即离线预检查的分组在真实环境指令核对后依然成立。
+
+注意口径：PR #11 自身标注为 `provisional_offline_only`、不是最终冻结；本目录的划分是在真实环境 goal-map 对齐后重划并通过 `/health` 校验的版本。**逐字节相同是交叉验证结果，不等于两者验收等级相同**；正式冻结仍待 Issue #2 负责人确认。
 
 ## 边界
 
 - **n=3，成功率 0 的 Wilson 上界为 0.5615**，只能表述为「基座模型在这 3 个 val 任务上未完成购买」，不得推广为模型能力结论。这是未经 SFT 的 B0 基线行为。
+- **`mean_final_reward=0.9167` 是页面匹配分均值，不是任务奖励均值**；任务级 `mean_terminal_reward=0.0`、`purchase_terminated=0`。任何报告、图表或结果登记行引用奖励时必须标明是哪一种，不得用页面分暗示任务接近完成。
 - 未执行 SFT、未执行 PPO、无任何训练后性能结果。Issue #1 第 5 条（2-step SFT 与 adapter 重载）仍待 Issue #3 的冻结配置。
 - `rollout-3val.jsonl` 是**智能体自身生成的交互轨迹**，不是原始专家 SFT 对话，也不含 MTurk worker 信息。
 - 本目录不含模型权重、原始数据集或完整大日志。
