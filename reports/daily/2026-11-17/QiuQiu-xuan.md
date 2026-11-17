@@ -61,6 +61,18 @@
 
 顺带修掉两个工具问题：①配置哈希在 Windows 检出（CRLF）下会误报"config 被改"，现在接受 LF 归一化后的匹配并给出警告；②我自己改这段代码时把 `expected`（期望 episode 列表）覆盖成了配置哈希，导致 `3 of 64` 的错误摘要——因为每次都用真实产物核数字才在提交前发现，已修复并加了断言。测试从 45 增到 **48 项**，全部通过。
 
+## 补充二：11/19 的人工复核已完成
+
+HowseaonLink 在 issue #5 同步了首批真实日志与 `goal_fingerprint`，阻塞解除。我把 3 条轨迹逐步读完并人工确认分类，产出 `results/failure-cases-b0-smoke.md`：
+
+- task 16：连续 7 次 `click[sea change]`，页面分 0.75，未购买 → loop；
+- task 75：8/10 步动作不可执行（`size:` 前缀 + `fl. oz` 与环境的 `fl oz` 不符），页面分从 1.0 掉到 0，但记录的 `final_reward` 仍是 1.0（非法步不覆盖 reward）→ 主标签 format、次要 loop；
+- task 104：`click[white]` ×7，页面分已 1.0 但从未下单 → loop。
+
+三条的共同点：`buy now` 每一步都在可用列表里却从未被点击——是策略问题，不是环境不可行。这也再次说明「页面分 1.0」不等于「任务完成」。
+
+同时给 HowseaonLink 回了批量规格（B0：冻结 val 160 任务 × 1 repeat、greedy、`max_steps=10`、按 `val_ids` 顺序，预计 45–60 分钟），并明确这 3 条 smoke **不登记**到 experiment-register，等全量 B0 跑完再登记一行。
+
 ## 下一个学习问题
 
 同一批 160 个 val 任务上，"每任务 1 条"的 Wilson 区间和"重复采样后"的任务簇 bootstrap 会差多少？报告里该报哪一个、怎么措辞才不夸大一个种子的差异？这直接关系到 12/03 两臂对比表的写法。
