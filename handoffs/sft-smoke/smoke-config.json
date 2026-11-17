@@ -1,0 +1,22 @@
+{
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "load_in_4bit": true,
+  "seed": 42,
+  "train_file": "data/train-smoke.json",
+  "val_file": "data/val-smoke.json",
+  "output_dir": "outputs/qwen15b-2step-seed42",
+  "max_length": 2048,
+  "epochs": 1,
+  "gradient_accumulation_steps": 8,
+  "learning_rate": 0.0002,
+  "lora_r": 8,
+  "lora_alpha": 16,
+  "target_modules": [
+    "q_proj",
+    "v_proj"
+  ],
+  "logging_steps": 1,
+  "model_revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+  "max_steps": 2,
+  "purpose": "two-update engineering smoke; not formal training/evaluation"
+}
