@@ -37,3 +37,14 @@ PYTHONPATH=src python -m webshop_lab.cli split --sft /path/to/webshop_sft.json -
 200 个 test ID 不代表 SFT 内有 200 条测试演示。当前只能检查 SFT 已出现的测试请求；SFT 中未出现的实际测试指令、环境 goal 排序仍未知。须取得 HowseaonLink 的实际 `goal-instructions.json` 与环境 fingerprint，再用 `split --goal-map` 重划分、检查 health 中 alignment 和 split_status 后冻结。不要直接把本目录 IDs 复制到默认 processed/ 并绕过该验证。
 
 不对数据任务 Issue #2 宣称全部完成，不把重复性检查或 CPU 测试当成 GPU 训练成功。
+
+## 11/18 review 补充（保留原始离线验证记录）
+
+QiuQiu-xuan 和 Jun040504 已独立复核并批准本 PR 的离线证据。为响应非阻塞意见，补充两条原始购物指令（仅基准任务文字，不含对话）：
+
+- 1746：`i need a cell phone signal booster that is compatible with 4g lte, and price lower than 380.00 dollars`
+- 5413：`i need a cell phone signal booster that is compatible with 4g lte, and price lower than 370.00 dollars`
+
+validation.json 中 train.json/val.json 的 SHA 来自本地生成的完整文件，无法只凭仓库中的 ID 清单核验，须下载相同原始 SFT 后重建。原来的“重复两次逐字节一致”指同一 macOS 环境；当前 write_json 使用平台默认换行，不能据此保证原生 Windows 的重建字节相同。Git 的 CRLF 检出转换也可能影响工作区哈希，跨机器比较优先读取 Git blob。统一 LF 的代码改动留给后续独立修复，本 PR 不更改运行代码。
+
+11/18 已对 PR #10 环境证据的固定 commit 与本 PR 原记录逐项核对：三份 ID 文件逐字节相同，manifest 除 goal_map_sha256 外全部字段相同，health/对齐报告/fingerprint 自洽。完整结果见 [交接复核](../data-handoff-20261118-zqq/README.md)。这说明已提交证据一致；完整 goal-map 原文尚未共享，不能把读取 health 快照写成在 Mac 独立重跑真实映射验证，也不因此宣布最终冻结。

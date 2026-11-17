@@ -1,0 +1,63 @@
+{
+  "date": "2026-11-18",
+  "executor": "Codex tutor demonstration; not student-independent execution",
+  "environment_evidence_commit": "d1d160bcfa44c7caa2c92609d8e5012662a23de6",
+  "offline_evidence_commit": "12ce2b11dffb5e0956b8a0d6750c9e05ad62cb41",
+  "checks": {
+    "train_ids.json_byte_identical": true,
+    "val_ids.json_byte_identical": true,
+    "test_ids.json_byte_identical": true,
+    "id_sets_disjoint": true,
+    "manifest_matches_except_goal_map": true,
+    "goal_map_sha_present": true,
+    "reported_health_ready": true,
+    "reported_alignment_complete": true,
+    "reported_health_split_verified": true,
+    "fingerprint_consistent": true,
+    "counts_consistent": true,
+    "rollout_tasks_inside_validation": true,
+    "nonpurchase_terminal_rewards_zero": true,
+    "supplement_source_hash_matches": true,
+    "supplement_terminal_mean_matches": true
+  },
+  "id_files": {
+    "train_ids.json": {
+      "sha256": "8c85e56b3ac2e1f0a09b54560ad0f9bf77eedddb241d73617c7ff32416522e20",
+      "count": 1451
+    },
+    "val_ids.json": {
+      "sha256": "45440d724b33e69e13916d0adbe243cc63ce3bd67677b8220feff9f30b866c36",
+      "count": 160
+    },
+    "test_ids.json": {
+      "sha256": "823eb6f68270b3b83695415c8ee008a1c86fc86977ac6d316e44590f2f0f97c7",
+      "count": 200
+    }
+  },
+  "reported_goal_map_sha256": "6b5d9dfceee913828871b8dff62fd59720a40306738a92a496d1b0fb6838fa88",
+  "goal_fingerprint": "e69c9ae2a0aad88977c44a7baf49f1f5ef7918ba8317923c4ae24dcc1f5638d8",
+  "rollout_diagnostic": {
+    "source_sha256": "fe32f8478c1c72740f6deadc14faa89e83650ab1b45e555bde40d66d95a36483",
+    "episodes": 3,
+    "purchase_terminated": 0,
+    "terminal_rewards": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "mean_terminal_reward": 0.0,
+    "last_environment_scores": [
+      0.75,
+      1.0,
+      1.0
+    ],
+    "mean_last_environment_score": 0.9166666666666666,
+    "episode_seconds": 52.389792231
+  },
+  "status": "handoff_artifacts_cross_checked_raw_goal_map_pending",
+  "not_verified": [
+    "Full goal-instructions.json absent: its file hash, instruction coverage and split --goal-map not independently rerun on Mac.",
+    "Health JSON checked as committed snapshot only; no live WSL service/GPU tested.",
+    "No final data freeze, SFT training or RL update performed."
+  ]
+}
