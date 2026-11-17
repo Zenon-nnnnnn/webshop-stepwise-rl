@@ -1,0 +1,49 @@
+{
+  "purpose": "two-update engineering smoke; not formal training/evaluation",
+  "source_sft_sha256": "721e46dba410cff900e187bccea91a456c38b105b6d14d068d7762afb7791de3",
+  "split_manifest_sha256": "59efc75ca23c3e256f8caeb124709f67d4143dd3bfa52919faad75152eddc5b1",
+  "environment_goal_map_verified": false,
+  "seed": 42,
+  "selection": "sort each split by task ID; independently shuffle with seed 42; take first 16/4 dialogues",
+  "datasets": {
+    "train": {
+      "source_sha256": "00e9a068f90011ba85eb42e26dc3e048241f94a77820c4e64b8df999f54b045e",
+      "subset_sha256": "c3f2668a4481b663eddf8e256631dcea8f2b46d1cf562df5eece13036caa9f09",
+      "dialogues": 16,
+      "task_ids": [
+        2581,
+        6285,
+        8526,
+        6632,
+        3107,
+        7369,
+        2771,
+        9672,
+        394,
+        1481,
+        8332,
+        9142,
+        5514,
+        298,
+        7284,
+        9240
+      ]
+    },
+    "val": {
+      "source_sha256": "2ac4dcb4388735c031be4ffc46eb3454301340238f15c9bef01f616b2216b8b3",
+      "subset_sha256": "91603b9a152f77e21268b5688ede0129d1aba654416b2fe8882a2877082c740a",
+      "dialogues": 4,
+      "task_ids": [
+        3508,
+        6094,
+        7073,
+        1745
+      ]
+    }
+  },
+  "source_files_sha256": {
+    "src/webshop_lab/model.py": "bfa07a259dadaf1ada4d271cf9574a9a13d30132196c6e0b4cb25a59f8321bfd",
+    "src/webshop_lab/common.py": "c23857554463dd23006b368087b44010f71ebf8ea04dd7ded0e74a17bf2adc2f",
+    "configs/sft-qwen15b.json": "a85d40b37798c9b6a54f3f0f016d6c8119fa77e827b4eea8fa985e3b2cef1ec1"
+  }
+}
