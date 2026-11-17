@@ -96,6 +96,19 @@ class CompletionAuditTests(unittest.TestCase):
             self.assertEqual(audit['status'], 'partial')
             self.assertEqual(len(audit['missing_pairs']), 1)
 
+    def test_wrong_run_id_or_fingerprint_is_a_mismatch(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            meta_path = write_json(root / 'run.meta.json', meta([1]))
+            write_jsonl(root / 'run.jsonl', [episode(1, 1., run_id='other')])
+            audit = evaluation.inspect_run(root / 'run.jsonl', meta_path)
+            self.assertEqual(audit['status'], 'mismatched')
+            self.assertFalse(audit['provenance_ok'])
+            write_jsonl(root / 'run.jsonl', [episode(1, 1., fingerprint='c' * 64)])
+            audit = evaluation.inspect_run(root / 'run.jsonl', meta_path)
+            self.assertEqual(audit['status'], 'mismatched')
+            self.assertFalse(audit['provenance_ok'])
+
     def test_run_id_and_fingerprint_mismatches_are_reported(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -373,6 +386,22 @@ class EndToEndEvaluationTests(unittest.TestCase):
             self.assertEqual(row['successes'], '1')
             checked = register.validate(fieldnames, rows, root, check_git=False)
             self.assertEqual(checked['status'], 'ok', msg=checked['errors'])
+
+    def test_register_refuses_an_edited_config(self):
+        with tempfile.TemporaryDirectory() as directory:
+            args, root = self._run(directory, [episode(1, 1.)])
+            evaluation.evaluate(args)
+            self.assertTrue((root / 'row.csv').is_file())
+            write_json(root / 'eval-config.json', dict(CONFIG, seed=999))
+            with self.assertRaises(SystemExit):
+                evaluation.evaluate(args)
+
+    def test_register_refuses_a_split_without_the_evaluated_tasks(self):
+        with tempfile.TemporaryDirectory() as directory:
+            args, root = self._run(directory, [episode(1, 1.)])
+            args.split_ids = str(write_json(root / 'other_ids.json', [999]))
+            with self.assertRaises(SystemExit):
+                evaluation.evaluate(args)
 
     def test_evaluate_refuses_incomplete_run_without_flag(self):
         with tempfile.TemporaryDirectory() as directory:

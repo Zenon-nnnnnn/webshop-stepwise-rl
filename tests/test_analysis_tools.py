@@ -118,7 +118,7 @@ class ComparisonTests(unittest.TestCase):
         result = comparison.compare_runs(rows, rows, ('B0', 'B1'))
         self.assertEqual(result['risk_difference'], 0.0)
         self.assertEqual(result['risk_difference_ci95'], [0.0, 0.0])
-        self.assertEqual(result['paired']['mcnemar_exact_p'], 1.0)
+        self.assertEqual(result['mcnemar_exact_p'], 1.0)
         self.assertEqual(result['tasks'], 10)
 
     def test_paired_counts_and_exact_test(self):
@@ -128,10 +128,25 @@ class ComparisonTests(unittest.TestCase):
         self.assertEqual(result['paired']['only_B1'], 3)
         self.assertEqual(result['paired']['only_B0'], 0)
         self.assertAlmostEqual(result['risk_difference'], 0.3)
-        self.assertAlmostEqual(result['paired']['mcnemar_exact_p'], 0.25)
+        self.assertAlmostEqual(result['mcnemar_exact_p'], 0.25)
         low, high = result['risk_difference_ci95']
         self.assertLessEqual(low, high)
         self.assertLess(low, 0.3)
+
+    def test_repeated_trajectories_are_one_cluster(self):
+        # Two tasks, 100 repeats each: this is 2 paired units, not 200 independent samples.
+        rows_a = [episode(task, 0., repeat=rep) for task in (1, 2) for rep in range(100)]
+        rows_b = [episode(task, 1. if task == 1 else 0., repeat=rep)
+                  for task in (1, 2) for rep in range(100)]
+        result = comparison.compare_runs(rows_a, rows_b, ('B0', 'B1'))
+        self.assertEqual(result['tasks'], 2)
+        self.assertEqual(result['repeats_per_task'], [100])
+        self.assertFalse(result['mcnemar_applicable'])
+        self.assertIsNone(result['mcnemar_exact_p'])
+        self.assertAlmostEqual(result['risk_difference'], 0.5)
+        low, high = result['risk_difference_ci95']
+        self.assertEqual([low, high], [0.0, 1.0])
+        self.assertIn('McNemar is not reported', ' '.join(result['notes']))
 
     def test_different_task_sets_are_rejected(self):
         with self.assertRaises(ValueError):
@@ -187,8 +202,8 @@ class TerminalRewardTests(unittest.TestCase):
             jsonl = write_jsonl(root / 'run.jsonl', [episode(1, 1.), episode(2, 0.9, done=False)])
             args = argparse.Namespace(method='B0', split_ids=str(split), jsonl=str(jsonl),
                                       peak_vram_gb=None)
-            audit = {'complete': True, 'run_id': 'run-1', 'goal_fingerprint': FINGERPRINT,
-                     'summary': '2 of 2'}
+            audit = {'complete': True, 'provenance_ok': True, 'run_id': 'run-1',
+                     'selected_ids': [1, 2], 'goal_fingerprint': FINGERPRINT, 'summary': '2 of 2'}
             metrics = {'episodes': 2, 'full_reward_successes': 1, 'purchase_terminated': 1,
                        'success_rate': 0.5, 'success_rate_ci95': [0.09, 0.9],
                        'mean_terminal_reward': 0.5, 'mean_final_reward': 0.95,
@@ -196,6 +211,38 @@ class TerminalRewardTests(unittest.TestCase):
             row = register.row_from_run(args, audit, {'path': config, 'sha256': 'a' * 64}, metrics)
             self.assertEqual(row['mean_reward'], '0.500000')
             self.assertIn('task reward', row['notes'])
+
+    def test_register_row_refuses_a_split_that_does_not_cover_the_run(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            config = write_json(root / 'config.json', BASE_CONFIG)
+            wrong_split = write_json(root / 'val_ids.json', [999])
+            args = argparse.Namespace(method='B0', split_ids=str(wrong_split), jsonl='x.jsonl',
+                                      peak_vram_gb=None)
+            audit = {'complete': True, 'provenance_ok': True, 'run_id': 'run-1',
+                     'selected_ids': [16, 75, 104], 'goal_fingerprint': FINGERPRINT, 'summary': '3 of 3'}
+            metrics = {'episodes': 3, 'full_reward_successes': 0, 'purchase_terminated': 0,
+                       'success_rate': 0.0, 'success_rate_ci95': [0.0, 0.5],
+                       'mean_terminal_reward': 0.0, 'mean_final_reward': 0.5,
+                       'mean_steps': 10.0, 'invalid_action_rate': 0.1}
+            with self.assertRaises(SystemExit):
+                register.row_from_run(args, audit, {'path': config, 'sha256': 'a' * 64}, metrics)
+
+    def test_register_refuses_a_run_without_provenance(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            config = write_json(root / 'config.json', BASE_CONFIG)
+            split = write_json(root / 'val_ids.json', [1, 2])
+            args = argparse.Namespace(method='B0', split_ids=str(split), jsonl='x.jsonl',
+                                      peak_vram_gb=None)
+            audit = {'complete': True, 'provenance_ok': False, 'run_id': 'run-1',
+                     'selected_ids': [1, 2], 'goal_fingerprint': FINGERPRINT, 'summary': '2 of 2'}
+            metrics = {'episodes': 2, 'full_reward_successes': 1, 'purchase_terminated': 1,
+                       'success_rate': 0.5, 'success_rate_ci95': [0.1, 0.9],
+                       'mean_terminal_reward': 0.5, 'mean_final_reward': 0.5,
+                       'mean_steps': 2.0, 'invalid_action_rate': 0.0}
+            with self.assertRaises(SystemExit):
+                register.row_from_run(args, audit, {'path': config, 'sha256': 'a' * 64}, metrics)
 
     def test_config_hash_accepts_a_windows_checkout(self):
         with tempfile.TemporaryDirectory() as directory:

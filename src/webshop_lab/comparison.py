@@ -1,19 +1,28 @@
 """Paired comparison of two runs evaluated on the same tasks.
 
-Success is a per-task binary outcome, so the two arms are compared as paired data: only the tasks
-where the arms disagree carry information (McNemar), and the risk difference gets a paired
-bootstrap interval that resamples whole tasks. Treating every trajectory as independent would
-overstate confidence whenever a task has repeated samples.
+Success is a per-task outcome, so the two arms are compared as paired data **by task**, not by
+trajectory: repeated trajectories of one task are correlated, and counting them as independent
+samples inflates significance. With one trajectory per task the task-level outcome is binary and an
+exact McNemar test applies; with repeats the test is replaced by a paired task-cluster bootstrap of
+the difference in per-task success rates, and no McNemar p-value is reported.
 """
 import collections
 import math
 import random
 
-from .evaluation import cluster_bootstrap_ci, is_success, percentile, summarize_episodes
+from .evaluation import is_success, percentile, summarize_episodes
 
 
-def _by_task(rows):
-    return {(row['task_id'], int(row.get('repeat', 0))): row for row in rows}
+def group_by_task(rows):
+    groups = collections.defaultdict(dict)
+    for row in rows:
+        groups[row['task_id']][int(row.get('repeat', 0))] = row
+    return groups
+
+
+def _task_success_means(groups):
+    return {task: sum(1 for row in repeats.values() if is_success(row)) / len(repeats)
+            for task, repeats in groups.items()}
 
 
 def mcnemar_exact(a_only, b_only):
@@ -25,77 +34,92 @@ def mcnemar_exact(a_only, b_only):
     return min(1.0, 2 * tail / 2 ** discordant)
 
 
-def paired_bootstrap_difference(rows_a, rows_b, resamples=2000, seed=42):
-    """Percentile interval for success_rate(b) - success_rate(a), resampling task clusters."""
-    a = {key: 1 if is_success(row) else 0 for key, row in _by_task(rows_a).items()}
-    b = {key: 1 if is_success(row) else 0 for key, row in _by_task(rows_b).items()}
-    keys = sorted(a)
+def paired_task_bootstrap(means_a, means_b, resamples=2000, seed=42):
+    """Percentile interval for the task-averaged difference, resampling whole tasks."""
+    keys = sorted(means_a)
     rng = random.Random(seed)
     differences = []
     for _ in range(resamples):
-        total = hits_a = hits_b = 0
+        total = 0.0
         for _ in keys:
-            key = keys[rng.randrange(len(keys))]
-            total += 1
-            hits_a += a[key]
-            hits_b += b[key]
-        differences.append(hits_b / total - hits_a / total)
+            task = keys[rng.randrange(len(keys))]
+            total += means_b[task] - means_a[task]
+        differences.append(total / len(keys))
     return [round(percentile(differences, .025), 6), round(percentile(differences, .975), 6)]
 
 
 def compare_runs(rows_a, rows_b, labels=('a', 'b')):
-    by_a, by_b = _by_task(rows_a), _by_task(rows_b)
-    if set(by_a) != set(by_b):
-        only_a = sorted(set(by_a) - set(by_b))[:5]
-        only_b = sorted(set(by_b) - set(by_a))[:5]
-        raise ValueError('The two runs were not evaluated on the same (task, repeat) set; '
+    groups_a, groups_b = group_by_task(rows_a), group_by_task(rows_b)
+    if set(groups_a) != set(groups_b):
+        only_a = sorted(set(groups_a) - set(groups_b))[:5]
+        only_b = sorted(set(groups_b) - set(groups_a))[:5]
+        raise ValueError('The two runs were not evaluated on the same tasks; '
                          f'only in {labels[0]}: {only_a}; only in {labels[1]}: {only_b}')
-    if len(by_a) < 2:
+    for task in groups_a:
+        if set(groups_a[task]) != set(groups_b[task]):
+            raise ValueError(f'Task {task} has different repeat indices in the two runs; '
+                             'align the repeats before comparing')
+    tasks = len(groups_a)
+    if tasks < 2:
         raise ValueError('Need at least two paired tasks to compare')
-    metrics_a = summarize_episodes(rows_a)
-    metrics_b = summarize_episodes(rows_b)
-    keys = sorted(by_a)
-    a_only = sum(1 for key in keys if is_success(by_a[key]) and not is_success(by_b[key]))
-    b_only = sum(1 for key in keys if is_success(by_b[key]) and not is_success(by_a[key]))
-    difference = metrics_b['success_rate'] - metrics_a['success_rate']
-    interval = paired_bootstrap_difference(rows_a, rows_b)
-    p_value = mcnemar_exact(a_only, b_only)
+    means_a, means_b = _task_success_means(groups_a), _task_success_means(groups_b)
+    repeats = {len(repeats) for repeats in groups_a.values()} | {len(repeats) for repeats in groups_b.values()}
+    single = repeats == {1}
+    metrics_a, metrics_b = summarize_episodes(rows_a), summarize_episodes(rows_b)
+    difference = sum(means_b[task] - means_a[task] for task in groups_a) / tasks
+    interval = paired_task_bootstrap(means_a, means_b)
+    paired = None
+    p_value = None
+    if single:
+        a_only = sum(1 for task in groups_a if means_a[task] == 1 and means_b[task] == 0)
+        b_only = sum(1 for task in groups_a if means_b[task] == 1 and means_a[task] == 0)
+        p_value = mcnemar_exact(a_only, b_only)
+        paired = {f'only_{labels[0]}': a_only, f'only_{labels[1]}': b_only,
+                  'both_success': sum(1 for task in groups_a if means_a[task] == 1 and means_b[task] == 1),
+                  'neither_success': sum(1 for task in groups_a if means_a[task] == 0 and means_b[task] == 0)}
     notes = [
-        'Paired by (task, repeat); only discordant tasks inform the McNemar test.',
-        'The interval is a paired task-cluster bootstrap (2000 resamples, seed 42).',
+        'Paired by task; repeated trajectories of one task are one cluster, not independent samples.',
+        'The interval is a paired task-cluster bootstrap of the task-averaged success-rate difference '
+        '(2000 resamples, seed 42).',
         'A difference whose interval contains 0 is not evidence of an improvement.',
         'This compares two runs; it says nothing about other seeds or about the test split.',
     ]
-    if len(keys) < 50:
-        notes.append(f'Only {len(keys)} paired tasks: intervals are wide and one task moves the rate '
-                     f'by {100 / len(keys):.1f} percentage points.')
+    if single:
+        notes.append('One trajectory per task, so an exact McNemar test on discordant tasks is reported.')
+    else:
+        notes.append('Repeated trajectories detected: McNemar is not reported (its independence '
+                     'assumption fails); read the task-cluster interval instead.')
+    if len(repeats) > 1:
+        notes.append(f'Repeats per task differ between tasks: {sorted(repeats)}; the risk difference is '
+                     'the task-averaged paired difference.')
+    if tasks < 50:
+        notes.append(f'Only {tasks} paired tasks: intervals are wide and one task moves the rate '
+                     f'by {100 / tasks:.1f} percentage points.')
     return {
-        'tasks': len(keys),
+        'tasks': tasks,
+        'repeats_per_task': sorted(repeats),
+        'episodes': {labels[0]: metrics_a['episodes'], labels[1]: metrics_b['episodes']},
         labels[0]: {
             'episodes': metrics_a['episodes'],
             'purchase_terminated': metrics_a['purchase_terminated'],
             'full_reward_successes': metrics_a['full_reward_successes'],
             'success_rate': metrics_a['success_rate'],
+            'mean_terminal_reward': metrics_a['mean_terminal_reward'],
             'success_rate_ci95': metrics_a['success_rate_ci95'],
             'invalid_action_rate': metrics_a['invalid_action_rate'],
-            'mean_final_reward': metrics_a['mean_final_reward'],
         },
         labels[1]: {
             'episodes': metrics_b['episodes'],
             'purchase_terminated': metrics_b['purchase_terminated'],
             'full_reward_successes': metrics_b['full_reward_successes'],
             'success_rate': metrics_b['success_rate'],
+            'mean_terminal_reward': metrics_b['mean_terminal_reward'],
             'success_rate_ci95': metrics_b['success_rate_ci95'],
             'invalid_action_rate': metrics_b['invalid_action_rate'],
-            'mean_final_reward': metrics_b['mean_final_reward'],
         },
-        'paired': {
-            f'only_{labels[0]}': a_only,
-            f'only_{labels[1]}': b_only,
-            'both_success': sum(1 for key in keys if is_success(by_a[key]) and is_success(by_b[key])),
-            'neither_success': sum(1 for key in keys if not is_success(by_a[key]) and not is_success(by_b[key])),
-            'mcnemar_exact_p': round(p_value, 6),
-        },
+        'paired': paired,
+        'mcnemar_applicable': single,
+        'mcnemar_exact_p': p_value,
         'risk_difference': round(difference, 6),
         'risk_difference_ci95': interval,
         'ci_method': 'paired task-cluster bootstrap, 2000 resamples, seed 42',

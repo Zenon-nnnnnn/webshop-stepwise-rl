@@ -193,17 +193,19 @@ def inspect_run(jsonl_path, meta_path, config_path=None):
     missing_pairs = sorted(expected_set - completed_set)
     unexpected_pairs = sorted(completed_set - expected_set)
     duplicate_pairs = sorted(pair for pair, count in collections.Counter(completed).items() if count > 1)
-    if unexpected_pairs or duplicate_pairs:
-        status = 'mismatched'
-    elif missing_pairs:
-        status = 'partial'
-    else:
-        status = 'complete'
     expected_fingerprint = (meta.get('health') or {}).get('goal_fingerprint')
     run_id = meta['run_id']
     run_id_mismatches = sorted({int(row['task_id']) for row in rows if row.get('run_id') != run_id})
     fingerprint_mismatches = sorted({int(row['task_id']) for row in rows
                                      if expected_fingerprint and row.get('goal_fingerprint') != expected_fingerprint})
+    # Identity failures are as blocking as a wrong task set: a merged file from another run would
+    # otherwise look complete just because it happens to cover the same task IDs.
+    if unexpected_pairs or duplicate_pairs or run_id_mismatches or fingerprint_mismatches:
+        status = 'mismatched'
+    elif missing_pairs:
+        status = 'partial'
+    else:
+        status = 'complete'
     config_file = None
     if config_path:
         candidate = Path(config_path)
@@ -217,17 +219,23 @@ def inspect_run(jsonl_path, meta_path, config_path=None):
                        'newline_normalized': canonical != raw,
                        'matches_metadata': canonical == expected_sha,
                        'matches_embedded': read_json(candidate) == meta.get('config')}
+    provenance_ok = (not run_id_mismatches and not fingerprint_mismatches
+                     and (config_file is None or config_file['matches_metadata']))
     summary = (f'{len(completed)} of {len(expected)} expected episodes '
                f'({len(selected)} tasks x {repeats} repeats)')
     if status == 'partial':
         summary += f'; missing {len(missing_pairs)} episode(s)'
     elif status == 'mismatched':
-        summary += f'; unexpected {len(unexpected_pairs)}, duplicate {len(duplicate_pairs)} episode(s)'
+        summary += (f'; unexpected {len(unexpected_pairs)}, duplicate {len(duplicate_pairs)}, '
+                    f'wrong run_id {len(run_id_mismatches)}, wrong fingerprint '
+                    f'{len(fingerprint_mismatches)}')
     return {
         'status': status, 'summary': summary,
         'complete': status == 'complete', 'partial': status == 'partial',
+        'provenance_ok': provenance_ok,
         'meta_path': str(meta_path), 'jsonl_path': str(jsonl_path),
         'run_id': run_id,
+        'selected_ids': selected,
         'selected_tasks': len(selected), 'repeats': repeats,
         'expected_episodes': len(expected), 'completed_episodes': len(completed),
         'completed_unique_tasks': len({task for task, _ in completed}),
@@ -241,6 +249,8 @@ def inspect_run(jsonl_path, meta_path, config_path=None):
         'config_file': config_file,
         'notes': [
             'A partial or mismatched file must not be reported as the frozen task set.',
+            'run_id or goal_fingerprint mismatches are identity failures, so status becomes mismatched.',
+            'provenance_ok is false when the config file no longer matches config_sha256; such a run cannot be registered.',
             'order_ok is informational: episodes are appended sequentially by rollout.',
         ],
     }
@@ -529,6 +539,14 @@ def evaluate(args):
         raise SystemExit(f'Run is {audit["status"]}: {audit["summary"]}. '
                          'Refusing to summarize an incomplete task set; rerun or pass --allow-partial '
                          'and label the numbers as partial.')
+    if getattr(args, 'register_row', None):
+        if not audit['config_file']:
+            raise SystemExit('--config is required with --register-row: the row must name and hash '
+                             'the configuration that produced the run')
+        if not audit['config_file']['matches_metadata']:
+            raise SystemExit('Refusing to register: the config file hash does not match '
+                             'config_sha256 in the metadata, so the config was edited after the run '
+                             'started (or the wrong file was supplied).')
     rows = load_episodes(args.jsonl)
     metrics = summarize_episodes(rows)
     failures = failure_breakdown(rows, max(1, int(getattr(args, 'cases_per_class', 1))))
@@ -547,6 +565,7 @@ def evaluate(args):
         'completeness': audit,
         'metrics': metrics,
         'failures': failures,
+        'usable_as_result': bool(audit['complete'] and audit['provenance_ok']),
         'warnings': [],
     }
     if audit['status'] == 'partial':

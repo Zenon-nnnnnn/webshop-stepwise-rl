@@ -29,29 +29,38 @@
 
 ## 4. 证据索引（11/22 交接用）
 
-文件哈希为 sha256 全值；改动任一文件后需重新计算。commit 指本次评审所在的仓库状态，`main@295ba6a` + PR #8 分支。
+评审基线：`main@295ba6a` + PR #8 分支（11/17 上午）。数据与环境证据在 11/17 下午已有更新（Release `data-v1`、`results/env-2026-11-17/`），所以下表只列"证明什么 / 不证明什么"，**不写死哈希**——文件会随迭代变化，哈希请在目标 commit 上现算：
 
-| 证据 | sha256 | 证明什么 | 不证明什么 |
-|---|---|---|---|
-| `results/material-audit.json` | `537d682e263be8f01aca85058217e3a899261d6203b8e1f4ac9f7c1132d980b6` | 原始 SFT 1624 行、1624 个 ID、1599 条不同指令、12 个 train/test ID 重叠、12 条 `reward`/`true_reward` 不一致 | 不是模型效果 |
-| `results/provisional-split-validation.json` | `e700af7b9fc7daf494bddafc39a2e47144cd1f4e1a8d4ff655f36c32ccdd2bdb` | 1451/160/200 划分、排除 13 条、seed 42、ID 与指令哈希交叉为 0 | 离线划分，未与真实环境 goal-map 核对 |
-| `results/dependency-availability.json` | `1d5c348b64c286de2059d1480442904f13d02682c62b68a4834d438742a14174` | 候选依赖版本在官方源存在 | 不证明互相兼容，也不证明能装上 50 系显卡 |
-| `results/upstream-demo-data-check.json` | `006200ca2155699f33baa8151a1960a9aba1a4684d730b974a5c4b2e53dec913` | 上游演示轨迹 78 条、803/1170 个 assistant 回合不可解析、奖励只有 0/1、79/100 次购买前置观测含价格 | 证明它**不能**当本组失败案例或成功率 |
-| `results/metrics-definition.json` | `de186a5989f75faa93d25dcfa1488c5e4bf2eef7023e603e91b8fa501670c0c7` | 指标 v1.1 的机器可读定义（含 `terminal_reward` 与页面分数的区分），与代码字段一致（有测试守住） | 不含任何结果 |
-| `results/validation.md` | `06c77eb94f57c989d82735f2433c6493fde1ac9cbf62dda2d1f0363909107df0` | 本地 CPU 检查记录：43 项测试、合成 fixture 端到端、分诊修正 | 不含 GPU / 真实 rollout 证据 |
-| `results/experiment-register.csv` | `13bd48654f4cc449e8820951062b93e695110f714128777454b8b873c727233f` | 登记表结构与校验规则；当前只有表头 | 表头不是结果 |
-| `docs/EVALUATION.md` | `f8c271c9b0cdbea9e863c9ac24b55f8c83b5c29e3eea32b2a2b73fc9d8244b59` | 分母、区间、公平性、失败分诊与人工核对流程 | 不含模型结论 |
+```bash
+git cat-file blob <commit>:<path> | sha256sum     # 任一提交里的文件哈希
+sha256sum webshop_sft.json                        # 实际输入数据，应为 721e46db…
+```
+
+| 证据 | 证明什么 | 不证明什么 |
+|---|---|---|
+| `results/material-audit.json` | 原始 SFT 1624 行、1624 个 ID、1599 条不同指令、12 个 train/test ID 重叠、8 条 `reward`/`true_reward` 不一致 | 不是模型效果 |
+| `results/provisional-split-validation.json` | 离线划分 1451/160/200、排除 13 条、seed 42、ID 与指令哈希交叉为 0 | 不是环境冻结版（见下） |
+| `results/offline-split-20261117-zqq/`（PR #11） | 用 Release 副本重跑 `audit` + 两次 `split`，ID 与 manifest 逐字节可复现 | 仍缺环境映射，标 `provisional_offline_only` |
+| `results/env-2026-11-17/`（PR #10） | 目标机环境、`/health`、冻结划分、首批 3 条真实 rollout 与 meta | 不含 SFT/B1、无性能结论 |
+| `results/dependency-availability.json` | 候选依赖版本在官方源存在 | 不证明互相兼容，也不证明能装上 50 系显卡 |
+| `results/upstream-demo-data-check.json` | 上游演示轨迹 78 条、803/1170 个 assistant 回合不可解析、奖励只有 0/1、79/100 次购买前置观测含价格 | 证明它**不能**当本组失败案例或成功率 |
+| `results/metrics-definition.json` | 指标 v1.1 的机器可读定义（含 `terminal_reward` 与页面分数的区分），与代码字段一致（有测试守住） | 不含任何结果 |
+| `results/failure-cases-b0-smoke.md` | 3 条真实 B0 轨迹的人工复核（loop ×2、format+loop ×1） | n=3，不能推广 |
+| `results/validation.md` | 本地 CPU 检查记录（日期化，不随迭代改写） | 不含 GPU / 真实 rollout 证据 |
+| `results/experiment-register.csv` | 登记表结构与校验规则；当前只有表头 | 表头不是结果 |
+| `docs/EVALUATION.md` | 分母、区间、公平性、失败分诊与人工核对流程 | 不含模型结论 |
 
 数据与模型侧：
 
-- SFT 源文件 sha256：`721e46dba410cff900e187bccea91a456c38b105b6d14d068d7762afb7791de3`（来自 `material-audit.json` 的 `sft.sha256`，与划分文件记录的 `source_sha256` 一致）。
-- 模型 revision：**未知**。仓库没有下载权重；首次实机运行必须在 run 记录里补 Hugging Face revision。
-- 环境 goal fingerprint：**未知**。/health 尚未在目标机跑过；没有它就不能做最终评估。
+- SFT 源文件 sha256：`721e46dba410cff900e187bccea91a456c38b105b6d14d068d7762afb7791de3`（Release `data-v1` 附件 digest；与 `material-audit.json` 的 `sft.sha256`、划分文件的 `source_sha256` 一致）。
+- 模型 revision：`989aa7980e4cf806f80c7fef2b1adb7bc71aa306`（Qwen/Qwen2.5-1.5B-Instruct，来自 PR #10 的 `base-model-manifest.json`）。注意 `model.py::load()` 目前不透传 revision，登记表尚无该列，见 Issue #3。
+- 环境 goal fingerprint：`e69c9ae2a0aad88977c44a7baf49f1f5ef7918ba8317923c4ae24dcc1f5638d8`（PR #10 的 `/health`，`n_goals=12087`，与冻结划分 manifest 一致）。
 - 测试集：`upstream/eval_agent/data/webshop/test_indices.json` 为保留 test（200 任务），按计划 12/08 才首次使用。
 
 ## 5. 未验证 / 阻塞
 
-- 真实 B0/B1 val 结果：等 HowseaonLink 的目标机 rollout（需要 `.jsonl` + `.meta.json` + config + `*_ids.json`）。
-- 五类真实失败案例与人工复核 3 条轨迹：同上；上游演示轨迹已确认不可替代。
+- B0 真实结果：首批 3 条 val 轨迹已出并人工复核（`results/failure-cases-b0-smoke.md`），全量 160 任务待 HowseaonLink 按 11/17 确定的规格执行；B1 要等 SFT adapter。
+- 五类真实失败案例：已有人工确认的首批（loop ×2、format+loop ×1），其余类别要等全量 val 与 B1。
 - `configs/eval-sft.json` 指向的 adapter 目录不存在，`preflight` 会报错——SFT 产物落地后再跑一次即可。
 - 两臂配对比较（`compare`）已实现并有测试，但还没有真实两臂数据可算。
+- `model.py::load()` 不透传 `revision`，登记表也还没有 `model_revision` 列；在 Issue #3 有结论前，模型版本只能记在 notes 里。

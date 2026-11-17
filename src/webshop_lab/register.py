@@ -62,6 +62,17 @@ def row_from_run(args, audit, config_snapshot, metrics):
         raise SystemExit('--split-ids is required: the row must record which frozen ID list was used')
     if not audit['complete']:
         raise SystemExit('Refusing to register an incomplete run: ' + audit['summary'])
+    if not audit.get('provenance_ok', False):
+        raise SystemExit('Refusing to register a run whose run_id, goal fingerprint or config hash '
+                         'does not match its metadata')
+    frozen_ids = read_json(split_ids)
+    if not isinstance(frozen_ids, list) or any(type(task) is not int for task in frozen_ids):
+        raise SystemExit(f'{split_ids} is not a JSON list of integer task IDs')
+    evaluated = {int(task) for task in audit.get('selected_ids', [])}
+    outside = sorted(evaluated - set(frozen_ids))
+    if outside:
+        raise SystemExit(f'Refusing to register: tasks {outside[:5]} were evaluated but are not in '
+                         f'{split_ids}; the split hash would not describe this run')
     commit = git_head()
     if not commit:
         raise SystemExit('Cannot determine the git commit; run this from the repository checkout')

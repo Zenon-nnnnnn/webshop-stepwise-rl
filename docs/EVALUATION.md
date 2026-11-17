@@ -153,6 +153,8 @@ invalid_action_rate,peak_vram_gb,evidence_path,notes
 - `method` 取 `B0/B1/P0/R-TG/R-PG`；旧标签 `R0/R1` 只用于 11/16 计划之前导出的结果，`check-register` 会给警告。
 - `complete` 行必须同时具备：`split_sha256`（所用 `*_ids.json` 的 sha256）、`goal_fingerprint`、`git_commit`（本仓库存在的 commit）、`config_path` + `config_sha256`、`episodes/successes/purchase_terminated`、`success_rate` 与区间、`evidence_path`。
 - `successes <= purchase_terminated <= episodes`，且 `success_rate` 必须等于 `successes/episodes`（1e-6 容差），区间必须包含该值。
+- 溯源硬门槛：`run_id` 或 goal fingerprint 与 metadata 不一致 → 完成度直接判 `mismatched`，不能汇总；config 文件哈希不再等于 `config_sha256` → `evaluate --register-row` 直接拒绝（config 在 run 之后被改过）；`--split-ids` 必须覆盖本次实际评估的任务 ID，否则 split 哈希描述不了这次 run，`row_from_run` 拒绝登记。
+- 输出里的 `usable_as_result` 只有在"任务集完整 + 溯源一致"时才为 true；partial 或溯源异常的诊断输出不能当完成证据。
 - 目前只有表头，`check-register` 通过是正常状态；**表头不是结果**。
 
 一条命令从评估直接生成登记行（避免手抄误差）：
@@ -214,7 +216,14 @@ webshop-lab figures      --register results/experiment-register.csv --output res
 webshop-lab results-table --register results/experiment-register.csv --output results/summary.md
 ```
 
-`compare` 只接受**同一批 (task, repeat)** 的两条 run，按配对样本算 McNemar 精确 p 值与配对 bootstrap 区间；任务集不同会直接报错，不把两组不同的任务当成对比。
+`compare` 只接受**同一批任务**的两条 run，并按**任务**配对而不是按轨迹配对：
+
+- 每个任务先聚合成"该任务的成功率"（1 条轨迹时就是 0/1），再比较两臂；
+- 每个任务只有 1 条轨迹时，报精确 McNemar 检验；
+- 有重复轨迹时不报 McNemar（其独立性假设不成立），只报按任务簇重采样的配对 bootstrap 区间；
+- 任务集不同、或同一任务两臂的 repeat 下标不一致，直接报错，不把两组不同的任务当成对比。
+
+登记表的硬门槛（任一不满足就拒绝写行）：`status=complete`、run_id 与 goal fingerprint 和 metadata 一致、config 文件哈希仍等于 `config_sha256`、`--split-ids` 必须覆盖本次实际评估的任务 ID（split 哈希要能描述这次 run）。
 
 ## 7. 当前缺口
 

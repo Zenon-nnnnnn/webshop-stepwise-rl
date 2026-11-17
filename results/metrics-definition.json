@@ -48,7 +48,7 @@
   "uncertainty": {
     "independent_tasks": "Wilson 95% interval (common.wilson)",
     "repeated_tasks": "task-cluster bootstrap, 2000 resamples, seed 42; never treat repeated trajectories as independent samples",
-    "paired_runs": "McNemar exact test on discordant tasks plus a paired task-cluster bootstrap (comparison.py)"
+    "paired_runs": "one trajectory per task: exact McNemar on discordant tasks plus a paired task-cluster bootstrap; repeated trajectories: paired task-cluster bootstrap only, no McNemar p-value"
   },
   "failure_classes": ["format", "budget", "specification", "loop", "retrieval", "other", "engineering"],
   "failure_counting": {
