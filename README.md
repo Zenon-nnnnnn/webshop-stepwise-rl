@@ -76,6 +76,9 @@ Python 3.10+ 可运行这些标准库工具；**GPU 与旧环境统一使用 Pyt
 
 ## 大文件与引用
 
+组员获取材料请先看 **[团队数据共享指南](docs/SHARED_DATA.md)**：私有 Release `data-v1`、SFT 下载、索引分片合并及校验。
+
+
 约 4 GB 的原始压缩包、约 9.3 GB 的解压资产、SFT 数据和模型权重不放入 Git。下载来源与本地导入方法见 [数据指南](docs/DATA.md)。原始教程视频未上传；本项目提供独立编写的说明。
 
 - 原论文：[SPA-RL: Reinforcing LLM Agents via Stepwise Progress Attribution](https://arxiv.org/abs/2505.20732)
