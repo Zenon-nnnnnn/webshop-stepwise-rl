@@ -87,7 +87,7 @@ webshop-lab check-run --meta artifacts/b0-val.meta.json --jsonl artifacts/b0-val
 |---|---|
 | `model` | 基础模型名（含 revision 时以日志为准） |
 | `load_in_4bit` | 量化方式 |
-| `seed`、`temperature`、`top_p` | 采样设置（greedy 时 temperature=0） |
+| `seed`、`temperature`、`top_p`、`top_k` | 采样设置（greedy 时 temperature=0） |
 | `context_length`、`max_new_tokens` | 上下文与生成预算 |
 | `max_steps` | 动作上限 |
 | `environment_url` | 同一环境服务与 goal 顺序 |
@@ -95,6 +95,8 @@ webshop-lab check-run --meta artifacts/b0-val.meta.json --jsonl artifacts/b0-val
 | `selected_ids`（含顺序）、`repeats` | 同一 val 列表、同一次数 |
 
 系统提示词与动作解析在代码里（`model.SYSTEM`、`common.parse_action`），所以两侧还必须来自**同一 commit**；不同 commit 的 B0/B1 不能对比。
+
+采样口径：`rollout` 由 `temperature` 决定 `do_sample`，配置里没写的 `top_k` 等值会从模型的 `generation_config.json` 继承（两侧同一模型，因此一致）。greedy（`temperature=0`）时模型自带的 `temperature`/`top_p`/`top_k` 会被忽略并可能打印警告，这是预期行为；报告只需写清"greedy，temperature=0，seed 42"。若某次 run 改用采样，必须把 `temperature`/`top_p`/`top_k` 都写进 config，否则 `check-parity` 只能比到前两项。
 
 ```bash
 webshop-lab check-parity --a-meta artifacts/b0-val.meta.json --b-meta artifacts/b1-val.meta.json \

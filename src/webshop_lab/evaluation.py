@@ -430,7 +430,7 @@ def write_case_report(cases, path, source):
     Path(path).write_text('\n'.join(lines) + '\n', encoding='utf-8')
 
 
-PARITY_FIELDS = ('model', 'load_in_4bit', 'seed', 'temperature', 'top_p',
+PARITY_FIELDS = ('model', 'load_in_4bit', 'seed', 'temperature', 'top_p', 'top_k',
                  'context_length', 'max_new_tokens', 'max_steps', 'environment_url')
 
 

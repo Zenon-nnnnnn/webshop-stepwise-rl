@@ -5,6 +5,7 @@
 - `dependency-availability.json`：官方 PyPI 元数据查验，仅证明候选包版本存在，不证明环境兼容。
 - `validation.md`：本地检查记录；GitHub Actions 另在 Actions 页面查看。
 - `metrics-definition.json`：指标定义 v1（机器可读），只定义口径，不含任何结果；`tests/test_analysis_tools.py` 会检查它与代码字段一致。
+- `hand-check-metrics.md`：4 条合成 episode 的手算样例（成功率/平均奖励/非法率/区间），与两套代码复算结果逐项对照；`tests/test_hand_check.py` 把数字写成断言。
 - `upstream-demo-data-check.json`：上游演示轨迹的可用性检查（78 条、803/1170 个回合不可解析、奖励只有 0/1），说明它只能校准解析、不能当失败案例或成功率。
 - `experiment-register.csv`：真实训练/评估运行登记表；目前只有表头，没有预填性能。
 - `summary.md`、`success-by-method.svg`：由 `webshop-lab results-table` / `figures` 从登记表生成，等真实 `complete` 行出现后才有内容。
