@@ -107,6 +107,56 @@ Regeneration must reproduce the subset hashes in the handed-off manifest. The ru
 
 Return `outputs/qwen15b-2step-seed42/` with `run-evidence.json`, `reload-evidence.json`, `steps.jsonl`, `trainer-state.json`, `config.json` and `adapter/`, plus console error/success logs, actual pip freeze, the source commit and manifest. On failure, return the error and partial artifacts; do not label the run passed or replace failures with synthetic numbers.
 
+## Review follow-up: self-contained provenance and always-on checks
+
+Updated 2026-11-18 in response to HowseaonLink's two non-blocking review items.
+Both run and reload evidence now contain `runtime_provenance`: Python/platform,
+the six main package versions, the installed package name/version inventory,
+torch CUDA build and cuDNN version, observed repository Git HEAD, tracked-dirty
+status, five source/config file hashes, and the hashes of the three handoff scripts
+plus their config (four files total). Python's optimization level is recorded too.
+The existing weight/subset checks remain mandatory.
+
+For a checkout reconstructed through the API, optionally add
+`--source-commit FULL_40_CHARACTER_COMMIT_SHA` to **both** run and reload commands.
+It records an operator declaration separately from observed Git HEAD and reports
+whether they match. An API copy can have a different local Git commit; never
+present the declared commit as independently verified. Reviewers must compare the
+recorded file hashes with the target GitHub commit. No credentials or environment
+variables are dumped. Keep external console logs and pip freeze as well.
+
+All validation in `prepare.py`, `check_subset.py` and `run_smoke.py` now uses
+explicit `require` checks that raise ValueError, including under `python -O`.
+This covers source/data/model hashes, masks, finite losses/gradients, two updates,
+actual parameter changes, output isolation and exact reload identity. Checks in
+unchanged production modules are outside this patch.
+
+CPU follow-up validation: seven tests pass both normally and with `-O`; a tampered
+source hash is rejected under optimization. Real-tokenizer preparation/checks
+under `-O` reproduce the existing config/manifest/subset bytes and 53/15 examples,
+zero skips, 2/2 history removals, with mask/padding checks passing. These tests do
+not execute GPU training or verify the actual runtime_provenance GPU fields.
+
+Preserve the reviewed execution contract: use the isolated preliminary split,
+not a goal-map-aligned formal split, when reproducing this exact manifest. The
+existing three-file manifest gate remains unchanged to keep the dataset/config
+hashes stable; data.py and cli.py are now additionally recorded in runtime
+provenance, but their hashes are observations rather than additional frozen gates.
+prepare.py deterministically regenerates tracked smoke-config.json and should
+leave its bytes unchanged. Invoke the scripts as files as documented; module-style
+imports from a repository-root Python session are not part of this interface.
+
+Do not replace scripts midway through a running GPU job. If the original pinned
+commit was already executed, preserve its evidence unchanged and return its
+source hashes, actual versions and console logs as a separate provenance sidecar.
+Do not relabel it as a run of this update. A new execution must use a fresh output
+directory and matching run/reload script bytes; never overwrite an older result.
+
+Acceptance remains pending until the executor supplies finite per-step loss and
+gradient evidence, changed LoRA tensors, allocated/reserved VRAM, saved outputs,
+and fresh-process reload hash/forward/generation evidence. A review saying the
+CPU preflight passed is not GPU training evidence.
+
 ## Earlier full-data work: summary
 
 - Original SFT verified: 9,312,587 bytes, 1,624 dialogues, SHA-256 `721e46dba410cff900e187bccea91a456c38b105b6d14d068d7762afb7791de3`.
@@ -115,4 +165,4 @@ Return `outputs/qwen15b-2step-seed42/` with `run-evidence.json`, `reload-evidenc
 - Full train-turn preprocessing: 5,259 candidates, 5,241 retained, 188 history-trimmed, 18 skipped; validation: 605 retained, 27 history-trimmed, zero skipped.
 - Label/history checks passed for all 5,846 retained examples; this is preprocessing evidence, not a GPU/gradient test.
 
-The independent full-data report and detailed JSON were produced locally before this handoff. No remote GitHub content was changed as part of this task.
+The independent full-data report and detailed JSON were produced locally before this handoff. This follow-up changes only the PR handoff files; it does not merge or change main.

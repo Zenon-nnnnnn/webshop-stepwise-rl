@@ -8,6 +8,11 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 SFT_SHA = '721e46dba410cff900e187bccea91a456c38b105b6d14d068d7762afb7791de3'
 
+def require(condition, message):
+    """Always-on validation, including under python -O."""
+    if not condition:
+        raise ValueError(message)
+
 def sha(path):
     h = hashlib.sha256()
     with Path(path).open('rb') as f:
@@ -26,9 +31,9 @@ def main():
     args = parser.parse_args()
     repo = args.repo.resolve()
     split_dir = args.split_dir.resolve() if args.split_dir else repo/'data/processed'
-    assert sha(repo/'data/raw/webshop_sft.json') == SFT_SHA, 'Wrong original SFT version'
+    require(sha(repo/'data/raw/webshop_sft.json') == SFT_SHA, 'Wrong original SFT version')
     split = json.loads((split_dir/'split-manifest.json').read_text())
-    assert split['source_sha256'] == SFT_SHA and split['seed'] == 42
+    require(split['source_sha256'] == SFT_SHA and split['seed'] == 42, 'prepare.py: validation failed at original line 31')
     test_ids = set(json.loads((split_dir/'test_ids.json').read_text()))
     manifest = {'purpose': 'two-update engineering smoke; not formal training/evaluation',
                 'source_sft_sha256': SFT_SHA, 'split_manifest_sha256': sha(split_dir/'split-manifest.json'),
@@ -43,14 +48,14 @@ def main():
         rows = sorted(json.loads(source.read_text()), key=lambda row: row['id'])
         random.Random(42).shuffle(rows)
         selected = rows[:count]
-        assert len(selected) == count
-        assert not ({r['id'] for r in selected} & test_ids)
+        require(len(selected) == count, 'prepare.py: validation failed at original line 46')
+        require(not ({r['id'] for r in selected} & test_ids), 'prepare.py: validation failed at original line 47')
         selections[name] = selected
         dest = HERE/f'data/{name}-smoke.json'
         write(dest, selected)
         manifest['datasets'][name] = {'source_sha256': sha(source), 'subset_sha256': sha(dest),
             'dialogues': count, 'task_ids': [r['id'] for r in selected]}
-    assert not ({r['id'] for r in selections['train']} & {r['id'] for r in selections['val']})
+    require(not ({r['id'] for r in selections['train']} & {r['id'] for r in selections['val']}), 'prepare.py: validation failed at original line 53')
     config = json.loads((repo/'configs/sft-qwen15b.json').read_text())
     config.update({'train_file': 'data/train-smoke.json', 'val_file': 'data/val-smoke.json',
                    'output_dir': 'outputs/qwen15b-2step-seed42', 'logging_steps': 1,
@@ -60,7 +65,7 @@ def main():
     write(HERE/'data/subset-manifest.json', manifest)
     expected = HERE/'evidence/subset-manifest.json'
     if expected.exists():
-        assert manifest == json.loads(expected.read_text()), 'Subset does not match the handed-off manifest; stop and reconcile inputs'
+        require(manifest == json.loads(expected.read_text()), 'Subset does not match the handed-off manifest; stop and reconcile inputs')
     print(json.dumps(manifest, indent=2))
 
 if __name__ == '__main__':
