@@ -38,8 +38,12 @@ webshop-lab evaluate --method B0 --meta artifacts/b0-val.meta.json --jsonl artif
 ## 复核命令
 
 ```bash
-sha256sum results/eval-frozen-20261120/val_ids.json          # 45440d72…
-sha256sum configs/eval-b0-frozen.json configs/eval-b1-frozen.json
+# 取提交里的字节，任何平台都一致（Windows 原生检出会把 LF 转 CRLF，直接 sha256sum 文件可能不等）
+git cat-file blob HEAD:results/eval-frozen-20261120/val_ids.json | sha256sum   # 45440d72…
+git cat-file blob HEAD:configs/eval-b0-frozen.json | sha256sum                 # 91d3f8ad…
+git cat-file blob HEAD:configs/eval-b1-frozen.json | sha256sum                 # 03cce78c…
+# WSL/Linux 检出上也可以直接：
+sha256sum results/eval-frozen-20261120/val_ids.json
 webshop-lab check-parity --a-config configs/eval-b0-frozen.json \
   --b-config configs/eval-b1-frozen.json --require-frozen     # parity=true
 webshop-lab preflight --a-config configs/eval-b0-frozen.json \

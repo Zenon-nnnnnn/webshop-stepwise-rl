@@ -340,7 +340,7 @@ class FrozenValListTests(unittest.TestCase):
     def test_frozen_val_list_matches_the_documented_hash(self):
         import hashlib
         path = REPO / 'results/eval-frozen-20261120/val_ids.json'
-        raw = path.read_bytes()
+        raw = path.read_bytes().replace(b'\r\n', b'\n')  # a Windows checkout rewrites LF to CRLF
         self.assertEqual(hashlib.sha256(raw).hexdigest(), self.VAL_SHA)
         ids = json.loads(raw)
         self.assertEqual(len(ids), 160)
