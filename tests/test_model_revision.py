@@ -13,6 +13,15 @@ REVISION = '989aa7980e4cf806f80c7fef2b1adb7bc71aa306'
 
 
 class ModelRevisionTests(unittest.TestCase):
+    def test_memory_record_distinguishes_reserved_and_allocated_with_explicit_units(self):
+        fake = SimpleNamespace(cuda=SimpleNamespace(max_memory_allocated=lambda: 4*1024**3,
+            max_memory_reserved=lambda: 15*1024**3,
+            get_device_properties=lambda device: SimpleNamespace(total_memory=16*1024**3)))
+        info = sft.memory_record(fake)
+        self.assertEqual(info['peak_allocated_gib'], 4)
+        self.assertEqual(info['peak_reserved_gib'], 15)
+        self.assertEqual(info['device_total_gib'], 16)
+        self.assertEqual(info['peak_allocated_gb'], info['peak_allocated_gib'])
     def fake_runtime(self, resolved=REVISION):
         tok = SimpleNamespace(pad_token_id=0, init_kwargs={'_commit_hash': resolved})
         base = SimpleNamespace(config=SimpleNamespace(_commit_hash=resolved))

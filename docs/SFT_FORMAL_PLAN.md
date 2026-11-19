@@ -129,3 +129,9 @@ configuration, reload acceptance and interpretation. HowseaonLink owns the GPU
 environment and training execution. Zqqq-qq owns data protocol/final split and
 subsequent reward/RL; QiuQiu-xuan owns independent evaluation. SFT ownership
 does not transfer all data preparation, GPU execution or evaluation to Jun.
+
+## Capacity review follow-up (2026-11-19)
+
+The runner records peak_allocated_gib, peak_reserved_gib and device_total_gib in GiB (2**30 bytes). Statistics reset before model loading and are sampled after final evaluation/saving, with CUDA synchronized. Legacy peak_allocated_gb remains an alias. Reserved memory is allocator reservation, not device-wide used memory or a guarantee of headroom; retain external monitoring and failure logs.
+
+HowseaonLink reported an old-loader capacity probe at 4.84 GiB allocated and 15.69 GiB reserved on a roughly 15.93 GiB card. These are reported observations, not measurements of this patch. Before freezing, run this PR's pinned revision offline loading path and representative longest retained sequences near 2048 tokens through training and evaluation. Record both peaks, device capacity, sequence lengths, batch/accumulation and versions. Any OOM or insufficient margin requires a reviewed adjustment and recheck. A short-input two-step run cannot establish long-input capacity. The draft remains blocked pending target-device evidence.

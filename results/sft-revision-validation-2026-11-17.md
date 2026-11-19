@@ -53,3 +53,7 @@ are included in this PR.
   fields yet; manually compare the recorded source versions and any local manifests.
 
 No training success, shopping improvement, or RL result is claimed.
+
+## 2026-11-19 capacity-record follow-up
+
+Added allocated/reserved allocator peaks and total device capacity with explicit GiB units, reset before loading and synchronization before recording. Legacy allocated field retained. The branch suite now has 16 passing CPU tests, including a mocked memory conversion test. These are not GPU measurements. The updated offline loader and representative long-sequence capacity still require executor validation; formal config remains a draft.
