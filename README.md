@@ -17,7 +17,8 @@
 3. GPU 机器负责人按 [安装指南](docs/SETUP.md) 配置两个隔离环境。
 4. 数据负责人按 [数据指南](docs/DATA.md) 导入材料、审计并冻结划分。
 5. 训练与评估负责人按 [实验手册](docs/EXPERIMENTS.md) 运行真实实验。
-6. 全组按 [分工和时间表](docs/TEAM.md)、[协作规则](CONTRIBUTING.md) 提交工作；到 [任务清单](https://github.com/Zqqq-qq/webshop-stepwise-rl/issues) 查看五人分工与各自交付任务。
+6. 评估负责人按 [统一评估](docs/EVALUATION.md) 核对分母、生成登记行、失败案例与图表。
+7. 全组按 [分工和时间表](docs/TEAM.md)、[协作规则](CONTRIBUTING.md) 提交工作；到 [任务清单](https://github.com/Zqqq-qq/webshop-stepwise-rl/issues) 查看五人分工与各自交付任务。
 
 ## 先在任何电脑跑起来
 
@@ -45,7 +46,7 @@ Python 3.10+ 可运行这些标准库工具；**GPU 与旧环境统一使用 Pyt
 | `configs/` | 默认 1.5B / 可选 3B 的 SFT 与推理配置 | C / D |
 | `requirements/` | GPU 与环境 CPU 依赖候选组合 | A |
 | `upstream/` | SPA 原始可复用代码、FastChat、三个任务相关组件及演示轨迹 | 论文复现参考 |
-| `docs/` | 安装、数据、架构、实验、故障排查、代码审计、分工 | 所有人 |
+| `docs/` | 安装、数据、架构、实验、评估、故障排查、代码审计、分工 | 所有人 |
 | `reports/` | proposal 草案、pre 内容提纲、report 模板 | 所有人各写负责模块 |
 | `results/` | 实验登记表、审计证据、经核实的结果；当前无性能结果 | E |
 | `tests/` | 无 GPU 的有意义逻辑测试 | 所有人 |
@@ -62,6 +63,9 @@ Python 3.10+ 可运行这些标准库工具；**GPU 与旧环境统一使用 Pyt
 | `env-server` | 单客户端本地 WebShop 文本环境桥 | 完整 Java / Lucene / spaCy 待实机 |
 | `sft` | assistant-only loss、LoRA / QLoRA、保存日志和 adapter | GPU 待实机 |
 | `rollout` / `summarize` | 真实任务交互与指标 | 指标逻辑有测试；真实 rollout 待实机 |
+| `check-run` / `evaluate` | 完成度核对、购买/成功分开统计、失败案例与 SVG 图 | 合成 fixture 端到端测试；真实日志待实机 |
+| `check-parity` / `check-register` | B0/B1 公平性核对、结果登记表校验 | 逻辑测试通过；无真实登记行 |
+| `preflight` / `compare` / `results-table` | 跑前闸门、配对比较（McNemar+配对 bootstrap）、登记表转结果表 | 合成 fixture 测试；真实 run 待实机 |
 | `progress-train` / `progress-predict` | 低成本可加线性估计器 | 合成轨迹端到端测试；未宣称真实效果 |
 | `reward-export` | terminal / uniform / progress+grounding 奖励 | 逻辑测试通过；**不会执行 PPO** |
 | `upstream/ppo/` | 论文来源中的 PPO 实现 | 旧依赖、轨迹策略一致性、50 系显卡兼容性待验证 |

@@ -1,0 +1,25 @@
+{
+  "status": "frozen_dev_val_list",
+  "date": "2026-11-20",
+  "tasks": 160,
+  "sha256": "45440d724b33e69e13916d0adbe243cc63ce3bd67677b8220feff9f30b866c36",
+  "source": {
+    "branch": "env/setup-howseaonlink",
+    "path": "results/env-2026-11-17/val_ids.json",
+    "cross_check": "results/mapped-split-20261119-zqq/split-manifest.json 与环境侧 split-manifest.json 全字段一致",
+    "goal_map_sha256": "6b5d9dfceee913828871b8dff62fd59720a40306738a92a496d1b0fb6838fa88",
+    "goal_map_tasks": 12087
+  },
+  "environment": {
+    "goal_fingerprint": "e69c9ae2a0aad88977c44a7baf49f1f5ef7918ba8317923c4ae24dcc1f5638d8",
+    "model_revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306"
+  },
+  "configs": {
+    "configs/eval-b0-frozen.json": "91d3f8ad5150a724dfd76eaf478a7d1aa68a8ba8f03235740b62436abddb07ac",
+    "configs/eval-b1-frozen.json": "03cce78c6f2a208b59e14e923927968fdfcc43d8f9dda3b0c4d70a652702990f"
+  },
+  "not_included": [
+    "test IDs (200 reserved; only for the frozen final evaluation)",
+    "any model result; this directory only freezes the task list and the two eval configs"
+  ]
+}

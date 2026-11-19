@@ -1,0 +1,31 @@
+{
+  "trajectories": 78,
+  "turns_schema": "role/content, 31-31 turns per trajectory",
+  "assistant_turns": 1170,
+  "parseable_assistant_turns": 367,
+  "unparsable_assistant_turns": 803,
+  "parseable_ratio": 0.3137,
+  "buy_actions": 100,
+  "buy_actions_with_price_in_observation": 79,
+  "parseable_action_after_invalid_feedback": 8,
+  "rewards": {
+    "0.0": 77,
+    "1.0": 1
+  },
+  "distinct_instructions": 41,
+  "usable_for": [
+    "calibrating that the triage reads real WebShop observation text (prices, buttons, \"Invalid format\" feedback)"
+  ],
+  "not_usable_for": [
+    "our failure-case section",
+    "any success-rate or failure-rate number"
+  ],
+  "reasons": [
+    "No per-step environment reward and no availability list in the source, so grounding can only measure parseability.",
+    "803 of 1170 assistant turns are unparsable (truncated generation), so a trajectory-level label mixes real failure with broken generation.",
+    "agent_final_reward is only 0 or 1: 77 of 78 trajectories are 0 while every trajectory still contains a purchase action.",
+    "These are upstream demo trajectories, not this group's model output."
+  ],
+  "consequence": "Use them to calibrate parsing only. Real failure cases (format/retrieval/specification/budget/loop) must come from webshop-lab rollout logs on our own tasks.",
+  "source": "upstream\\exploration\\webshop\\exploration_outputs\\explore\\webshop_traj_0.json"
+}

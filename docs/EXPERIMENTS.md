@@ -98,17 +98,19 @@ webshop-lab rollout --config configs/explore-sft.json --ids data/processed/val_i
 ## 5. 指标与结果记录
 
 - **Success rate**：`done=true` 且最终奖励 ≥ `1-1e-6` 的任务比例。
-- **Mean final reward**：全部已完成记录的最终奖励均值，包括失败。
+- **Mean final reward**：全部已完成记录的最终奖励均值，包括失败。注意 `final_reward` 对未购买的 episode 是页面匹配分，任务奖励要看 `mean_terminal_reward`（见 [统一评估](EVALUATION.md) 第 1.1 节）。
 - **Mean steps**：每个 episode 实际交互轮数均值，非法动作也消耗步数。
 - **Invalid action rate**：所有尝试动作中格式错误或当前不可执行的比例。
 - **Grounding accuracy**：1 − invalid action rate。
-- **95% Wilson interval**：每个任务仅一条 episode 时提供；有重复任务时不将轨迹视为独立样本。
+- **95% Wilson interval**：每个任务仅一条 episode 时提供；有重复任务时不将轨迹视为独立样本，改用按任务簇的 bootstrap。
+
+`done=true` 只表示购买结束，不等于成功：买错规格或超预算也会结束但奖励小于 1。购买结束数、满奖励成功数与两者之差必须分开记录，分母、区间与失败分诊规则见 [统一评估与失败分析](EVALUATION.md)。
 
 greedy 测试不需要重复同一任务来扩大样本量。多种子训练与任务内重复采样是两种不同的不确定性来源。较小任务集上的少数成功差异不应被夸大。
 
 每次运行把证据登记到 `results/experiment-register.csv`：run ID、状态、方法、模型、seed、split SHA、goal fingerprint、commit、配置、任务数、指标、显存和备注。空白表头不是结果。
 
-正式汇总前核对 `.meta.json` 的 selected_ids 与 JSONL 完成列表一致；中断产生的部分文件不可冒充完整任务集。当前 summarize 不替代这项完整性审核。
+正式汇总前核对 `.meta.json` 的 selected_ids 与 JSONL 完成列表一致；中断产生的部分文件不可冒充完整任务集。当前 summarize 不替代这项完整性审核，用 `webshop-lab check-run`（见 [统一评估](EVALUATION.md) 第 2 节）确认分母后再汇总。
 
 ## 6. 失败案例分析
 
@@ -121,7 +123,7 @@ greedy 测试不需要重复同一任务来扩大样本量。多种子训练与�
 5. 无效循环或步数耗尽；
 6. 环境/模型加载错误——单独列为工程故障。
 
-给每种方法用同一套分类。展示界面并非必须，完整日志与对照案例优先。
+给每种方法用同一套分类。自动初筛用 `webshop-lab evaluate --cases` 生成案例工作表，分类规则、优先级与人工复核流程见 [统一评估](EVALUATION.md) 第 4 节；未人工确认的标签不能进报告。展示界面并非必须，完整日志与对照案例优先。
 
 ## 7. 奖励实验入口
 

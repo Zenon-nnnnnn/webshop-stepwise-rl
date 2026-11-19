@@ -1,0 +1,33 @@
+{
+  "run_id": "hand-check-2026-11-17",
+  "config": {
+    "model": "fixture/no-model",
+    "adapter": null,
+    "load_in_4bit": false,
+    "seed": 42,
+    "temperature": 0.0,
+    "top_p": 0.9,
+    "context_length": 2048,
+    "max_new_tokens": 128,
+    "max_steps": 10,
+    "environment_url": "http://127.0.0.1:8765",
+    "goal_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+  },
+  "config_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "ids_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "selected_ids": [
+    101,
+    102,
+    103,
+    104
+  ],
+  "repeats": 1,
+  "health": {
+    "goal_fingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "alignment_checked": 1,
+    "split_status": {
+      "verified": true
+    }
+  },
+  "started_utc": "2026-11-17T00:00:00+00:00"
+}

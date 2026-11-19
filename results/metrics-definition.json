@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "name": "webshop-lab metrics v1.1",
+  "frozen_at": "2026-11-17",
+  "status": "definition only; contains no model result",
+  "changelog": [
+    {"date": "2026-11-16", "change": "initial definitions"},
+    {"date": "2026-11-17", "change": "add terminal_reward / mean_terminal_reward after the first real rollout showed final_reward is a page-match score on non-purchase episodes"}
+  ],
+  "code": {
+    "module": "src/webshop_lab/evaluation.py",
+    "command": "webshop-lab evaluate",
+    "independent_check": "scripts/verify_metrics.py"
+  },
+  "success": {
+    "rule": "done == true AND final_reward >= 1 - 1e-6",
+    "note": "done means the episode ended with a purchase. A purchase with a wrong product/specification or an exceeded budget still ends the episode, often with reward 0, so it is not success."
+  },
+  "reward_semantics": {
+    "terminal_reward": "final_reward if done else 0.0; the task reward. The environment also returns a page-match score at every step (upstream web_agent_text_env.py sets self.reward = search_max / maxr per page), so a run that never purchased can still record final_reward 0.9.",
+    "final_reward": "the last recorded environment score; equals the task reward only for purchased episodes. Reported for diagnostics, not as task outcome.",
+    "note": "mean_reward in results/experiment-register.csv is the terminal (task) reward."
+  },
+  "denominators": {
+    "success_rate": "episodes: every record in the JSONL, failures included",
+    "mean_final_reward": "episodes",
+    "mean_steps": "episodes",
+    "invalid_action_rate": "steps: every recorded step; an invalid action still consumes a step"
+  },
+  "metrics": [
+    {"name": "episodes", "definition": "completed episode records", "denominator": null},
+    {"name": "unique_tasks", "definition": "distinct task_id values", "denominator": null},
+    {"name": "purchase_terminated", "definition": "episodes with done == true", "denominator": "episodes"},
+    {"name": "full_reward_successes", "definition": "episodes with done == true and final_reward >= 1 - 1e-6", "denominator": "episodes"},
+    {"name": "purchase_without_full_reward", "definition": "purchase_terminated - full_reward_successes", "denominator": "episodes"},
+    {"name": "max_steps_terminated", "definition": "episodes - purchase_terminated", "denominator": "episodes"},
+    {"name": "success_rate", "definition": "full_reward_successes / episodes; the headline metric", "denominator": "episodes"},
+    {"name": "success_rate_ci95", "definition": "95% interval for success_rate (method depends on repeats)", "denominator": null},
+    {"name": "conditional_success_given_purchase", "definition": "full_reward_successes / purchase_terminated", "denominator": "purchase_terminated"},
+    {"name": "mean_final_reward", "definition": "mean of the last recorded environment score over all episodes; a page-match score for non-purchase episodes", "denominator": "episodes"},
+    {"name": "mean_terminal_reward", "definition": "mean task reward: final_reward for purchased episodes, 0 otherwise", "denominator": "episodes"},
+    {"name": "mean_steps", "definition": "mean number of recorded steps", "denominator": "episodes"},
+    {"name": "invalid_action_rate", "definition": "steps with grounding == 0", "denominator": "steps"},
+    {"name": "grounding_accuracy", "definition": "1 - invalid_action_rate", "denominator": "steps"},
+    {"name": "episodes_with_invalid_actions", "definition": "episodes containing at least one ungrounded step", "denominator": "episodes"},
+    {"name": "termination_counts", "definition": "counts of purchase and max_steps terminations", "denominator": "episodes"}
+  ],
+  "uncertainty": {
+    "independent_tasks": "Wilson 95% interval (common.wilson)",
+    "repeated_tasks": "task-cluster bootstrap, 2000 resamples, seed 42; never treat repeated trajectories as independent samples",
+    "paired_runs": "one trajectory per task: exact McNemar on discordant tasks plus a paired task-cluster bootstrap; repeated trajectories: paired task-cluster bootstrap only, no McNemar p-value"
+  },
+  "failure_classes": ["format", "budget", "specification", "loop", "retrieval", "other", "engineering"],
+  "failure_counting": {
+    "counts": "one primary label per failed episode",
+    "any_counts": "episodes where the signal appears as primary or secondary label",
+    "why_primary_is_the_purchase_outcome": "a purchase with reward 0 would otherwise be hidden behind format errors"
+  },
+  "out_of_scope": [
+    "no per-seed aggregation; multiple seeds are separate runs",
+    "no significance claim for a single pair of runs without the paired interval",
+    "no success claim from upstream demo trajectories"
+  ]
+}

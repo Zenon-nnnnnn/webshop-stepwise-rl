@@ -27,6 +27,29 @@ def file_hash(path):
     return h.hexdigest()
 
 
+def file_hash_lf(path):
+    """Hash with CRLF normalized to LF.
+
+    Git stores text as LF; a Windows checkout rewrites it to CRLF, so the raw digest of the
+    working copy stops matching the digest recorded on the machine that produced the run. This
+    variant lets the audit recognise a line-ending-only difference instead of reporting a
+    config edit that never happened.
+    """
+    data = Path(path).read_bytes().replace(b"\r\n", b"\n")
+    return hashlib.sha256(data).hexdigest()
+
+
+def git_head(cwd=ROOT):
+    """Best-effort HEAD commit; None when this is not a checkout or git is unavailable."""
+    import subprocess
+    try:
+        out = subprocess.run(["git", "rev-parse", "HEAD"], cwd=str(cwd),
+                             capture_output=True, text=True, check=False)
+    except OSError:
+        return None
+    return out.stdout.strip() if out.returncode == 0 else None
+
+
 def goal_text(row):
     """Extract the actual shopping instruction, not the shared system preamble."""
     for turn in row["conversations"]:
