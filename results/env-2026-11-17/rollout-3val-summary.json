@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
-  "generated_utc": "2026-11-19T11:41:28+00:00",
+  "generated_utc": "2026-11-19T16:26:36+00:00",
   "run": {
     "run_id": "1ed67684-a2b2-4fcf-b1a3-2385653ec7a6",
-    "method": null,
+    "method": "B0",
     "meta_path": "results/env-2026-11-17/rollout-3val.meta.json",
     "jsonl_path": "results/env-2026-11-17/rollout-3val.jsonl",
     "jsonl_sha256": "fe32f8478c1c72740f6deadc14faa89e83650ab1b45e555bde40d66d95a36483",
     "config_path": "results/env-2026-11-17/rollout-base-3val.json",
     "config_sha256": "2a61cd099b4228e09e1f5ebff58b87820a2cf9bb91dd6ac77185c43fbd349908",
-    "commit": "44148aaa8ef2ed59b0aeeba2fcc3f0b5ee4d6d50"
+    "commit": "21f3c83da9c9f599665cd89df479fbca7f512b88"
   },
   "completeness": {
     "status": "complete",

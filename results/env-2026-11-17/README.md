@@ -93,7 +93,7 @@
 
 ### 指标文件版本说明
 
-`rollout-3val-summary.json` 由 [PR #8](https://github.com/Zqqq-qq/webshop-stepwise-rl/pull/8) 的固定审阅版本 `b19b87fdc402c4a3c3d5d32cfeddd71cd5b2e1d3` 重新生成。原始轨迹、元数据和配置保留原字节。评估器核对该三任务样本的完整性和溯源，输出购买 0、满分成功 0、平均终局购物奖励 0。区间下界的原始浮点值约为 0。摘要仅用于三任务工程验证，未写入实验登记表。
+`rollout-3val-summary.json` 由 [PR #8](https://github.com/Zqqq-qq/webshop-stepwise-rl/pull/8) 合并进 `main` 的版本 `21f3c83da9c9f599665cd89df479fbca7f512b88` 重新生成。原始轨迹、元数据和配置保留原字节。评估器核对该三任务样本的完整性和溯源，输出购买 0、满分成功 0、平均终局购物奖励 0。Wilson 区间下界的原始值 5.551115123125783e-17 是 0 的浮点残差。摘要仅用于三任务工程验证，未写入实验登记表。
 
 在该评估器源码快照中，将本目录原始输入放在同名相对路径，运行下面的命令。
 
@@ -102,6 +102,7 @@ PYTHONPATH=src python -m webshop_lab.cli evaluate \
   --jsonl results/env-2026-11-17/rollout-3val.jsonl \
   --meta results/env-2026-11-17/rollout-3val.meta.json \
   --config results/env-2026-11-17/rollout-base-3val.json \
+  --method B0 \
   --output results/env-2026-11-17/rollout-3val-summary.json
 ```
 
