@@ -285,6 +285,7 @@ class RegisterTests(unittest.TestCase):
     def _row(self, **overrides):
         row = {
             'run_id': 'run-1', 'status': 'complete', 'method': 'B0', 'model': CONFIG['model'],
+            'model_revision': '9' * 40,
             'seed': '42', 'split_sha256': 'c' * 64, 'goal_fingerprint': FINGERPRINT,
             'git_commit': '0123456789abcdef0123456789abcdef01234567',
             'config_path': 'configs/eval-base.json', 'config_sha256': CONFIG_SHA,
@@ -336,6 +337,12 @@ class RegisterTests(unittest.TestCase):
         result = register.validate(list(register.COLUMNS), [row], root, check_git=False)
         self.assertEqual(result['status'], 'invalid')
         self.assertTrue(any('config_sha256 does not match' in error for error in result['errors']))
+
+    def test_model_revision_must_be_a_commit_hash(self):
+        result = register.validate(list(register.COLUMNS),
+                                   [self._row(model_revision='main')], check_git=False)
+        self.assertEqual(result['status'], 'invalid')
+        self.assertTrue(any('model_revision' in error for error in result['errors']))
 
     def test_planned_rows_may_omit_results(self):
         row = {'run_id': 'later', 'status': 'planned', 'method': 'B1', 'model': CONFIG['model'],

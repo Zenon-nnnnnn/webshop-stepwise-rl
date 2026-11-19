@@ -14,10 +14,10 @@ from pathlib import Path
 from .common import ROOT, file_hash, file_hash_lf, git_head, read_json, write_json
 
 COLUMNS = (
-    'run_id', 'status', 'method', 'model', 'seed', 'split_sha256', 'goal_fingerprint', 'git_commit',
-    'config_path', 'config_sha256', 'episodes', 'successes', 'purchase_terminated', 'success_rate',
-    'success_rate_ci95', 'mean_reward', 'mean_steps', 'invalid_action_rate', 'peak_vram_gb',
-    'evidence_path', 'notes',
+    'run_id', 'status', 'method', 'model', 'model_revision', 'seed', 'split_sha256', 'goal_fingerprint',
+    'git_commit', 'config_path', 'config_sha256', 'episodes', 'successes', 'purchase_terminated',
+    'success_rate', 'success_rate_ci95', 'mean_reward', 'mean_steps', 'invalid_action_rate',
+    'peak_vram_gb', 'evidence_path', 'notes',
 )
 STATUSES = ('planned', 'running', 'complete', 'failed')
 # R-TG / R-PG are the current reward arms (terminal+G and stepwise+G, same grounding weight).
@@ -77,6 +77,9 @@ def row_from_run(args, audit, config_snapshot, metrics):
     if not commit:
         raise SystemExit('Cannot determine the git commit; run this from the repository checkout')
     config = read_json(config_snapshot['path'])
+    source = audit.get('model_source') or {}
+    revision = (source.get('requested_revision') or source.get('resolved_model_revision')
+                or config.get('revision') or '')
     interval = metrics['success_rate_ci95']
     if not interval:
         raise SystemExit('Run has no success interval; cannot register a result without uncertainty')
@@ -86,6 +89,7 @@ def row_from_run(args, audit, config_snapshot, metrics):
         'status': 'complete',
         'method': method,
         'model': config.get('model', ''),
+        'model_revision': revision,
         'seed': str(config.get('seed', '')),
         'split_sha256': file_hash(split_ids),
         'goal_fingerprint': audit['goal_fingerprint'] or '',
@@ -152,6 +156,11 @@ def validate(fieldnames, rows, root=ROOT, check_git=True):
             warnings.append(f'{label}: {method} is a legacy label; current arms are R-TG / R-PG')
         if not (row.get('model') or '').strip():
             problem('model is empty')
+        revision = (row.get('model_revision') or '').strip()
+        if revision and not re.fullmatch(r'[0-9a-fA-F]{40}', revision):
+            problem('model_revision must be a 40-character Hugging Face commit hash')
+        elif not revision and status == 'complete':
+            warnings.append(f'{label}: model_revision is empty (take it from meta.model_source)')
         seed = _int_field(row, 'seed', problem, required=status == 'complete', minimum=0)
         commit = (row.get('git_commit') or '').strip()
         if commit:

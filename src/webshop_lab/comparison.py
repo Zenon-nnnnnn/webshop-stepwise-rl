@@ -129,22 +129,38 @@ def compare_runs(rows_a, rows_b, labels=('a', 'b')):
 
 def run(args):
     from .common import write_json
-    from .evaluation import check_parity, load_episodes
+    from .evaluation import check_parity, inspect_run, load_episodes
     import json
     labels = (args.a_label or 'a', args.b_label or 'b')
+    # Each arm must be verified against its own metadata. Comparing two metas without checking the
+    # JSONL they claim to describe would let a mismatched or merged trajectory pass as a fair arm.
+    audits = {}
+    for side, meta, jsonl in (('a', args.a_meta, args.a_jsonl), ('b', args.b_meta, args.b_jsonl)):
+        if not meta:
+            continue
+        audit = inspect_run(jsonl, meta)
+        if not audit['complete'] or not audit['provenance_ok']:
+            raise SystemExit(f'拒绝比较：{side} 臂的 JSONL 与 metadata 不一致（{audit["status"]}：'
+                             f'{audit["summary"]}）。先用 check-run 修正，不能把不匹配的轨迹当作公平对照。')
+        audits[side] = audit
+    if len(audits) == 1:
+        raise SystemExit('两臂都要提供 --a-meta/--b-meta，或都不提供；只给一边无法证明公平性')
     rows_a = load_episodes(args.a_jsonl)
     rows_b = load_episodes(args.b_jsonl)
     parity = None
-    if args.a_meta and args.b_meta:
+    if len(audits) == 2:
+        if audits['a']['goal_fingerprint'] != audits['b']['goal_fingerprint']:
+            raise SystemExit('拒绝比较：两臂的 goal_fingerprint 不同，环境目标映射不一致')
         parity = check_parity(a_meta=args.a_meta, b_meta=args.b_meta)
     result = compare_runs(rows_a, rows_b, labels)
     result['labels'] = labels
     result['fairness'] = parity
-    if parity and not parity['parity']:
-        result.setdefault('notes', []).append('Both arms are not run under the same settings; '
-                                             'see fairness.blocking_issues.')
+    if parity is None:
+        result.setdefault('notes', []).append('未提供两臂 metadata：公平性未验证，只能当诊断输出。')
+    elif not parity['parity']:
+        result.setdefault('notes', []).append('两臂的运行设置不一致；见 fairness.blocking_issues。')
     if args.output:
         write_json(args.output, result)
     print(json.dumps(result, ensure_ascii=False, indent=2))
-    if parity and not parity['parity']:
+    if parity is not None and not parity['parity']:
         raise SystemExit(1)

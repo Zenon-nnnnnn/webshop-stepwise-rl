@@ -1,1 +1,1 @@
-run_id,status,method,model,seed,split_sha256,goal_fingerprint,git_commit,config_path,config_sha256,episodes,successes,purchase_terminated,success_rate,success_rate_ci95,mean_reward,mean_steps,invalid_action_rate,peak_vram_gb,evidence_path,notes
+run_id,status,method,model,model_revision,seed,split_sha256,goal_fingerprint,git_commit,config_path,config_sha256,episodes,successes,purchase_terminated,success_rate,success_rate_ci95,mean_reward,mean_steps,invalid_action_rate,peak_vram_gb,evidence_path,notes

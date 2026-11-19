@@ -148,6 +148,58 @@ class ComparisonTests(unittest.TestCase):
         self.assertEqual([low, high], [0.0, 1.0])
         self.assertIn('McNemar is not reported', ' '.join(result['notes']))
 
+    def _meta(self, path, rows, run_id='run-1', fingerprint=FINGERPRINT):
+        meta = {'run_id': run_id, 'config': BASE_CONFIG, 'config_sha256': '0' * 64,
+                'ids_sha256': '0' * 64, 'selected_ids': sorted({row['task_id'] for row in rows}),
+                'repeats': 1, 'health': {'goal_fingerprint': fingerprint},
+                'started_utc': '2026-11-19T00:00:00+00:00'}
+        return write_json(path, meta)
+
+    def test_compare_run_refuses_a_meta_that_does_not_match_its_jsonl(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            rows = [episode(1, 1.), episode(2, 0.)]
+            jsonl_a = write_jsonl(root / 'a.jsonl', rows)
+            jsonl_b = write_jsonl(root / 'b.jsonl', rows)
+            meta_a = self._meta(root / 'a.meta.json', rows)
+            meta_b = self._meta(root / 'b.meta.json', rows, run_id='a-different-run')
+            args = argparse.Namespace(a_meta=str(meta_a), a_jsonl=str(jsonl_a),
+                                      b_meta=str(meta_b), b_jsonl=str(jsonl_b),
+                                      a_label='A', b_label='B', output=None)
+            with self.assertRaises(SystemExit):
+                comparison.run(args)
+
+    def test_compare_run_refuses_a_one_sided_metadata(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            rows = [episode(1, 1.), episode(2, 0.)]
+            jsonl_a = write_jsonl(root / 'a.jsonl', rows)
+            jsonl_b = write_jsonl(root / 'b.jsonl', rows)
+            meta_a = self._meta(root / 'a.meta.json', rows)
+            args = argparse.Namespace(a_meta=str(meta_a), a_jsonl=str(jsonl_a),
+                                      b_meta=None, b_jsonl=str(jsonl_b),
+                                      a_label='A', b_label='B', output=None)
+            with self.assertRaises(SystemExit):
+                comparison.run(args)
+
+    def test_compare_run_accepts_two_verified_arms(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            rows_a = [episode(1, 0.), episode(2, 0.)]
+            rows_b = [episode(1, 1.), episode(2, 0.)]
+            jsonl_a = write_jsonl(root / 'a.jsonl', rows_a)
+            jsonl_b = write_jsonl(root / 'b.jsonl', rows_b)
+            meta_a = self._meta(root / 'a.meta.json', rows_a, fingerprint=FINGERPRINT)
+            meta_b = self._meta(root / 'b.meta.json', rows_b, fingerprint=FINGERPRINT)
+            args = argparse.Namespace(a_meta=str(meta_a), a_jsonl=str(jsonl_a),
+                                      b_meta=str(meta_b), b_jsonl=str(jsonl_b),
+                                      a_label='B0', b_label='B1', output=str(root / 'compare.json'))
+            comparison.run(args)
+            result = json.loads((root / 'compare.json').read_text(encoding='utf-8'))
+            self.assertTrue(result['fairness']['parity'])
+            self.assertEqual(result['paired']['only_B1'], 1)
+            self.assertEqual(result['mcnemar_exact_p'], 1.0)
+
     def test_different_task_sets_are_rejected(self):
         with self.assertRaises(ValueError):
             comparison.compare_runs([episode(1, 1.), episode(2, 0.)], [episode(1, 1.), episode(3, 0.)])
@@ -254,7 +306,8 @@ class TerminalRewardTests(unittest.TestCase):
             lf_hash = file_hash(config)
             config.write_bytes(text.encode('utf-8').replace(b'\n', b'\r\n'))
             row = {'run_id': 'r', 'status': 'complete', 'method': 'B0',
-                   'model': BASE_CONFIG['model'], 'seed': '42', 'split_sha256': 'b' * 64,
+                   'model': BASE_CONFIG['model'], 'model_revision': '9' * 40, 'seed': '42',
+                   'split_sha256': 'b' * 64,
                    'goal_fingerprint': FINGERPRINT, 'git_commit': 'a' * 40,
                    'config_path': 'configs/eval-base.json', 'config_sha256': lf_hash,
                    'episodes': '4', 'successes': '1', 'purchase_terminated': '2',
@@ -264,6 +317,19 @@ class TerminalRewardTests(unittest.TestCase):
             result = register.validate(list(register.COLUMNS), [row], root, check_git=False)
             self.assertEqual(result['status'], 'ok', msg=result['errors'])
             self.assertTrue(any('CRLF' in warning for warning in result['warnings']))
+
+
+class FrozenConfigTests(unittest.TestCase):
+    def test_frozen_arms_differ_only_by_adapter(self):
+        result = evaluation.check_parity(a_config=str(REPO / 'configs/eval-b0-frozen.json'),
+                                         b_config=str(REPO / 'configs/eval-b1-frozen.json'),
+                                         require_frozen=True)
+        self.assertTrue(result['parity'], msg=result['blocking_issues'])
+        self.assertTrue(result['goal_fingerprint']['equal'])
+        fields = {field['field']: field for field in result['fields']}
+        self.assertEqual(fields['revision']['a'], fields['revision']['b'])
+        self.assertEqual(fields['revision']['a'], '989aa7980e4cf806f80c7fef2b1adb7bc71aa306')
+        self.assertNotEqual(result['adapters']['a'], result['adapters']['b'])
 
 
 class IndependentMetricCheckTests(unittest.TestCase):

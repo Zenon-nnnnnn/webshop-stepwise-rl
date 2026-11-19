@@ -246,6 +246,7 @@ def inspect_run(jsonl_path, meta_path, config_path=None):
         'run_id_mismatch_tasks': run_id_mismatches,
         'goal_fingerprint_mismatch_tasks': fingerprint_mismatches,
         'goal_fingerprint': expected_fingerprint,
+        'model_source': meta.get('model_source'),
         'config_file': config_file,
         'notes': [
             'A partial or mismatched file must not be reported as the frozen task set.',
@@ -459,7 +460,7 @@ def write_case_report(cases, path, source):
     Path(path).write_text('\n'.join(lines) + '\n', encoding='utf-8')
 
 
-PARITY_FIELDS = ('model', 'load_in_4bit', 'seed', 'temperature', 'top_p', 'top_k',
+PARITY_FIELDS = ('model', 'revision', 'load_in_4bit', 'seed', 'temperature', 'top_p', 'top_k',
                  'context_length', 'max_new_tokens', 'max_steps', 'environment_url')
 
 
