@@ -11,9 +11,29 @@ from unittest.mock import patch
 
 from prepare import HERE, require, sha
 from run_smoke import runtime_provenance, validate_sources
+from contracts import verify_tokenizer, verify_stats, collate_lists, verify_collated
 
 
 class HandoffChecks(unittest.TestCase):
+    def test_tokenizer_and_exact_counts_reject_drift(self):
+        with tempfile.TemporaryDirectory() as directory:
+            (Path(directory)/'config.json').write_text('wrong tokenizer')
+            with self.assertRaisesRegex(ValueError, 'Tokenizer mismatch'):
+                verify_tokenizer(Path(directory))
+        expected = {'examples': 53, 'skipped': 0, 'trimmed': 2, 'max_length': 1934}
+        verify_stats(expected, expected)
+        for key in expected:
+            with self.assertRaises(ValueError):
+                verify_stats({**expected, key: expected[key]+1}, expected)
+
+    def test_actual_shared_collator_preserves_tokens_and_rejects_bad_padding(self):
+        items = [{'input_ids': [4,5], 'attention_mask': [1,1], 'labels': [-100,5]},
+                 {'input_ids': [6], 'attention_mask': [1], 'labels': [6]}]
+        batch = collate_lists(items, 0)
+        verify_collated(batch, items, 0)
+        batch['labels'][1][1] = 0
+        with self.assertRaisesRegex(ValueError, 'padding labels'):
+            verify_collated(batch, items, 0)
     def run_python(self, program, optimized=False):
         return subprocess.run([sys.executable, *(['-O'] if optimized else []), '-c', program],
                               cwd=HERE, capture_output=True, text=True)
@@ -81,7 +101,7 @@ class HandoffChecks(unittest.TestCase):
             self.assertFalse(info['source']['declared_matches_git_head'])
             self.assertTrue(info['source']['repo_tracked_dirty'])
             self.assertEqual(len(info['source']['source_files_sha256']), 5)
-            self.assertEqual(len(info['source']['handoff_files_sha256']), 4)
+            self.assertEqual(len(info['source']['handoff_files_sha256']), 5)
             self.assertEqual(set(info['package_versions']),
                              {'torch', 'transformers', 'peft', 'accelerate', 'bitsandbytes', 'tokenizers'})
             json.dumps(info)

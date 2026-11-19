@@ -166,3 +166,11 @@ CPU preflight passed is not GPU training evidence.
 - Label/history checks passed for all 5,846 retained examples; this is preprocessing evidence, not a GPU/gradient test.
 
 The independent full-data report and detailed JSON were produced locally before this handoff. This follow-up changes only the PR handoff files; it does not merge or change main.
+
+## Evaluation-side follow-up (2026-11-19)
+
+CPU preflight now checks the same three pinned tokenizer/config hashes as the GPU runner before loading. Both paths require exact statistics from evidence/subset-tokenizer-check.json: train examples/skips/trims/max-length = 53/0/2/1934; validation = 15/0/2/1995. Tokenizer or count drift fails explicitly.
+
+contracts.py supplies the actual list collator shared by CPU preflight and the GPU tensor wrapper. The CPU check examines its output on real unequal-length examples: original inputs/labels preserved, correct pad IDs, zero attention and ignored padding labels. GPU tensor checks remain required; CPU checks do not establish torch/Trainer behavior. Provenance records contracts.py too (five handoff files including config).
+
+Nine CPU tests pass normally and under -O, including corrupt tokenizer/count/padding cases. Real-tokenizer preflight reproduces the exact statistics. Hyperparameters, subset bytes and expected manifests are unchanged. This revision is not GPU-validated; original reported training belongs to an older snapshot and still requires raw artifacts for independent acceptance.

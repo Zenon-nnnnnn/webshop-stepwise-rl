@@ -4,6 +4,7 @@ import json
 import sys
 from pathlib import Path
 from prepare import HERE, sha, write, require
+from contracts import verify_tokenizer, verify_stats, collate_lists, verify_collated
 
 def main():
     p = argparse.ArgumentParser()
@@ -13,6 +14,7 @@ def main():
     sys.path.insert(0, str(args.repo.resolve()/'src'))
     from transformers import AutoTokenizer
     from webshop_lab.model import fit_history, training_messages
+    verify_tokenizer(args.tokenizer)
     tok = AutoTokenizer.from_pretrained(args.tokenizer, local_files_only=True, trust_remote_code=False)
     cfg = json.loads((HERE/'smoke-config.json').read_text())
     manifest = json.loads((HERE/'data/subset-manifest.json').read_text())
@@ -48,14 +50,13 @@ def main():
                                     'max_length': max(lengths), 'label_invariants_passed': True}
     pair = next(( [samples[0], item] for item in samples[1:] if len(item[0]) != len(samples[0][0]) ), None)
     require(pair, 'check_subset.py: validation failed at original line 50')
-    width = max(len(ids) for ids,labels in pair)
-    for ids,labels in pair:
-        n = width-len(ids)
-        attention = [1]*len(ids)+[0]*n
-        padded = labels+[-100]*n
-        require(all(label == -100 for mask,label in zip(attention,padded) if mask==0), 'check_subset.py: validation failed at original line 56')
+    items = [{'input_ids': ids, 'labels': labels, 'attention_mask': [1]*len(ids)} for ids, labels in pair]
+    actual_batch = collate_lists(items, tok.pad_token_id)
+    verify_collated(actual_batch, items, tok.pad_token_id)
     result['padding_contract_passed'] = True
-    require(result['datasets']['train']['examples'] >= 16, 'check_subset.py: validation failed at original line 58')
+    expected = json.loads((HERE/'evidence/subset-tokenizer-check.json').read_text())
+    for name in ['train', 'val']:
+        verify_stats(result['datasets'][name], expected['datasets'][name])
     write(HERE/'data/subset-tokenizer-check.json', result)
     print(json.dumps(result, indent=2))
 

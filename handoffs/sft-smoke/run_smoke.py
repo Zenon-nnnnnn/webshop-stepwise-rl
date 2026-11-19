@@ -17,10 +17,7 @@ from pathlib import Path
 from prepare import HERE, sha, write, require
 
 WEIGHT_SHA = 'dd924a11b4c220f385b51ffa522daea7c9f3d850e31b162bb5661df483c6d3ee'
-TOKENIZER_SHAS = {
-    'config.json': '98d2ff8cc47488d08a2b0b3acf4eb99ef210779b42bd48605f6b8e36acdbf670',
-    'tokenizer.json': 'c0382117ea329cdf097041132f6d735924b697924d6f6fc3945713e96ce87539',
-    'tokenizer_config.json': '5b5d4f65d0acd3b2d56a35b56d374a36cbc1c8fa5cf3b3febbbfabf22f359583'}
+from contracts import TOKENIZER_SHAS, verify_stats, collate_lists
 
 def validate_sources(repo, manifest):
     for filename, expected in manifest['source_files_sha256'].items():
@@ -48,7 +45,7 @@ def runtime_provenance(repo, torch, declared_commit=None):
             versions[name] = None
     source_names = ['src/webshop_lab/model.py', 'src/webshop_lab/common.py',
                     'src/webshop_lab/data.py', 'src/webshop_lab/cli.py', 'configs/sft-qwen15b.json']
-    handoff_names = ['run_smoke.py', 'prepare.py', 'check_subset.py', 'smoke-config.json']
+    handoff_names = ['run_smoke.py', 'prepare.py', 'check_subset.py', 'smoke-config.json', 'contracts.py']
     return {'python_version': platform.python_version(), 'python_optimization_level': sys.flags.optimize,
             'platform': platform.platform(),
             'package_versions': versions, 'installed_packages': dict(sorted(installed.items())),
@@ -125,12 +122,10 @@ def main():
                 trimmed += len(kept) < len(history)
                 items.append({'input_ids': ids, 'attention_mask': [1]*len(ids), 'labels': labels})
         return items, {'examples': len(items), 'skipped': skipped, 'history_trimmed': trimmed,
-                       'label_checks_passed': True}
+                       'label_checks_passed': True, 'max_length': max(len(item['input_ids']) for item in items)}
 
     def collate(items):
-        width = max(len(x['input_ids']) for x in items)
-        return {key: torch.tensor([item[key]+[pad]*(width-len(item[key])) for item in items])
-                for key, pad in [('input_ids', tok.pad_token_id), ('attention_mask', 0), ('labels', -100)]}
+        return {key: torch.tensor(values) for key, values in collate_lists(items, tok.pad_token_id).items()}
 
     if args.mode == 'reload':
         evidence = json.loads((out/'run-evidence.json').read_text())
@@ -138,7 +133,8 @@ def main():
         runtime = {**cfg, 'model': str(model_path), 'adapter': str(out/'adapter')}
         model, tok, dtype = load(runtime, training=False)
         require(lora_hash(model) == evidence['lora_state_sha256'], 'Reloaded LoRA parameters differ')
-        val, _ = examples(HERE/cfg['val_file'], tok)
+        val, reload_stats = examples(HERE/cfg['val_file'], tok)
+        verify_stats(reload_stats, json.loads((HERE/'evidence/subset-tokenizer-check.json').read_text())['datasets']['val'])
         model.eval()
         probe = collate([val[0]])
         with torch.no_grad():
@@ -175,7 +171,9 @@ def main():
     before = {name: param.detach().float().cpu().clone() for name,param in trainable.items()}
     train, train_stats = examples(HERE/cfg['train_file'], tok)
     val, val_stats = examples(HERE/cfg['val_file'], tok)
-    require(len(train) >= 16 and val, 'run_smoke.py: validation failed at original line 131')
+    expected_stats = json.loads((HERE/'evidence/subset-tokenizer-check.json').read_text())['datasets']
+    verify_stats(train_stats, expected_stats['train'])
+    verify_stats(val_stats, expected_stats['val'])
     pair = next(([train[0], item] for item in train[1:] if len(item['input_ids']) != len(train[0]['input_ids'])), None)
     require(pair is not None, 'run_smoke.py: validation failed at original line 133')
     padded = collate(pair)
