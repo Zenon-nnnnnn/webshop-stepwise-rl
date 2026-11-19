@@ -157,7 +157,7 @@ mean_steps,invalid_action_rate,peak_vram_gb,evidence_path,notes
 - `method` 取 `B0/B1/P0/R-TG/R-PG`；旧标签 `R0/R1` 只用于 11/16 计划之前导出的结果，`check-register` 会给警告。
 - `complete` 行必须同时具备：`split_sha256`（所用 `*_ids.json` 的 sha256）、`goal_fingerprint`、`git_commit`（本仓库存在的 commit）、`config_path` + `config_sha256`、`episodes/successes/purchase_terminated`、`success_rate` 与区间、`evidence_path`。
 - `successes <= purchase_terminated <= episodes`，且 `success_rate` 必须等于 `successes/episodes`（1e-6 容差），区间必须包含该值。
-- 溯源硬门槛：`run_id` 或 goal fingerprint 与 metadata 不一致 → 完成度直接判 `mismatched`，不能汇总；config 文件哈希不再等于 `config_sha256` → `evaluate --register-row` 直接拒绝（config 在 run 之后被改过）；`--split-ids` 必须覆盖本次实际评估的任务 ID，否则 split 哈希描述不了这次 run，`row_from_run` 拒绝登记。
+- 溯源硬门槛：`run_id` 或 goal fingerprint 与 metadata 不一致 → 完成度直接判 `mismatched`，不能汇总；config 文件哈希不再等于 `config_sha256`、**或文件内容与 `metadata.config` 不一致**（例如只改了 metadata 里的 seed）→ `provenance_ok=false`、`usable_as_result=false`，`check-run` 与 `evaluate --register-row` 都会硬失败；`--split-ids` 必须覆盖本次实际评估的任务 ID，否则 split 哈希描述不了这次 run，`row_from_run` 拒绝登记。
 - 输出里的 `usable_as_result` 只有在"任务集完整 + 溯源一致"时才为 true；partial 或溯源异常的诊断输出不能当完成证据。
 - 目前只有表头，`check-register` 通过是正常状态；**表头不是结果**。
 

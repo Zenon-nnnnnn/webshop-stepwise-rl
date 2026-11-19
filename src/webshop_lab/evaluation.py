@@ -219,8 +219,17 @@ def inspect_run(jsonl_path, meta_path, config_path=None):
                        'newline_normalized': canonical != raw,
                        'matches_metadata': canonical == expected_sha,
                        'matches_embedded': read_json(candidate) == meta.get('config')}
-    provenance_ok = (not run_id_mismatches and not fingerprint_mismatches
-                     and (config_file is None or config_file['matches_metadata']))
+    provenance_issues = []
+    if run_id_mismatches:
+        provenance_issues.append(f'{len(run_id_mismatches)} episode(s) carry a different run_id')
+    if fingerprint_mismatches:
+        provenance_issues.append(f'{len(fingerprint_mismatches)} episode(s) carry a different goal_fingerprint')
+    if config_file:
+        if not config_file['matches_metadata']:
+            provenance_issues.append('config file sha256 does not match metadata.config_sha256')
+        if not config_file['matches_embedded']:
+            provenance_issues.append('config file content differs from metadata.config')
+    provenance_ok = not provenance_issues
     summary = (f'{len(completed)} of {len(expected)} expected episodes '
                f'({len(selected)} tasks x {repeats} repeats)')
     if status == 'partial':
@@ -232,7 +241,7 @@ def inspect_run(jsonl_path, meta_path, config_path=None):
     return {
         'status': status, 'summary': summary,
         'complete': status == 'complete', 'partial': status == 'partial',
-        'provenance_ok': provenance_ok,
+        'provenance_ok': provenance_ok, 'provenance_issues': provenance_issues,
         'meta_path': str(meta_path), 'jsonl_path': str(jsonl_path),
         'run_id': run_id,
         'selected_ids': selected,
@@ -251,7 +260,7 @@ def inspect_run(jsonl_path, meta_path, config_path=None):
         'notes': [
             'A partial or mismatched file must not be reported as the frozen task set.',
             'run_id or goal_fingerprint mismatches are identity failures, so status becomes mismatched.',
-            'provenance_ok is false when the config file no longer matches config_sha256; such a run cannot be registered.',
+            'provenance_issues lists why provenance_ok is false; both the config file hash and its content must agree with the metadata.',
             'order_ok is informational: episodes are appended sequentially by rollout.',
         ],
     }
@@ -544,10 +553,9 @@ def evaluate(args):
         if not audit['config_file']:
             raise SystemExit('--config is required with --register-row: the row must name and hash '
                              'the configuration that produced the run')
-        if not audit['config_file']['matches_metadata']:
-            raise SystemExit('Refusing to register: the config file hash does not match '
-                             'config_sha256 in the metadata, so the config was edited after the run '
-                             'started (or the wrong file was supplied).')
+        if not audit['provenance_ok']:
+            raise SystemExit('Refusing to register: ' + '; '.join(audit['provenance_issues'])
+                             + '. The config file and the metadata do not describe the same run.')
     rows = load_episodes(args.jsonl)
     metrics = summarize_episodes(rows)
     failures = failure_breakdown(rows, max(1, int(getattr(args, 'cases_per_class', 1))))
@@ -614,7 +622,7 @@ def check_run(args):
     if getattr(args, 'output', None):
         write_json(args.output, audit)
     print(json.dumps(audit, ensure_ascii=False, indent=2))
-    if audit['status'] != 'complete':
+    if audit['status'] != 'complete' or not audit['provenance_ok']:
         raise SystemExit(1)
 
 

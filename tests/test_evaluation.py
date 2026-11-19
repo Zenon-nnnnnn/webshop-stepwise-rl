@@ -118,6 +118,35 @@ class CompletionAuditTests(unittest.TestCase):
             self.assertEqual(audit['run_id_mismatch_tasks'], [1])
             self.assertEqual(audit['goal_fingerprint_mismatch_tasks'], [1])
 
+    def test_embedded_config_must_match_the_config_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            config_path = write_json(root / 'config.json', CONFIG)
+            jsonl = write_jsonl(root / 'run.jsonl', [episode(1, 1.)])
+            meta_path = root / 'run.meta.json'
+            # Same file and hash; only the metadata's embedded snapshot is tampered with.
+            for key, value in (('seed', 999), ('model', 'tampered/model'),
+                               ('revision', 'f' * 40)):
+                tampered = dict(CONFIG, **{key: value})
+                write_json(meta_path, meta([1], config_sha=file_hash(config_path), config=tampered))
+                audit = evaluation.inspect_run(jsonl, meta_path, config_path)
+                self.assertTrue(audit['config_file']['matches_metadata'], key)
+                self.assertFalse(audit['config_file']['matches_embedded'], key)
+                self.assertFalse(audit['provenance_ok'], key)
+                self.assertTrue(any('differs from metadata.config' in issue
+                                    for issue in audit['provenance_issues']), key)
+
+    def test_check_run_fails_on_provenance_mismatch(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            config_path = write_json(root / 'config.json', CONFIG)
+            jsonl = write_jsonl(root / 'run.jsonl', [episode(1, 1.)])
+            meta_path = write_json(root / 'run.meta.json',
+                                   meta([1], config_sha=file_hash(config_path), config=dict(CONFIG, seed=999)))
+            with self.assertRaises(SystemExit):
+                evaluation.check_run(argparse.Namespace(jsonl=str(jsonl), meta=str(meta_path),
+                                                        config=str(config_path), output=None))
+
     def test_config_edit_after_run_is_detected(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -127,6 +156,7 @@ class CompletionAuditTests(unittest.TestCase):
             jsonl = write_jsonl(root / 'run.jsonl', [episode(1, 1.)])
             audit = evaluation.inspect_run(jsonl, meta_path, config_path)
             self.assertTrue(audit['config_file']['matches_metadata'])
+            self.assertTrue(audit['provenance_ok'])
             self.assertEqual(audit['expected_episodes'], 1)
             self.assertEqual(audit['selected_tasks'], 1)
             edit = dict(CONFIG, max_steps=12)
@@ -393,6 +423,16 @@ class EndToEndEvaluationTests(unittest.TestCase):
             self.assertEqual(row['successes'], '1')
             checked = register.validate(fieldnames, rows, root, check_git=False)
             self.assertEqual(checked['status'], 'ok', msg=checked['errors'])
+
+    def test_register_refuses_metadata_config_tampering(self):
+        with tempfile.TemporaryDirectory() as directory:
+            args, root = self._run(directory, [episode(1, 1.)])
+            meta_path = root / 'b0-val.meta.json'
+            data = json.loads(meta_path.read_text(encoding='utf-8'))
+            data['config']['seed'] = 999
+            write_json(meta_path, data)
+            with self.assertRaises(SystemExit):
+                evaluation.evaluate(args)
 
     def test_register_refuses_an_edited_config(self):
         with tempfile.TemporaryDirectory() as directory:
