@@ -332,6 +332,31 @@ class FrozenConfigTests(unittest.TestCase):
         self.assertNotEqual(result['adapters']['a'], result['adapters']['b'])
 
 
+class FrozenValListTests(unittest.TestCase):
+    VAL_SHA = '45440d724b33e69e13916d0adbe243cc63ce3bd67677b8220feff9f30b866c36'
+    FINGERPRINT = 'e69c9ae2a0aad88977c44a7baf49f1f5ef7918ba8317923c4ae24dcc1f5638d8'
+    REVISION = '989aa7980e4cf806f80c7fef2b1adb7bc71aa306'
+
+    def test_frozen_val_list_matches_the_documented_hash(self):
+        import hashlib
+        path = REPO / 'results/eval-frozen-20261120/val_ids.json'
+        raw = path.read_bytes()
+        self.assertEqual(hashlib.sha256(raw).hexdigest(), self.VAL_SHA)
+        ids = json.loads(raw)
+        self.assertEqual(len(ids), 160)
+        self.assertEqual(len(set(ids)), 160)
+        self.assertTrue(all(type(task) is int for task in ids))
+
+    def test_frozen_configs_match_the_documented_environment(self):
+        for name in ('eval-b0-frozen.json', 'eval-b1-frozen.json'):
+            config = json.loads((REPO / 'configs' / name).read_text(encoding='utf-8'))
+            self.assertEqual(config['goal_fingerprint'], self.FINGERPRINT)
+            self.assertEqual(config['revision'], self.REVISION)
+        manifest = json.loads((REPO / 'results/eval-frozen-20261120/manifest.json').read_text(encoding='utf-8'))
+        self.assertEqual(manifest['sha256'], self.VAL_SHA)
+        self.assertEqual(manifest['environment']['goal_fingerprint'], self.FINGERPRINT)
+
+
 class IndependentMetricCheckTests(unittest.TestCase):
     def test_script_agrees_with_evaluate_and_flags_tampering(self):
         with tempfile.TemporaryDirectory() as directory:

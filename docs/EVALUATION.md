@@ -103,7 +103,7 @@ webshop-lab check-run --meta artifacts/b0-val.meta.json --jsonl artifacts/b0-val
 
 系统提示词与动作解析在代码里（`model.SYSTEM`、`common.parse_action`），所以两侧还必须来自**同一 commit**；不同 commit 的 B0/B1 不能对比。
 
-**冻结的评估配置**（11/20）：`configs/eval-b0-frozen.json` 与 `configs/eval-b1-frozen.json` 已固定模型 `Qwen/Qwen2.5-1.5B-Instruct`、revision `989aa7980e4cf806f80c7fef2b1adb7bc71aa306`、`goal_fingerprint=e69c9ae2…5638d8`、greedy 采样、上下文 2048、`max_steps=10`；两臂只有 `adapter` 不同，`check-parity --require-frozen` 必须为 true。冻结 val 列表的 sha256 是 `45440d724b33e69e13916d0adbe243cc63ce3bd67677b8220feff9f30b866c36`（160 个任务，与 PR #10 / PR #15 的环境侧一致），划分的 `goal_map_sha256` 是 `6b5d9dfceee913828871b8dff62fd59720a40306738a92a496d1b0fb6838fa88`。正式开跑前先跑 `preflight --require-frozen`。
+**冻结的评估配置**（11/20）：`configs/eval-b0-frozen.json` 与 `configs/eval-b1-frozen.json` 已固定模型 `Qwen/Qwen2.5-1.5B-Instruct`、revision `989aa7980e4cf806f80c7fef2b1adb7bc71aa306`、`goal_fingerprint=e69c9ae2…5638d8`、greedy 采样、上下文 2048、`max_steps=10`；两臂只有 `adapter` 不同，`check-parity --require-frozen` 必须为 true。冻结 val 清单在 `results/eval-frozen-20261120/val_ids.json`（160 个任务，sha256 `45440d724b33e69e13916d0adbe243cc63ce3bd67677b8220feff9f30b866c36`），划分的 `goal_map_sha256` 是 `6b5d9dfceee913828871b8dff62fd59720a40306738a92a496d1b0fb6838fa88`。正式开跑前先跑 `preflight --require-frozen`。
 
 `eval-b1-frozen.json` 里的 adapter 路径目前是**占位**（`artifacts/sft-qwen15b-seed42/adapter`）。B1 的 SFT 产物若落在别的目录，必须在 B1 首次评估**之前**改这个路径并重新记录 `config_sha256`（B0 配置不受影响）；不要让 B1 的 run 用旧配置哈希去登记。
 
@@ -165,8 +165,8 @@ mean_steps,invalid_action_rate,peak_vram_gb,evidence_path,notes
 
 ```bash
 webshop-lab evaluate --method B1 \
-  --meta artifacts/b1-val.meta.json --jsonl artifacts/b1-val.jsonl --config configs/eval-sft.json \
-  --split-ids data/processed/val_ids.json \
+  --meta artifacts/b1-val.meta.json --jsonl artifacts/b1-val.jsonl --config configs/eval-b1-frozen.json \
+  --split-ids results/eval-frozen-20261120/val_ids.json \
   --output artifacts/b1-val-evaluation.json --cases artifacts/b1-val-cases.md \
   --figures-dir artifacts/figures --register-row artifacts/b1-val-row.csv --peak-vram-gb 7.8
 ```
@@ -195,19 +195,19 @@ webshop-lab results-table --register results/experiment-register.csv --output re
 目标机（A/HowseaonLink 执行，按 [实验手册](EXPERIMENTS.md) 第 4 节）：
 
 ```bash
-webshop-lab rollout --config configs/eval-base.json --ids data/processed/val_ids.json --output artifacts/b0-val.jsonl
-webshop-lab rollout --config configs/eval-sft.json  --ids data/processed/val_ids.json --output artifacts/b1-val.jsonl
+webshop-lab rollout --config configs/eval-b0-frozen.json --ids results/eval-frozen-20261120/val_ids.json --output artifacts/b0-val.jsonl
+webshop-lab rollout --config configs/eval-b1-frozen.json --ids results/eval-frozen-20261120/val_ids.json --output artifacts/b1-val.jsonl
 ```
 
 复核机（E，CPU 即可）：
 
 ```bash
-webshop-lab preflight    --a-config configs/eval-base.json --b-config configs/eval-sft.json \
-                         --ids data/processed/val_ids.json --require-frozen --output artifacts/preflight.json
-webshop-lab check-run    --meta artifacts/b0-val.meta.json --jsonl artifacts/b0-val.jsonl --config configs/eval-base.json
+webshop-lab preflight    --a-config configs/eval-b0-frozen.json --b-config configs/eval-b1-frozen.json \
+                         --ids results/eval-frozen-20261120/val_ids.json --require-frozen --output artifacts/preflight.json
+webshop-lab check-run    --meta artifacts/b0-val.meta.json --jsonl artifacts/b0-val.jsonl --config configs/eval-b0-frozen.json
 webshop-lab check-parity --a-meta artifacts/b0-val.meta.json --b-meta artifacts/b1-val.meta.json --require-frozen
 webshop-lab evaluate     --method B0 --meta artifacts/b0-val.meta.json --jsonl artifacts/b0-val.jsonl \
-                         --config configs/eval-base.json --split-ids data/processed/val_ids.json \
+                         --config configs/eval-b0-frozen.json --split-ids results/eval-frozen-20261120/val_ids.json \
                          --output artifacts/b0-val-evaluation.json --cases artifacts/b0-val-cases.md \
                          --figures-dir artifacts/figures --register-row artifacts/b0-val-row.csv
 webshop-lab compare      --a-jsonl artifacts/b0-val.jsonl --b-jsonl artifacts/b1-val.jsonl \
