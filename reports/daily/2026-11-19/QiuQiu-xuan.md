@@ -45,3 +45,9 @@
 ## 下一个学习问题
 
 在 160 个 val 任务、每任务 1 条轨迹时，B0 的成功率 Wilson 区间会宽到什么程度；如果 B1 只提升 2–3 个任务，需要多少任务才能把差异与噪声分开？这决定 12/03 两臂对照表该怎么写"未观察到差异"。
+
+## 补充：晚间两条新评审的处理
+
+1. **Zqqq-qq 对 PR #8 的第二轮评审（P2）成立并已修（`abdd4f3`）**：他只改 `metadata.config.seed`、保持配置文件与 SHA 不变，`inspect_run` 仍返回 `matches_metadata=true`、`provenance_ok=true`，`evaluate --register-row` 还能写 complete 行。现在 `provenance_ok` 要求**哈希与内容都一致**，新增 `provenance_issues` 说明原因，`usable_as_result=false`，`check-run` 溯源不一致也返回非 0；补了 seed / model / revision 篡改的负向用例，测试 **62 项**通过，已重新请求 Zqqq 与 HowseaonLink 复审。
+2. **PR #16 复审通过**：作者已把 README 重存为 UTF-8（650 个中文字符、0 个 `?`），口径也收紧为"底模配对试跑"：明确单任务来源（Qwen2.5 只有 task 160 的 0.4、Qwen3 只有 task 111 的 0.667）、无满分配对任务、两臂模型同时变化不构成受控对照、未登记、容量数字单列。我按 `paired-summary.json` 重新核对表格全部一致。
+3. **issue #2 补了评估侧说明**：冻结配置已绑定 PR #15/PR #10 这一版划分（val sha `45440d72…`、goal_map `6b5d9dfc…`）；若改用其他版本，B0/B1 正式 run 前必须更新冻结配置并重记哈希。
