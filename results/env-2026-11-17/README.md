@@ -31,7 +31,7 @@
 | `rollout-3val-ids.json` | 本次选用的 3 个 val 任务 ID |
 | `rollout-3val.jsonl` | 3 个真实 episode 的逐步原文：observation、available、action、grounding、error、environment_reward |
 | `rollout-3val.meta.json` | run_id、config 与 ids 的 SHA-256、selected_ids、repeats、health 快照、torch 版本、起始 UTC |
-| `rollout-3val-summary.json` | `summarize` 输出的指标原文（**PR #8 合并前版本**，见下文指标文件版本说明） |
+| `rollout-3val-summary.json` | 固定版评估器 `evaluate` 输出，包含完整性、终局购物奖励、页面匹配分和失败分类 |
 | `rollout-3val-terminal-supplement.json` | 独立派生件：逐 episode 的页面分与 `terminal_reward`、`purchase_terminated`、任务级均值、episode 耗时合计，附定义、上游行号引用与源 JSONL 的 SHA-256 |
 | `run-model-revision.json` | run_id 到模型 revision 的旁证件：repo、revision、权重 SHA-256、下载 endpoint、原 meta 的 SHA-256。原 meta 未修改，此件供结果登记行取用 |
 
@@ -93,7 +93,17 @@
 
 ### 指标文件版本说明
 
-`rollout-3val-summary.json` 由 **PR #8 合并前**的 `summarize` 生成，因此缺 `purchase_terminated` 与 `terminal_reward` 字段，且 Wilson 下界为 `5.551115123125783e-17`（应为 `0.0`）。**PR #8 合并后须用 `evaluate` 重新生成该文件**，使产物与报告采用的指标定义一致。在该重生成完成前，任务级口径以本 README 与补充文件为准。
+`rollout-3val-summary.json` 由 [PR #8](https://github.com/Zqqq-qq/webshop-stepwise-rl/pull/8) 的固定审阅版本 `b19b87fdc402c4a3c3d5d32cfeddd71cd5b2e1d3` 重新生成。原始轨迹、元数据和配置保留原字节。评估器核对该三任务样本的完整性和溯源，输出购买 0、满分成功 0、平均终局购物奖励 0。区间下界的原始浮点值约为 0。摘要仅用于三任务工程验证，未写入实验登记表。
+
+在该评估器源码快照中，将本目录原始输入放在同名相对路径，运行下面的命令。
+
+```bash
+PYTHONPATH=src python -m webshop_lab.cli evaluate \
+  --jsonl results/env-2026-11-17/rollout-3val.jsonl \
+  --meta results/env-2026-11-17/rollout-3val.meta.json \
+  --config results/env-2026-11-17/rollout-base-3val.json \
+  --output results/env-2026-11-17/rollout-3val-summary.json
+```
 
 ### 失败模式
 
@@ -123,6 +133,6 @@
 
 - **n=3，成功率 0 的 Wilson 上界为 0.5615**，只能表述为「基座模型在这 3 个 val 任务上未完成购买」，不得推广为模型能力结论。这是未经 SFT 的 B0 基线行为。
 - **`mean_final_reward=0.9167` 是页面匹配分均值，不是任务奖励均值**；任务级 `mean_terminal_reward=0.0`、`purchase_terminated=0`。任何报告、图表或结果登记行引用奖励时必须标明是哪一种，不得用页面分暗示任务接近完成。
-- 未执行 SFT、未执行 PPO、无任何训练后性能结果。Issue #1 第 5 条（2-step SFT 与 adapter 重载）仍待 Issue #3 的冻结配置。
+- 本目录仅覆盖 11/17 环境和三任务 rollout。后续 [PR #12](https://github.com/Zqqq-qq/webshop-stepwise-rl/pull/12#issuecomment-7008040535) 已单独交付两步 SFT 与独立重载证据。[PR #14](https://github.com/Zqqq-qq/webshop-stepwise-rl/pull/14#issuecomment-7007874484) 记录后续长样本容量和加载补测。正式 1 epoch SFT 仍待配置和划分确认。
 - `rollout-3val.jsonl` 是**智能体自身生成的交互轨迹**，不是原始专家 SFT 对话，也不含 MTurk worker 信息。
 - 本目录不含模型权重、原始数据集或完整大日志。

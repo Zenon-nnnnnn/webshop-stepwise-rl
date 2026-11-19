@@ -1,24 +1,322 @@
 {
-  "episodes": 3,
-  "unique_tasks": 3,
-  "successes": 0,
-  "success_rate": 0.0,
-  "success_rate_wilson_95": [
-    5.551115123125783e-17,
-    0.5614970317550454
-  ],
-  "mean_final_reward": 0.9166666666666666,
-  "mean_steps": 10.0,
-  "invalid_action_rate": 0.26666666666666666,
-  "grounding_accuracy": 0.7333333333333334,
-  "termination_counts": {
-    "max_steps": 3
+  "schema_version": 1,
+  "generated_utc": "2026-11-19T11:41:28+00:00",
+  "run": {
+    "run_id": "1ed67684-a2b2-4fcf-b1a3-2385653ec7a6",
+    "method": null,
+    "meta_path": "results/env-2026-11-17/rollout-3val.meta.json",
+    "jsonl_path": "results/env-2026-11-17/rollout-3val.jsonl",
+    "jsonl_sha256": "fe32f8478c1c72740f6deadc14faa89e83650ab1b45e555bde40d66d95a36483",
+    "config_path": "results/env-2026-11-17/rollout-base-3val.json",
+    "config_sha256": "2a61cd099b4228e09e1f5ebff58b87820a2cf9bb91dd6ac77185c43fbd349908",
+    "commit": "44148aaa8ef2ed59b0aeeba2fcc3f0b5ee4d6d50"
   },
-  "input_sha256": "fe32f8478c1c72740f6deadc14faa89e83650ab1b45e555bde40d66d95a36483",
-  "goal_fingerprint": "e69c9ae2a0aad88977c44a7baf49f1f5ef7918ba8317923c4ae24dcc1f5638d8",
-  "notes": [
-    "Success requires both done=true and final_reward approximately 1; purchase alone is not success.",
-    "Independent-task Wilson interval omitted for repeated trajectories; use task-cluster bootstrap for repeated-task inference.",
-    "Check metadata selected_ids against completed IDs before calling a run complete."
-  ]
+  "completeness": {
+    "status": "complete",
+    "summary": "3 of 3 expected episodes (3 tasks x 1 repeats)",
+    "complete": true,
+    "partial": false,
+    "provenance_ok": true,
+    "provenance_issues": [],
+    "meta_path": "results/env-2026-11-17/rollout-3val.meta.json",
+    "jsonl_path": "results/env-2026-11-17/rollout-3val.jsonl",
+    "run_id": "1ed67684-a2b2-4fcf-b1a3-2385653ec7a6",
+    "selected_ids": [
+      16,
+      75,
+      104
+    ],
+    "selected_tasks": 3,
+    "repeats": 1,
+    "expected_episodes": 3,
+    "completed_episodes": 3,
+    "completed_unique_tasks": 3,
+    "missing_pairs": [],
+    "unexpected_pairs": [],
+    "duplicate_pairs": [],
+    "order_ok": true,
+    "run_id_mismatch_tasks": [],
+    "goal_fingerprint_mismatch_tasks": [],
+    "goal_fingerprint": "e69c9ae2a0aad88977c44a7baf49f1f5ef7918ba8317923c4ae24dcc1f5638d8",
+    "model_source": null,
+    "config_file": {
+      "path": "results\\env-2026-11-17\\rollout-base-3val.json",
+      "sha256": "2a61cd099b4228e09e1f5ebff58b87820a2cf9bb91dd6ac77185c43fbd349908",
+      "raw_sha256": "2a61cd099b4228e09e1f5ebff58b87820a2cf9bb91dd6ac77185c43fbd349908",
+      "lf_sha256": "2a61cd099b4228e09e1f5ebff58b87820a2cf9bb91dd6ac77185c43fbd349908",
+      "newline_normalized": false,
+      "matches_metadata": true,
+      "matches_embedded": true
+    },
+    "notes": [
+      "A partial or mismatched file must not be reported as the frozen task set.",
+      "run_id or goal_fingerprint mismatches are identity failures, so status becomes mismatched.",
+      "provenance_issues lists why provenance_ok is false; both the config file hash and its content must agree with the metadata.",
+      "order_ok is informational: episodes are appended sequentially by rollout."
+    ]
+  },
+  "metrics": {
+    "episodes": 3,
+    "unique_tasks": 3,
+    "purchase_terminated": 0,
+    "full_reward_successes": 0,
+    "successes": 0,
+    "purchase_without_full_reward": 0,
+    "max_steps_terminated": 3,
+    "success_rate": 0.0,
+    "success_rate_ci95": [
+      5.551115123125783e-17,
+      0.5614970317550454
+    ],
+    "ci_method": "wilson (one episode per task)",
+    "conditional_success_given_purchase": null,
+    "mean_terminal_reward": 0.0,
+    "mean_final_reward": 0.9166666666666666,
+    "mean_steps": 10.0,
+    "invalid_action_rate": 0.26666666666666666,
+    "grounding_accuracy": 0.7333333333333334,
+    "episodes_with_invalid_actions": 1,
+    "termination_counts": {
+      "max_steps": 3
+    },
+    "goal_fingerprint": "e69c9ae2a0aad88977c44a7baf49f1f5ef7918ba8317923c4ae24dcc1f5638d8",
+    "notes": [
+      "Success requires done=true AND final_reward approximately 1; a purchase alone is not success.",
+      "mean_terminal_reward is the task reward: the recorded score only when the episode purchased, else 0.",
+      "mean_final_reward is the last recorded environment score; for max_steps episodes it is a page-match score, not task completion.",
+      "success_rate uses every attempted episode as the denominator, including max_steps terminations.",
+      "Independent-task Wilson interval omitted for repeated trajectories; a task-cluster bootstrap is reported instead.",
+      "Check metadata selected_ids against completed IDs (webshop-lab check-run) before quoting a run."
+    ]
+  },
+  "failures": {
+    "episodes": 3,
+    "failed_episodes": 3,
+    "counts": {
+      "format": 1,
+      "budget": 0,
+      "specification": 0,
+      "loop": 2,
+      "retrieval": 0,
+      "other": 0,
+      "engineering": 0
+    },
+    "any_counts": {
+      "format": 1,
+      "budget": 0,
+      "specification": 0,
+      "loop": 3,
+      "retrieval": 0,
+      "other": 0,
+      "engineering": 0
+    },
+    "rates_of_failures": {
+      "format": 0.333333,
+      "budget": 0.0,
+      "specification": 0.0,
+      "loop": 0.666667,
+      "retrieval": 0.0,
+      "other": 0.0,
+      "engineering": 0.0
+    },
+    "unclassified_tasks": [],
+    "cases": [
+      {
+        "class": "format",
+        "reason": "8 parsed action(s) were not executable on the current page; first: 'click[4 fl. oz (pack of 3)]' (Action is not in available actions)",
+        "secondary": [
+          "loop"
+        ],
+        "task_id": 75,
+        "repeat": 0,
+        "instruction": "Instruction: i would like a three pack of 4 fluid ounce green envy hair dye, and price lower than 60.00 dollars",
+        "termination": "max_steps",
+        "done": false,
+        "final_reward": 1.0,
+        "steps": [
+          {
+            "step": 0,
+            "action": "search[green envy hair dye three pack]",
+            "grounding": 1,
+            "environment_reward": 0.7064102564102565,
+            "error": null,
+            "observation": "WebShop [SEP] Instruction: [SEP] i would like a three pack of 4 fluid ounce green envy hair dye, and price lower than 60.00 dollars [SEP] Search"
+          },
+          {
+            "step": 1,
+            "action": "click[b01ipzcpxq]",
+            "grounding": 1,
+            "environment_reward": 1.0,
+            "error": null,
+            "observation": "Instruction: [SEP] i would like a three pack of 4 fluid ounce green envy hair dye, and price lower than 60.00 dollars [SEP] Back to Search [SEP] Page 1 (Total results: 50) [SEP] Next > [SEP] B01IPZCPXQ [SEP] MANIC PANIC Venus Envy Hair Dye Classic 2PK [SEP] $28.24 [SEP] B0010NYC3M [SEP] MANIC PANIC Raven Black Hair Dye Classic [SEP] $14.24 [SEP] B00265MIR0 [SEP] Manic Panic Green Envy Hair Dye Cla"
+          },
+          {
+            "step": 2,
+            "action": "click[4 fl. oz (pack of 3)]",
+            "grounding": 0,
+            "environment_reward": 0.0,
+            "error": "Action is not in available actions",
+            "observation": "Instruction: [SEP] i would like a three pack of 4 fluid ounce green envy hair dye, and price lower than 60.00 dollars [SEP] Back to Search [SEP] < Prev [SEP] color [SEP] after midnight [SEP] atomic turquoise [SEP] bad boy blue [SEP] blue moon [SEP] blue steel [SEP] cleo rose [SEP] deep purple dream [SEP] electric amethyst [SEP] electric banana [SEP] electric lizard [SEP] electric tiger lily [SEP] "
+          },
+          {
+            "step": 3,
+            "action": "click[4 fl. oz (pack of 3)]",
+            "grounding": 0,
+            "environment_reward": 0.0,
+            "error": "Action is not in available actions",
+            "observation": "Instruction: [SEP] i would like a three pack of 4 fluid ounce green envy hair dye, and price lower than 60.00 dollars [SEP] Back to Search [SEP] < Prev [SEP] color [SEP] after midnight [SEP] atomic turquoise [SEP] bad boy blue [SEP] blue moon [SEP] blue steel [SEP] cleo rose [SEP] deep purple dream [SEP] electric amethyst [SEP] electric banana [SEP] electric lizard [SEP] electric tiger lily [SEP] "
+          },
+          {
+            "step": 4,
+            "action": "click[size: 4 fl. oz (pack of 3)]",
+            "grounding": 0,
+            "environment_reward": 0.0,
+            "error": "Action is not in available actions",
+            "observation": "Instruction: [SEP] i would like a three pack of 4 fluid ounce green envy hair dye, and price lower than 60.00 dollars [SEP] Back to Search [SEP] < Prev [SEP] color [SEP] after midnight [SEP] atomic turquoise [SEP] bad boy blue [SEP] blue moon [SEP] blue steel [SEP] cleo rose [SEP] deep purple dream [SEP] electric amethyst [SEP] electric banana [SEP] electric lizard [SEP] electric tiger lily [SEP] "
+          },
+          {
+            "step": 5,
+            "action": "click[size: 4 fl. oz (pack of 3)]",
+            "grounding": 0,
+            "environment_reward": 0.0,
+            "error": "Action is not in available actions",
+            "observation": "Instruction: [SEP] i would like a three pack of 4 fluid ounce green envy hair dye, and price lower than 60.00 dollars [SEP] Back to Search [SEP] < Prev [SEP] color [SEP] after midnight [SEP] atomic turquoise [SEP] bad boy blue [SEP] blue moon [SEP] blue steel [SEP] cleo rose [SEP] deep purple dream [SEP] electric amethyst [SEP] electric banana [SEP] electric lizard [SEP] electric tiger lily [SEP] "
+          },
+          {
+            "step": 6,
+            "action": "click[size: 4 fl. oz (pack of 3)]",
+            "grounding": 0,
+            "environment_reward": 0.0,
+            "error": "Action is not in available actions",
+            "observation": "Instruction: [SEP] i would like a three pack of 4 fluid ounce green envy hair dye, and price lower than 60.00 dollars [SEP] Back to Search [SEP] < Prev [SEP] color [SEP] after midnight [SEP] atomic turquoise [SEP] bad boy blue [SEP] blue moon [SEP] blue steel [SEP] cleo rose [SEP] deep purple dream [SEP] electric amethyst [SEP] electric banana [SEP] electric lizard [SEP] electric tiger lily [SEP] "
+          },
+          {
+            "step": 7,
+            "action": "click[size: 4 fl. oz (pack of 3)]",
+            "grounding": 0,
+            "environment_reward": 0.0,
+            "error": "Action is not in available actions",
+            "observation": "Instruction: [SEP] i would like a three pack of 4 fluid ounce green envy hair dye, and price lower than 60.00 dollars [SEP] Back to Search [SEP] < Prev [SEP] color [SEP] after midnight [SEP] atomic turquoise [SEP] bad boy blue [SEP] blue moon [SEP] blue steel [SEP] cleo rose [SEP] deep purple dream [SEP] electric amethyst [SEP] electric banana [SEP] electric lizard [SEP] electric tiger lily [SEP] "
+          },
+          {
+            "step": 8,
+            "action": "click[size: 4 fl. oz (pack of 3)]",
+            "grounding": 0,
+            "environment_reward": 0.0,
+            "error": "Action is not in available actions",
+            "observation": "Instruction: [SEP] i would like a three pack of 4 fluid ounce green envy hair dye, and price lower than 60.00 dollars [SEP] Back to Search [SEP] < Prev [SEP] color [SEP] after midnight [SEP] atomic turquoise [SEP] bad boy blue [SEP] blue moon [SEP] blue steel [SEP] cleo rose [SEP] deep purple dream [SEP] electric amethyst [SEP] electric banana [SEP] electric lizard [SEP] electric tiger lily [SEP] "
+          },
+          {
+            "step": 9,
+            "action": "click[size: 4 fl. oz (pack of 3)]",
+            "grounding": 0,
+            "environment_reward": 0.0,
+            "error": "Action is not in available actions",
+            "observation": "Instruction: [SEP] i would like a three pack of 4 fluid ounce green envy hair dye, and price lower than 60.00 dollars [SEP] Back to Search [SEP] < Prev [SEP] color [SEP] after midnight [SEP] atomic turquoise [SEP] bad boy blue [SEP] blue moon [SEP] blue steel [SEP] cleo rose [SEP] deep purple dream [SEP] electric amethyst [SEP] electric banana [SEP] electric lizard [SEP] electric tiger lily [SEP] "
+          }
+        ]
+      },
+      {
+        "class": "loop",
+        "reason": "the same action was repeated without a new observation",
+        "secondary": [],
+        "task_id": 16,
+        "repeat": 0,
+        "instruction": "Instruction: i'm looking for lead free luxury scented candle which last for 25+ hours, it should be in tin voyager, and price lower than 50.00 dollars",
+        "termination": "max_steps",
+        "done": false,
+        "final_reward": 0.75,
+        "steps": [
+          {
+            "step": 0,
+            "action": "search[lead free luxury scented candles that last for 25+ hours in tin voyager, priced under $50]",
+            "grounding": 1,
+            "environment_reward": 0.63125,
+            "error": null,
+            "observation": "WebShop [SEP] Instruction: [SEP] i'm looking for lead free luxury scented candle which last for 25+ hours, it should be in tin voyager, and price lower than 50.00 dollars [SEP] Search"
+          },
+          {
+            "step": 1,
+            "action": "click[b091d87qmm]",
+            "grounding": 1,
+            "environment_reward": 1.0,
+            "error": null,
+            "observation": "Instruction: [SEP] i'm looking for lead free luxury scented candle which last for 25+ hours, it should be in tin voyager, and price lower than 50.00 dollars [SEP] Back to Search [SEP] Page 1 (Total results: 50) [SEP] Next > [SEP] B091D87QMM [SEP] Mer Sea Luxury Scented Candle in Tin - Voyager, 25 Hour Burn [SEP] $12.0 [SEP] B087SYFZ3L [SEP] Stonebriar 50 Pack 4 Hour Burn Time Citronella Scented Te"
+          },
+          {
+            "step": 2,
+            "action": "click[25+ hour]",
+            "grounding": 1,
+            "environment_reward": 1.0,
+            "error": null,
+            "observation": "Instruction: [SEP] i'm looking for lead free luxury scented candle which last for 25+ hours, it should be in tin voyager, and price lower than 50.00 dollars [SEP] Back to Search [SEP] < Prev [SEP] scent [SEP] sun kissed [SEP] cape flower [SEP] coconut sugar [SEP] dune [SEP] fog [SEP] saltaire [SEP] sea change [SEP] voyager [SEP] size [SEP] 7.5 m us [SEP] 22+ hour [SEP] 25+ hour [SEP] 40+ hour [SEP"
+          },
+          {
+            "step": 3,
+            "action": "click[sea change]",
+            "grounding": 1,
+            "environment_reward": 0.75,
+            "error": null,
+            "observation": "Instruction: [SEP] i'm looking for lead free luxury scented candle which last for 25+ hours, it should be in tin voyager, and price lower than 50.00 dollars [SEP] Back to Search [SEP] < Prev [SEP] scent [SEP] sun kissed [SEP] cape flower [SEP] coconut sugar [SEP] dune [SEP] fog [SEP] saltaire [SEP] sea change [SEP] voyager [SEP] size [SEP] 7.5 m us [SEP] 22+ hour [SEP] 25+ hour [SEP] 40+ hour [SEP"
+          },
+          {
+            "step": 4,
+            "action": "click[sea change]",
+            "grounding": 1,
+            "environment_reward": 0.75,
+            "error": null,
+            "observation": "Instruction: [SEP] i'm looking for lead free luxury scented candle which last for 25+ hours, it should be in tin voyager, and price lower than 50.00 dollars [SEP] Back to Search [SEP] < Prev [SEP] scent [SEP] sun kissed [SEP] cape flower [SEP] coconut sugar [SEP] dune [SEP] fog [SEP] saltaire [SEP] sea change [SEP] voyager [SEP] size [SEP] 7.5 m us [SEP] 22+ hour [SEP] 25+ hour [SEP] 40+ hour [SEP"
+          },
+          {
+            "step": 5,
+            "action": "click[sea change]",
+            "grounding": 1,
+            "environment_reward": 0.75,
+            "error": null,
+            "observation": "Instruction: [SEP] i'm looking for lead free luxury scented candle which last for 25+ hours, it should be in tin voyager, and price lower than 50.00 dollars [SEP] Back to Search [SEP] < Prev [SEP] scent [SEP] sun kissed [SEP] cape flower [SEP] coconut sugar [SEP] dune [SEP] fog [SEP] saltaire [SEP] sea change [SEP] voyager [SEP] size [SEP] 7.5 m us [SEP] 22+ hour [SEP] 25+ hour [SEP] 40+ hour [SEP"
+          },
+          {
+            "step": 6,
+            "action": "click[sea change]",
+            "grounding": 1,
+            "environment_reward": 0.75,
+            "error": null,
+            "observation": "Instruction: [SEP] i'm looking for lead free luxury scented candle which last for 25+ hours, it should be in tin voyager, and price lower than 50.00 dollars [SEP] Back to Search [SEP] < Prev [SEP] scent [SEP] sun kissed [SEP] cape flower [SEP] coconut sugar [SEP] dune [SEP] fog [SEP] saltaire [SEP] sea change [SEP] voyager [SEP] size [SEP] 7.5 m us [SEP] 22+ hour [SEP] 25+ hour [SEP] 40+ hour [SEP"
+          },
+          {
+            "step": 7,
+            "action": "click[sea change]",
+            "grounding": 1,
+            "environment_reward": 0.75,
+            "error": null,
+            "observation": "Instruction: [SEP] i'm looking for lead free luxury scented candle which last for 25+ hours, it should be in tin voyager, and price lower than 50.00 dollars [SEP] Back to Search [SEP] < Prev [SEP] scent [SEP] sun kissed [SEP] cape flower [SEP] coconut sugar [SEP] dune [SEP] fog [SEP] saltaire [SEP] sea change [SEP] voyager [SEP] size [SEP] 7.5 m us [SEP] 22+ hour [SEP] 25+ hour [SEP] 40+ hour [SEP"
+          },
+          {
+            "step": 8,
+            "action": "click[sea change]",
+            "grounding": 1,
+            "environment_reward": 0.75,
+            "error": null,
+            "observation": "Instruction: [SEP] i'm looking for lead free luxury scented candle which last for 25+ hours, it should be in tin voyager, and price lower than 50.00 dollars [SEP] Back to Search [SEP] < Prev [SEP] scent [SEP] sun kissed [SEP] cape flower [SEP] coconut sugar [SEP] dune [SEP] fog [SEP] saltaire [SEP] sea change [SEP] voyager [SEP] size [SEP] 7.5 m us [SEP] 22+ hour [SEP] 25+ hour [SEP] 40+ hour [SEP"
+          },
+          {
+            "step": 9,
+            "action": "click[sea change]",
+            "grounding": 1,
+            "environment_reward": 0.75,
+            "error": null,
+            "observation": "Instruction: [SEP] i'm looking for lead free luxury scented candle which last for 25+ hours, it should be in tin voyager, and price lower than 50.00 dollars [SEP] Back to Search [SEP] < Prev [SEP] scent [SEP] sun kissed [SEP] cape flower [SEP] coconut sugar [SEP] dune [SEP] fog [SEP] saltaire [SEP] sea change [SEP] voyager [SEP] size [SEP] 7.5 m us [SEP] 22+ hour [SEP] 25+ hour [SEP] 40+ hour [SEP"
+          }
+        ]
+      }
+    ],
+    "notes": [
+      "counts assigns one primary label per episode; any_counts also counts secondary signals.",
+      "Labels are heuristic triage from recorded steps; confirm each case manually before quoting it.",
+      "An \"other\" class means no rule matched, not that the model behaved well.",
+      "engineering episodes are infrastructure problems and must be excluded from method comparison."
+    ]
+  },
+  "usable_as_result": true,
+  "warnings": []
 }

@@ -96,7 +96,7 @@
 
   **已验证的证据等级**：CUDA kernel 真实执行、`Linear4bit` 前向、组件导入与 JVM 启动、模型 4bit 加载与单条贪心生成、环境服务启动与指令对齐、单条串行 rollout。**这些都不等于训练就绪。**
 
-  **尚未验证**：SFT 的反向传播、优化器步、adapter 保存与重载、量化训练、批量 rollout、B1 臂与 `check-parity` 比对、任何 RL/PPO 更新、以及任何模型性能结论。Issue #1 第 5 条待 Issue #3 的冻结配置。**当前已知阻塞是 SFT 配置未交付；数据缺失这一原阻塞已解除，其余完整路径仍待实测**，不预先承诺配置到位后全流程都会成功。
+  **尚未验证**：SFT 的反向传播、优化器步、adapter 保存与重载、量化训练、批量 rollout、B1 臂与 `check-parity` 比对、任何 RL/PPO 更新、以及任何模型性能结论。此段记录 11/17 当时的证据范围。11/19 补记见文末。
 
 ## 观察、错误与判断
 
@@ -135,12 +135,16 @@
 
 ## 交接
 
-- **给 Jun040504（Issue #3）**：`webshop-gpu` 可用，模型 4bit 加载与单条贪心生成已实测通过，真实环境与冻结划分就绪，**串行 rollout 路径已跑通**。但**这不等于 2-step SFT 就绪**——反向传播、优化器步、adapter 保存与重载都还没验过。你冻结配置后我按配置执行。请注意上面第一条依赖缺口（`faiss-cpu`）与第六条 revision 缺口；第二条 pyjnius 请按修正后的口径理解（钉版是建议，不是已证实故障）。另：`configs/eval-sft.json` 指向的 adapter 目录仍不存在，QiuQiu 的 `preflight` 会因此报 `ready=false`，这是预期行为。
+- **给 Jun040504（Issue #3）**：`webshop-gpu` 可用，模型 4bit 加载与单条贪心生成已实测通过，真实环境与冻结划分就绪，**串行 rollout 路径已跑通**。但**这不等于 2-step SFT 就绪**——反向传播、优化器步、adapter 保存与重载都还没验过。以上为 11/17 交接时的状态，11/19 实测见文末。请注意上面第一条依赖缺口（`faiss-cpu`）与第六条 revision 缺口；第二条 pyjnius 请按修正后的口径理解（钉版是建议，不是已证实故障）。另：`configs/eval-sft.json` 指向的 adapter 目录仍不存在，QiuQiu 的 `preflight` 会因此报 `ready=false`，这是预期行为。
 - **给 Zqqq-qq（Issue #2 / #4）**：三份材料已导入并校验，完整 WebShop 已启动，goal-map 对齐与重划已完成，`alignment_mismatches=0`、`split_status.verified=true`。冻结划分的关键值与全部原文已提交到 `results/env-2026-11-17/`，并在 Issue #2 请你**正式确认冻结**（按 `docs/DATA.md` 这是 B 负责人的决定）。`goal_fingerprint` 已同步给 QiuQiu-xuan。
 - **给 QiuQiu-xuan（Issue #5）**：你 11/19 的「人工复核 3 条真实轨迹」**阻塞已解除**——首批真实 rollout 日志（3 个 val 任务、含逐 step observation/available/action/grounding/error/reward）与你要的 meta、config、ids 已入库，`goal_fingerprint` 可直接填评估配置。详见 Issue #5 我的评论。B1 臂仍等 Jun 的配置，故 `check-parity` 暂无法比对。
-- **验收条件**：Issue #1 第 1–4 条以本文件表格与 `results/env-2026-11-17/` 的原文为证据；第 5 条待 Issue #3 的冻结配置，另行提交。
+- **验收条件**：Issue #1 第 1–4 条以本文件表格与 `results/env-2026-11-17/` 的原文为证据；第 5 条的工程短训证据见文末 11/19 补记。
 - **阻塞时的最小检查**：SFT 配置到位后先跑 `webshop-lab preflight`（QiuQiu 提供）确认配置与 adapter 路径，再用独立输出目录做 2-step smoke，检查 loss 有限、assistant-only mask 与 skipped 数量、adapter 可重载；不要跳过 `alignment_mismatches=0` 与 `split_status.verified=true` 直接产出成绩。
 
 ## 下一个学习问题
 
 `max_steps` 截断一个 episode 时，GAE 该不该 bootstrap？`src/webshop_lab/rollout.py` 第 109–110 行已经把 `done` 与 `termination`（`purchase` / `max_steps`）分开记了，所以「真正终止」和「只是步数用完」在日志里是可区分的。我不清楚的是下游：算 advantage 时该不该对 `termination=max_steps` 的末尾用价值函数 bootstrap，而对 `purchase` 的末尾按真终止处理（不 bootstrap）？如果两者都当成真终止，截断的 episode 会被系统性低估。这直接影响 12/01 策略更新验收里 advantage 的正确性，也是 Zqqq-qq 在 Issue #4 要接的 RL 接口的一部分。
+
+## 11/19 补记
+
+[PR #12](https://github.com/Zqqq-qq/webshop-stepwise-rl/pull/12#issuecomment-7008040535) 的工程短训已在目标机执行，两步更新、保存 adapter 和新进程重载均有原始证据。[PR #14](https://github.com/Zqqq-qq/webshop-stepwise-rl/pull/14#issuecomment-7007874484) 另有固定版本离线加载、长样本两步压测及新进程生成补测。正式配置与数据冻结仍待负责人确认。本日报的三任务 B0 测试没有加载这些 adapter。
