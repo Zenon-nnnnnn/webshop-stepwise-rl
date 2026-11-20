@@ -1,7 +1,7 @@
 """Dependency-free linear progress baseline, NOT the paper's neural SPA estimator.
 
 Learn w such that sum_t dot(w, phi(observation_t, response_t)) approximates
-the final reward. Hashed bag-of-words features are fixed and use no test data.
+the purchase terminal reward (zero for an episode without a purchase). Hashed bag-of-words features are fixed and use no test data.
 The decomposition is not uniquely identified by terminal supervision.
 """
 import hashlib
@@ -11,7 +11,7 @@ import random
 import re
 from pathlib import Path
 from .common import read_json, write_json, file_hash, instruction_hash
-from .metrics import load_episodes
+from .evaluation import load_episodes, terminal_reward
 
 
 def features(step, dimensions):
@@ -45,11 +45,13 @@ def train(args):
         raise ValueError('Progress train/val environment mismatch')
     if args.dimensions < 2 or args.epochs < 1:
         raise ValueError('dimensions>=2 and epochs>=1 required')
-    if len({r['final_reward'] for r in train_rows}) < 2:
+    train_targets = [terminal_reward(row) for row in train_rows]
+    if len(set(train_targets)) < 2:
         raise ValueError('Training rewards have no variation; collect more diverse trajectories')
     w = [0.] * args.dimensions
-    data = [(total_features(r, args.dimensions), float(r['final_reward'])) for r in train_rows]
-    validation = [(total_features(r, args.dimensions), float(r['final_reward'])) for r in val_rows]
+    data = [(total_features(row, args.dimensions), target)
+            for row, target in zip(train_rows, train_targets)]
+    validation = [(total_features(row, args.dimensions), terminal_reward(row)) for row in val_rows]
     best_loss, best_w, best_epoch = math.inf, None, None
     rng = random.Random(args.seed)
     for epoch in range(args.epochs):
@@ -64,7 +66,7 @@ def train(args):
         if loss < best_loss:
             best_loss, best_w, best_epoch = loss, list(w), epoch + 1
     write_json(args.output, {'kind': 'hashed-linear-additive-v1', 'dimensions': args.dimensions,
-        'weights': best_w, 'best_epoch': best_epoch, 'validation_mse': best_loss, 'seed': args.seed,
+        'weights': best_w, 'target': 'terminal_reward', 'best_epoch': best_epoch, 'validation_mse': best_loss, 'seed': args.seed,
         'train_sha256': file_hash(args.train), 'val_sha256': file_hash(args.val),
         'goal_fingerprint': train_rows[0].get('goal_fingerprint'),
         'train_task_ids': sorted({r['task_id'] for r in train_rows}),
