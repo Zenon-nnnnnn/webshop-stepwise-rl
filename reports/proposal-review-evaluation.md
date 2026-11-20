@@ -9,7 +9,7 @@
 
 **定义与口径已经在仓库里落地，但 proposal 正文还没跟上。** 4 条"必须改"里：
 
-- 第 1–3 条（R-TG/R-PG 与同一 grounding、可检查的公平性字段、指标分母与区间）已经写进 **PR #13 的实验协议**，并落到冻结配置与 `results/metrics-definition.json` v1.1；**PR #13 的 proposal 分支只改了 §1/§7/§8**，§3/§4/§5 的正文还需要 Zqqq-qq 在 11/22 前补上。
+- 第 1–3 条（R-TG/R-PG 与同一 grounding、可检查的公平性字段、指标分母与区间）已经写进 **PR #13 的实验协议**，并落到冻结配置与 `results/metrics-definition.json` v1.1；**PR #13 对 proposal 的改动只有开头链接与 §7/§8**，§3/§4/§5 的正文还需要 Zqqq-qq 在 11/22 前补上。
 - 第 4 条（划分规模与 test 状态）的证据已在 **PR #15** 落地：真实 goal-map 重划后 1451/160/200、排除 13、真实指令零交叉；proposal §3 仍只写"1,624 条"和"12 个 ID 重叠"。
 - 模型 revision 已由 **PR #14** 支持钉版，评估侧登记表也加了 `model_revision`；PR #14 合并前，run 的 meta 里还不会有 `model_source`。
 
@@ -65,10 +65,30 @@ git cat-file blob HEAD:results/eval-frozen-20261120/val_ids.json | sha256sum   #
 - 冻结 val 清单：`results/eval-frozen-20261120/val_ids.json`，sha256 `45440d724b33e69e13916d0adbe243cc63ce3bd67677b8220feff9f30b866c36`。
 - 测试集：`upstream/eval_agent/data/webshop/test_indices.json` 为保留 test（200 任务），12/08 才首次使用。
 
-## 5. 未验证 / 阻塞（11/19）
+## 5. 未验证 / 阻塞（11/19 快照，11/20 更新见 §6）
 
 - **全量 160 任务 B0 未跑**：目前只有 3 条 smoke 与 8 任务 pilot；真实 val 表、区间、B0/B1 对照都还没有。
 - **B1 adapter 未产出**：`check-parity` 无法做两臂比对；`preflight` 在 B1 冻结配置上只报这一项。
 - **五类真实失败案例只覆盖两类**：现有 3 条真实轨迹是 loop 与 format；budget / specification / retrieval 仍无本组真实案例。
 - **PR #13 / #14 未合并**：协议的正文修改与 revision 透传还没进 main；在那之前 proposal 正文与 meta 都不完整。
 - 两臂配对比较（`compare`）已实现并有测试，但还没有真实两臂数据可算。
+
+## 6. 11/20 更新：候选结果已出，但正式登记仍未完成
+
+11/19 的快照已被下面的事实部分取代，保留原文供追溯：
+
+| 11/19 的说法 | 11/20 的实际状态 |
+|---|---|
+| 全量 160 任务 B0 未跑 | **已跑**：B0 与本地 1 epoch LoRA 在同一批 160 个冻结 val 任务上各 160 条；满分成功 19/160 与 50/160，配对差 +19.38pp，任务簇 95% CI +13.11 至 +26.25（`results/eval-20261119-full160/`，PR #18 + #21） |
+| B1 adapter 未产出 | **本地候选 adapter 已产出**并重载一致（`93760afb…`）；但不是正式冻结 SFT 配置的产物 |
+| `check-parity` 无法比对 | **已比对通过**：两臂同模型/revision/采样/环境指纹，仅 adapter 不同 |
+
+**但正式登记仍未完成**，因此上述 19 vs 50 只能写成"候选验证结果"，不能写成正式 B1 成绩：
+
+- 采样源码已公开（`dd9797e`，`evidence/full160-rollout-dd9797e`，附 git bundle），但登记还需要：采用实际执行配置及其哈希、原始 JSONL 的完整性/parity/登记预检、模型与 adapter 的独立旁证（路径 A）；
+- 或者用审定源码/配置重采这 160 个任务（路径 B）；
+- 两臂 meta 没有 `model_source`（PR #14 未合并）；执行配置与 `configs/eval-b0-frozen.json` 有四个字段差异（`model` 本地路径、`environment_url=8766`、`model_id`、`weights_sha256`）。
+
+**proposal 可以怎么用**：作为"160 个冻结 val 任务上的候选对照"引用，并写明本地 1 epoch LoRA、非正式冻结、test 未用、未登记；若要写正式 B1 结果，必须等路径 A 或 B 完成。
+
+其余仍未变：五类真实失败案例只覆盖 loop / format（full-160 只提供脱敏 per-task 记录，没有动作级日志）；PR #13 / #14 仍未合并，proposal 正文的 §3/§4/§5 仍需 Zqqq-qq 按 §1 清单补齐。
