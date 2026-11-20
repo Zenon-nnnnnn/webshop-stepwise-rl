@@ -64,6 +64,10 @@ webshop-lab ppo-smoke --config artifacts/ppo-smoke-config.json \
 
 成功时生成 `summary.json`，包括概率重放范围、梯度和参数哈希，以及本进程的 adapter/critic 保存重载结果。运行中断可能留下部分文件，以该摘要是否存在作为一次更新通过的判据。训练轨迹保留在本机。首次真实 GPU 验收另核对长回复概率重放和独立进程重载。
 
+### 逐步奖励接入
+
+工程对照可在同一初始 SFT adapter 上分别启动两臂。默认 `reward_mode=terminal` 在购买结束时发放终局奖励。逐步臂显式指定 `reward_mode=progress`、`progress_model` 和 `progress_model_sha256`，固定线性进度估计器并对照训练、验证划分。两臂 beta 为 0。逐步臂每轮只发放一次预测进度，购买终局分照常为评估保留。续跑仍要求与父轮配置逐字节相同。
+
 ## 原 PPO：可用参考源码，不是已完成的新主线
 
 入口：`upstream/ppo/train_ppo.sh` → `step_ppo.py` → `step_ppotrainer.py`；配置 `upstream/config/StepTool_ppo.json`；合并 `upstream/ppo/merge.py`。

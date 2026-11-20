@@ -6,6 +6,7 @@ import uuid
 
 from .common import file_hash, git_head, instruction_hash, is_executable, parse_action, read_json, write_json
 from .model import SYSTEM, fit_history, load
+from .progress import dot, features
 from .rollout import request
 
 CLIP = 0.2
@@ -13,14 +14,69 @@ JOINT_LOGPROB_TOLERANCE = 0.05
 TOKEN_LOGPROB_TOLERANCE = 0.02
 
 
-def episode_targets(old_values, purchased, score):
-    """For complete episodes with gamma=lambda=1, GAE telescopes to R - V."""
+def episode_targets(old_values, purchased, score, turn_rewards=None):
+    """For complete episodes with gamma=lambda=1, GAE is the suffix return minus V."""
     if not old_values or not all(math.isfinite(value) for value in old_values):
         raise ValueError("Invalid old values")
     if not math.isfinite(score) or not 0 <= score <= 1:
         raise ValueError("Invalid environment score")
     reward = score if purchased else 0.0
-    return reward, [reward - value for value in old_values], [reward] * len(old_values)
+    if turn_rewards is None:
+        return reward, [reward - value for value in old_values], [reward] * len(old_values)
+    if len(turn_rewards) != len(old_values) or not all(map(math.isfinite, turn_rewards)):
+        raise ValueError("Invalid per-turn progress rewards")
+    returns = [math.fsum(turn_rewards[i:]) for i in range(len(turn_rewards))]
+    return reward, [ret - value for ret, value in zip(returns, old_values)], returns
+
+
+def assign_episode_rewards(turns, purchased, score, progress_model=None):
+    progress = None
+    if progress_model is not None:
+        progress = [dot(progress_model["weights"], features(
+            {"observation": turn["observation"], "response": turn["response_text_parsed"]},
+            progress_model["dimensions"])) for turn in turns]
+    outcome, advantages, returns = episode_targets(
+        [turn["old_value"] for turn in turns], purchased, score, progress
+    )
+    for i, turn in enumerate(turns):
+        has_next = i + 1 < len(turns)
+        terminal = 0.0 if has_next else outcome
+        prediction = None if progress is None else progress[i]
+        reward = terminal if prediction is None else prediction
+        turn.update(reward=reward, advantage=advantages[i], return_target=returns[i],
+                    reward_components={"terminal_outcome": terminal, "progress": prediction,
+                                       "grounding_bonus": 0.0, "combined": reward},
+                    bootstrap_mask=int(has_next), continuation_mask=int(has_next),
+                    next_old_value=turns[i + 1]["old_value"] if has_next else 0.0)
+    return outcome
+
+
+def load_progress_model(cfg, split_dir):
+    mode = cfg.get("reward_mode", "terminal")
+    if mode == "terminal":
+        if "progress_model" in cfg or "progress_model_sha256" in cfg:
+            raise ValueError("Terminal mode does not accept a progress model")
+        return None
+    if mode != "progress":
+        raise ValueError("Unknown PPO reward mode")
+    path = Path(cfg["progress_model"])
+    if file_hash(path) != cfg["progress_model_sha256"]:
+        raise ValueError("Progress model hash mismatch")
+    model = read_json(path)
+    dimensions = model.get("dimensions")
+    weights = model.get("weights")
+    if (model.get("kind") != "hashed-linear-additive-v1" or model.get("target") != "terminal_reward"
+            or model.get("goal_fingerprint") != cfg["goal_fingerprint"]
+            or type(dimensions) is not int or dimensions < 2
+            or not isinstance(weights, list) or len(weights) != dimensions
+            or not all(type(w) in (int, float) and math.isfinite(w) for w in weights)):
+        raise ValueError("Invalid progress model identity, target or weights")
+    for split in ("train", "val"):
+        ids = model.get(f"{split}_task_ids")
+        frozen = read_json(Path(split_dir) / f"{split}_ids.json")
+        if not isinstance(ids, list) or not ids or any(type(i) is not int for i in ids) or not set(ids) <= set(frozen):
+            raise ValueError(f"Progress model {split} tasks differ from the frozen split")
+    return model
 
 
 def replay_ratio(old, replayed, joint_tolerance):
@@ -84,7 +140,7 @@ def replay(model, critic, turn):
     return logprobs, value
 
 
-def collect(model, tokenizer, critic, generation, base, task, cfg, expected_instruction):
+def collect(model, tokenizer, critic, generation, base, task, cfg, expected_instruction, progress_model=None):
     import torch
 
     state = request(base + "/reset", {"task_id": task})
@@ -142,12 +198,7 @@ def collect(model, tokenizer, critic, generation, base, task, cfg, expected_inst
         messages.extend([{"role": "assistant", "content": text}, {"role": "user", "content": feedback}])
         if purchased:
             break
-    reward, advantages, returns = episode_targets([turn["old_value"] for turn in turns], purchased, score)
-    for i, turn in enumerate(turns):
-        has_next = i + 1 < len(turns)
-        turn.update(reward=0.0 if has_next else reward, advantage=advantages[i], return_target=returns[i],
-                    bootstrap_mask=int(has_next), continuation_mask=int(has_next),
-                    next_old_value=turns[i + 1]["old_value"] if has_next else 0.0)
+    reward = assign_episode_rewards(turns, purchased, score, progress_model)
     return {"task_id": task, "turns": turns, "purchase_completed": purchased,
             "terminal_reward": reward, "environment_final_score": score,
             "end": "purchase" if purchased else "max_steps"}
@@ -232,6 +283,7 @@ def run(args):
             or not health["split_status"]["verified"] or health["goal_fingerprint"] != cfg["goal_fingerprint"]):
         raise ValueError("WebShop health, split or goal fingerprint mismatch")
     ids, splits, goals = training_tasks(args, health)
+    progress_model = load_progress_model(cfg, args.split_dir)
     adapter = Path(cfg["adapter"])
     snapshot = Path(cfg["model"])
     if snapshot.name != cfg["revision"] or not snapshot.is_dir():
@@ -289,6 +341,7 @@ def run(args):
         "ids_sha256": file_hash(args.ids), "split_hashes": splits, "goal_map_sha256": goal_map_sha,
         "parent_run_id": parent["run_id"] if parent else None, "update_index": cumulative_updates,
         "health": health, "sampling": generation.to_dict(), "torch_version": torch.__version__,
+        "reward_mode": cfg.get("reward_mode", "terminal"),
         "algorithm": {"unit": "assistant_turn", "ratio": "joint_response", "gamma": 1.0, "lambda": 1.0,
                       "clip": CLIP, "beta": 0.0, "kl_coefficient": 0.0, "optimizer_updates": 1,
                       "learning_rate": 1e-5, "value_coefficient": 0.5, "max_gradient_norm": 1.0,
@@ -297,7 +350,7 @@ def run(args):
         "actor_before": actor_before, "critic_before": critic_before})
     episodes = []
     for task in ids:
-        episode = collect(model, tokenizer, critic, generation, base, task, cfg, goals[task])
+        episode = collect(model, tokenizer, critic, generation, base, task, cfg, goals[task], progress_model)
         episodes.append(episode)
         print(f"Collected task={task} turns={len(episode['turns'])} R={episode['terminal_reward']}", flush=True)
     write_json(out / "episodes.json", episodes)
