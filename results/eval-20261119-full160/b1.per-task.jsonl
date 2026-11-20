@@ -1,0 +1,160 @@
+{"task_id": 16, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.5, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 75, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.5, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 104, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.8, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 111, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 136, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 139, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.25, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 160, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6, "steps": 4, "grounding": [true, false, true, true]}
+{"task_id": 191, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 5, "grounding": [true, true, true, true, true]}
+{"task_id": 192, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.3333333333333333, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 253, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 299, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 301, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.25, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 302, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 333, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 345, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 392, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 411, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 414, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.8, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 428, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 432, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.3333333333333333, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 494, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 589, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.5, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 686, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 791, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 798, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 1006, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 1053, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 1095, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 1126, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 1189, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.3333333333333333, "steps": 4, "grounding": [true, true, false, true]}
+{"task_id": 1262, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.8, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 1471, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 1511, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 1517, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 1564, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.25, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 1586, "repeat": 0, "purchase": false, "full_reward_success": false, "terminal_reward": 0.0, "steps": 10, "grounding": [true, false, false, false, false, false, false, false, false, false]}
+{"task_id": 1603, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 1604, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 1650, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 1673, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 1730, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.8, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 1744, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 1745, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.5, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 1814, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 1818, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 1830, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 1842, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 1865, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 1913, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.5, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 1943, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 1989, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 2036, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 2120, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 2247, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.3333333333333333, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 2353, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 2448, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 2584, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.5, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 2716, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.3333333333333333, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 2738, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 2770, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 3388, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 3508, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 3522, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 3555, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 3623, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 3948, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 3949, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 4129, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 4, "grounding": [true, true, false, true]}
+{"task_id": 4279, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 4360, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.8, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 4388, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 4399, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 4580, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.3333333333333333, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 4729, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 4830, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 4889, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 4994, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 5008, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 5150, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.25, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 5219, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.5, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 5233, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 5269, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.8, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 5343, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 5371, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 5388, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 5410, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.3333333333333333, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 5604, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 5966, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.03333333333333333, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 6077, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 6094, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 6135, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.06666666666666667, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 6136, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 6171, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 6173, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 6346, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 6423, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 6549, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.3333333333333333, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 6550, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 6630, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.5, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 6648, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 6700, "repeat": 0, "purchase": false, "full_reward_success": false, "terminal_reward": 0.0, "steps": 10, "grounding": [true, true, false, false, true, true, false, false, true, true]}
+{"task_id": 6801, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 6856, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 5, "grounding": [true, true, true, true, true]}
+{"task_id": 7034, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 7073, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 7337, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.5, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 7380, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 7410, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.06666666666666667, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 7434, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 7469, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 7663, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 7680, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 7767, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.03333333333333333, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 7875, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 8117, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.8, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 8128, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.3333333333333333, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 8161, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.3333333333333333, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 8261, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 8283, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 8346, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 8378, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 8390, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 8391, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 8467, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 8505, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 8633, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 4, "grounding": [true, true, false, true]}
+{"task_id": 8649, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.4, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 8772, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 8815, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 8820, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.25, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 8979, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 9000, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 9046, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 9101, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 9254, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 9326, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 9378, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 9448, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 4, "grounding": [true, true, false, true]}
+{"task_id": 9476, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 9582, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.25, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 9592, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 9625, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 9693, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 9703, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 9796, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 9949, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.6666666666666666, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 9985, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 10121, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 10216, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 10287, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 10336, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 10507, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 10889, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 11068, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.5, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 11346, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 11380, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 11629, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 11746, "repeat": 0, "purchase": true, "full_reward_success": true, "terminal_reward": 1.0, "steps": 4, "grounding": [true, true, true, true]}
+{"task_id": 11785, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.5, "steps": 3, "grounding": [true, true, true]}
+{"task_id": 11814, "repeat": 0, "purchase": true, "full_reward_success": false, "terminal_reward": 0.75, "steps": 3, "grounding": [true, true, true]}

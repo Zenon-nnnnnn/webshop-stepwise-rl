@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "source": {
+    "release_asset": "webshop-pr18-qwen25-sft-and-validation-evidence.zip",
+    "asset_sha256": "c62a1a97ac259a4a0f5ffb7d70e054ca2523c14d9866f53a40b56562c6aaae3b",
+    "asset_bytes": 77820,
+    "sampling_commit_recorded": "dd9797e34aae0a7a0c050fcae154a41383b7c1a2",
+    "evaluation_commit": "21f3c83da9c9f599665cd89df479fbca7f512b88"
+  },
+  "ids": {
+    "tasks": 160,
+    "sha256": "45440d724b33e69e13916d0adbe243cc63ce3bd67677b8220feff9f30b866c36",
+    "matches_frozen_val_list": true,
+    "frozen_val_sha256": "45440d724b33e69e13916d0adbe243cc63ce3bd67677b8220feff9f30b866c36"
+  },
+  "sha256sums": {
+    "checked": 60,
+    "failed": []
+  },
+  "arms": {
+    "b0": {
+      "run_id": "2ffc39df-7ef9-441c-86e6-465864c6978c",
+      "config_sha256": "ef73c4d6eeffe29540e7a8cd260dafeafb87daf7794a79ec67ab608216430f23",
+      "config_sha256_verified": true,
+      "ids_sha256_verified": true,
+      "selected_tasks": 160,
+      "episodes": 160,
+      "purchases": 57,
+      "successes": 19,
+      "success_rate": 0.11875,
+      "success_rate_wilson_95": [
+        0.07735486800592348,
+        0.17802285581234925
+      ],
+      "mean_terminal_reward": 0.23885416666666667,
+      "steps": 1219,
+      "mean_steps": 7.61875,
+      "invalid_actions": 585,
+      "invalid_action_rate": 0.47990155865463496,
+      "adapter": null,
+      "model": "/root/.cache/huggingface/hub/models--Qwen--Qwen2.5-1.5B-Instruct/snapshots/989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+      "model_id": "Qwen/Qwen2.5-1.5B-Instruct",
+      "environment_url": "http://127.0.0.1:8766",
+      "goal_fingerprint": "e69c9ae2a0aad88977c44a7baf49f1f5ef7918ba8317923c4ae24dcc1f5638d8",
+      "revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+      "order_matches_ids": true
+    },
+    "b1_local": {
+      "run_id": "0c66dc29-8d6a-45f3-9e9b-6ad33c0687ac",
+      "config_sha256": "aa8bd60bb1878d57539fdc5b38b362207b63f68ad850b6beefd80da9e55f4951",
+      "config_sha256_verified": true,
+      "ids_sha256_verified": true,
+      "selected_tasks": 160,
+      "episodes": 160,
+      "purchases": 158,
+      "successes": 50,
+      "success_rate": 0.3125,
+      "success_rate_wilson_95": [
+        0.24578642435252984,
+        0.3880058988367847
+      ],
+      "mean_terminal_reward": 0.7059375,
+      "steps": 557,
+      "mean_steps": 3.48125,
+      "invalid_actions": 18,
+      "invalid_action_rate": 0.03231597845601436,
+      "adapter": "/root/webshop-stepwise-rl/artifacts/qwen25-one-epoch-final-resume-Ydr3GfjQ/output/adapter",
+      "model": "/root/.cache/huggingface/hub/models--Qwen--Qwen2.5-1.5B-Instruct/snapshots/989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+      "model_id": "Qwen/Qwen2.5-1.5B-Instruct",
+      "environment_url": "http://127.0.0.1:8766",
+      "goal_fingerprint": "e69c9ae2a0aad88977c44a7baf49f1f5ef7918ba8317923c4ae24dcc1f5638d8",
+      "revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+      "order_matches_ids": true
+    }
+  },
+  "paired": {
+    "success_diff": 0.19375,
+    "success_diff_pp": 19.38,
+    "success_diff_bootstrap_95": [
+      0.131094,
+      0.2625
+    ],
+    "only_b0_success": 3,
+    "only_b1_success": 34,
+    "both_success": 16,
+    "terminal_delta_mean": 0.46708333333333335,
+    "terminal_delta_bootstrap_95": [
+      0.402906,
+      0.526276
+    ]
+  },
+  "training": {
+    "run_json_train_sha256": "00e9a068f90011ba85eb42e26dc3e048241f94a77820c4e64b8df999f54b045e",
+    "run_json_val_sha256": "2ac4dcb4388735c031be4ffc46eb3454301340238f15c9bef01f616b2216b8b3",
+    "train_matches_frozen_split": true,
+    "val_matches_frozen_split": true,
+    "global_step": 656,
+    "eval_loss": 0.400295227766037,
+    "train_examples": 5241,
+    "val_examples": 605,
+    "skipped_train_examples": 18,
+    "peak_allocated_gib": 5.776729106903076,
+    "peak_reserved_gib": 29.306640625,
+    "model_source": {
+      "model": "Qwen/Qwen2.5-1.5B-Instruct",
+      "requested_revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+      "resolved_model_revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+      "resolved_tokenizer_revision": null,
+      "note": "Null resolved revisions require separate local-file hash evidence; a requested revision is not proof of local file identity."
+    },
+    "lora_sha256": "93760afbdf4b2a24d4d89bfa2e986ec2db7576ce516f9fc439e485558f304640",
+    "lora_reload_match": true
+  },
+  "register_readiness": {
+    "complete_160": true,
+    "same_frozen_val_list": true,
+    "parity_between_arms": true,
+    "sampling_commit_in_repo": false,
+    "meta_has_model_source": false,
+    "config_matches_frozen_eval_config": false,
+    "config_fields_differing_from_frozen_b0": [
+      "environment_url",
+      "model",
+      "model_id",
+      "weights_sha256"
+    ],
+    "verdict": "usable as pre-experiment evidence; not formally registerable until the sampling commit is pushed and the executed config is either the frozen one or re-frozen"
+  }
+}
