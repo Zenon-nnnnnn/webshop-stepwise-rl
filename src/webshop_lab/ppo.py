@@ -32,8 +32,10 @@ def replay_ratio(old, replayed, joint_tolerance):
     joint_delta = math.fsum(differences)
     if abs(joint_delta) > joint_tolerance:
         raise ValueError(f"Old joint logprob replay failed: delta={joint_delta:.6g}")
-    if max(map(abs, differences)) > TOKEN_LOGPROB_TOLERANCE:
-        raise ValueError("Old token logprob replay failed")
+    max_token_delta = max(map(abs, differences))
+    if max_token_delta > TOKEN_LOGPROB_TOLERANCE:
+        raise ValueError(f"Old token logprob replay failed: max={max_token_delta:.6g}, "
+                         f"joint={joint_delta:.6g}, tokens={len(old)}")
     return math.exp(joint_delta)
 
 
@@ -86,7 +88,8 @@ def collect(model, tokenizer, critic, generation, base, task, cfg, expected_inst
     import torch
 
     state = request(base + "/reset", {"task_id": task})
-    if state["goal_fingerprint"] != cfg["goal_fingerprint"] or state["instruction"] != expected_instruction:
+    instruction = state["instruction"].removeprefix("Instruction: ")
+    if state["goal_fingerprint"] != cfg["goal_fingerprint"] or instruction != expected_instruction:
         raise ValueError(f"Live goal differs from frozen task {task}")
     messages = [{"role": "system", "content": SYSTEM + "\nShopping instruction: " + state["instruction"]},
                 {"role": "user", "content": state["observation"]}]
@@ -229,14 +232,18 @@ def run(args):
     out.mkdir(parents=True, exist_ok=False)
     run_id = str(uuid.uuid4())
     set_seed(cfg.get("seed", 42))
-    base_model, tokenizer, _ = load(cfg, training=True)
+    policy_dtype = cfg.get("policy_dtype", "auto")
+    if policy_dtype not in ("auto", "float32") or (policy_dtype == "float32" and cfg.get("load_in_4bit")):
+        raise ValueError("Use auto dtype or an unquantized float32 policy")
+    dtype = torch.float32 if policy_dtype == "float32" else None
+    base_model, tokenizer, _ = load(cfg, training=True, dtype=dtype)
     model = PeftModel.from_pretrained(base_model, str(adapter), is_trainable=True).eval()
     critic = torch.nn.Linear(model.config.hidden_size, 1, device=model.device, dtype=torch.float32)
     torch.nn.init.zeros_(critic.weight)
     torch.nn.init.zeros_(critic.bias)
     generation = GenerationConfig(do_sample=True, temperature=1.0, top_p=1.0, top_k=0,
                                   max_new_tokens=cfg["max_new_tokens"], return_dict_in_generate=True,
-                                  output_scores=True, eos_token_id=model.generation_config.eos_token_id,
+                                  output_scores=True, use_cache=False, eos_token_id=model.generation_config.eos_token_id,
                                   pad_token_id=tokenizer.pad_token_id)
     parameters = [p for p in model.parameters() if p.requires_grad]
     if not parameters or any("lora_" not in name for name, p in model.named_parameters() if p.requires_grad):

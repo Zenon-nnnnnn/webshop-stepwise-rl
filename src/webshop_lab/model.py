@@ -6,14 +6,15 @@ SYSTEM = ("You are a web shopping agent in a simulated benchmark. Follow the sho
           "Action: search[keywords] or Action: click[value]. Use a clickable value exactly as provided.")
 
 
-def load(config, training=False):
+def load(config, training=False, *, dtype=None):
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
     from peft import PeftModel, prepare_model_for_kbit_training
     if not torch.cuda.is_available():
         raise RuntimeError('Training/rollout configuration requires a CUDA GPU; run CPU tools separately.')
     name = config['model']
-    dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+    if dtype is None:
+        dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
     tok = AutoTokenizer.from_pretrained(name, trust_remote_code=False)
     if tok.pad_token_id is None:
         tok.pad_token = tok.eos_token
