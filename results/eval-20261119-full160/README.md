@@ -27,28 +27,35 @@
 
 按任务配对：成功率差 **+19.38 个百分点**，任务簇 bootstrap 95% 区间 **+13.11 至 +26.25 个百分点**；仅 B0 成功 3 项、仅 B1 成功 34 项、两边都成功 16 项。终局奖励差 +0.4671，区间 [0.4029, 0.5263]。
 
+区间方法：任务簇 bootstrap、2000 次重采样、seed 42、线性插值分位数，写进 `verification.json` 的 `paired.bootstrap`。PR #18 原包的奖励差区间用了 10000 次与不同的取分位数规则，数值略不同不是结果矛盾。
+
 `mean_terminal_reward` 是任务奖励（未购买记 0），不是页面匹配分；页面上限分数已按 `terminal_reward` 归零。
 
 ## 3. 训练侧（摘要，不是购物表现）
 
 - 1 epoch、656 步、训练样本 5,241（skipped 18）、验证样本 605、`eval_loss=0.4003`；
-- 峰值 allocated 5.78 GiB、reserved 29.31 GiB（reserved 是分配器保留量，**不能**当物理显存需求或 OOM 保证）；
+- 峰值 allocated 5.78 GiB、reserved 29.31 GiB。**reserved 超过设备 15.93 GiB，原因未核实**；只按分配器保留量记录，不能当物理显存需求或 OOM 结论；
 - 训练输入与冻结划分一致（见第 1 节哈希）；LoRA 重载一致。
 
-## 4. 为什么暂不正式登记
+## 4. 正式登记的两条完整路径
 
-登记表要求每行能追到"真实 run + config + commit + split SHA + fingerprint"。这批证据有三处不满足：
+这批运行目前还不能登记，因为登记要求每行能追到"真实 run + config + commit + split SHA + fingerprint"且完整性/公平性都可复查。现在**采样源码已公开**（`dd9797e` 已推到 `evidence/full160-rollout-dd9797e`，GitHub 可查；另有 git bundle `90a6037c…` 作备份），但仍有缺口，必须走下面**完整路径之一**，不能只补 commit 就放行：
 
-1. **采样 commit `dd9797e34aae0a7a0c050fcae154a41383b7c1a2` 不在仓库**（GitHub API 返回 422）。评估用的是 `main@21f3c83`，但 rollout 代码是本地 commit；
-2. 两臂 meta **没有 `model_source`**（PR #14 尚未合并时产生）；
-3. 执行配置与 `configs/eval-b0-frozen.json` 不同：`model` 写成本地快照路径、`environment_url` 是 8766、另有 `model_id` / `weights_sha256` 字段；采样参数、revision、fingerprint、任务列表都相同。
+**路径 A：沿用这次旧运行**
 
-解除条件（任一即可）：
+1. 精确执行源码已公开（`dd9797e`；`rollout.py`/`model.py`/`common.py` 的 blob 分别是 `227871ab…`、`d8c2efa4…`、`3d1e296e…`）；
+2. 关联环境优化 wrapper：`serve.py`，SHA-256 `8ee912a29923e6fd9b5b49f94af57e8963f8dd8b87980eb26898fc2624dd0df0`，两轮逐字节一致；
+3. 用独立来源旁证模型与 adapter：底模权重 `dd924a11…`、adapter 文件 `c39e2a78…`，与当时的配置/重载记录一致；
+4. **明确采用实际执行配置**（`b0.config.json` / `b1.config.json`，sha256 `ef73c4d6…` / `aa8bd60b…`），不再声称与冻结配置相同；
+5. 提供**原始 JSONL**（本目录只有脱敏 per-task 记录），跑 `check-run` 完整性、`check-parity`、`register` 预检；全部通过后才登记。
 
-- 把 `dd9797e` 推到可访问分支，并在 README 说明它对应哪次采样；
-- 或从 `main`（含 PR #14）重采 160 个任务，使用冻结配置（或同步重冻结并记录新哈希）。
+**路径 B：重采**
 
-满足后我可以直接用 `evaluate` 生成 summary 与登记行，并在 `results/summary.md`、`results/success-by-method.svg` 里出表和图。
+用审定源码与配置（或按实际配置重新冻结）重采这 160 个任务，再走同一套完整性、parity、登记预检。
+
+在路径 A 的第 5 步完成前，`verification.json` 的 `register_readiness.sampling_commit_in_repo=true` 只表示"源码可查"，**不表示可以登记**。
+
+另：两臂 meta 没有 `model_source`（PR #14 尚未合并时产生），执行配置与 `configs/eval-b0-frozen.json` 的差异是 `model`（本地快照路径）、`environment_url`（8766）、`model_id`、`weights_sha256` 四个字段；采样参数、revision、fingerprint、任务列表都相同。
 
 ## 5. 文件与复核
 

@@ -5,6 +5,15 @@
     "asset_sha256": "c62a1a97ac259a4a0f5ffb7d70e054ca2523c14d9866f53a40b56562c6aaae3b",
     "asset_bytes": 77820,
     "sampling_commit_recorded": "dd9797e34aae0a7a0c050fcae154a41383b7c1a2",
+    "sampling_commit_public": true,
+    "sampling_commit_ref": "evidence/full160-rollout-dd9797e",
+    "sampling_commit_url": "https://github.com/Zqqq-qq/webshop-stepwise-rl/commit/dd9797e34aae0a7a0c050fcae154a41383b7c1a2",
+    "sampling_git_bundle_sha256": "90a6037c8d2cdcf884974ca7cad9a1053839ac45af11695c108707b6d5960c3c",
+    "code_blobs": {
+      "rollout.py": "227871ab1c01187fae355ce8072035d42161ce77",
+      "model.py": "d8c2efa467cdd03f83284eee74e2e198d6cf6e13",
+      "common.py": "3d1e296e9a67d08b94335dbcad8a6c1fdde69f03"
+    },
     "evaluation_commit": "21f3c83da9c9f599665cd89df479fbca7f512b88"
   },
   "ids": {
@@ -87,7 +96,14 @@
     "terminal_delta_bootstrap_95": [
       0.402906,
       0.526276
-    ]
+    ],
+    "bootstrap": {
+      "method": "task-cluster bootstrap",
+      "resamples": 2000,
+      "seed": 42,
+      "percentile": "linear interpolation"
+    },
+    "note": "#18 证据里的奖励差区间使用 10000 次重采样与不同的取分位数规则，数值会略有差异，不是结果矛盾。"
   },
   "training": {
     "run_json_train_sha256": "00e9a068f90011ba85eb42e26dc3e048241f94a77820c4e64b8df999f54b045e",
@@ -101,6 +117,7 @@
     "skipped_train_examples": 18,
     "peak_allocated_gib": 5.776729106903076,
     "peak_reserved_gib": 29.306640625,
+    "reserved_peak_note": "reserved 29.31 GiB 超过设备 15.93 GiB，原因未核实；只按分配器保留量记录，不能当物理显存需求或 OOM 结论。",
     "model_source": {
       "model": "Qwen/Qwen2.5-1.5B-Instruct",
       "requested_revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
@@ -115,7 +132,7 @@
     "complete_160": true,
     "same_frozen_val_list": true,
     "parity_between_arms": true,
-    "sampling_commit_in_repo": false,
+    "sampling_commit_in_repo": true,
     "meta_has_model_source": false,
     "config_matches_frozen_eval_config": false,
     "config_fields_differing_from_frozen_b0": [
@@ -124,6 +141,10 @@
       "model_id",
       "weights_sha256"
     ],
-    "verdict": "usable as pre-experiment evidence; not formally registerable until the sampling commit is pushed and the executed config is either the frozen one or re-frozen"
+    "paths": [
+      "路径 A（沿用旧运行）：公开精确执行源码（已推 dd9797e，并附 git bundle）→ 关联环境优化 wrapper （serve.py，SHA 8ee912a2…）与独立来源的模型/权重/adapter 哈希 → 明确采用实际执行配置及其 sha256 → 提供原始 JSONL 并跑 check-run 完整性 + check-parity + register 预检，全部通过后才登记。",
+      "路径 B（重采）：用审定源码与配置（或按实际配置重新冻结）重采这 160 个任务，再走同一套完整性、parity、登记预检。"
+    ],
+    "verdict": "旧的本地候选运行：源码已公开，但正式登记仍需路径 A 的其余三件（采用实际配置、原始 JSONL、模型/adapter 旁证）；或走路径 B 重采。仅补 commit 不足以免除其他缺口。"
   }
 }
