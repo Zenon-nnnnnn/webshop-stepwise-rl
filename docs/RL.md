@@ -70,6 +70,8 @@ webshop-lab ppo-smoke --config artifacts/ppo-smoke-config.json \
 
 工程对照可在同一初始 SFT adapter 上分别启动两臂。默认 `reward_mode=terminal` 在购买结束时发放终局奖励。逐步臂显式指定 `reward_mode=progress`、`progress_model` 和 `progress_model_sha256`，固定线性进度估计器并对照训练、验证划分。两臂 beta 为 0。逐步臂每轮只发放一次预测进度，购买终局分照常为评估保留。续跑仍要求与父轮配置逐字节相同。
 
+另有 `reward_mode=option_potential` 工程候选，使用 `env-server --option-state`。它按当前已选规格与购物指令的词匹配定义势值，逐轮增加 `Phi(next)-Phi(current)`，购买或步数耗尽时下一状态势值为 0。训练数据记录原任务奖励、势值差与合成奖励。在 gamma=1 时，从零势值出发的完整轨迹总奖励仍等于购买终局奖励，回到同一状态的循环净塑形奖励为零。它是一个规则基线，独立于拟合的逐步进度模型。
+
 ## 原 PPO：可用参考源码，不是已完成的新主线
 
 入口：`upstream/ppo/train_ppo.sh` → `step_ppo.py` → `step_ppotrainer.py`；配置 `upstream/config/StepTool_ppo.json`；合并 `upstream/ppo/merge.py`。
