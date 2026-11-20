@@ -198,6 +198,18 @@ def tensor_digest(tensors):
     return digest.hexdigest()
 
 
+def resume_metadata(path, config_sha, split_hashes, goal_map_sha):
+    meta = read_json(path / "run.meta.json")
+    summary = read_json(path / "summary.json")
+    if (summary["run_id"] != meta["run_id"] or summary["updates"] != 1
+            or not summary["same_process_reload"] or meta["schema_version"] != "rl-smoke-v0.1"):
+        raise ValueError("Resume requires a completed and reloaded PPO run")
+    if (meta["config_sha256"] != config_sha or meta["split_hashes"] != split_hashes
+            or meta["goal_map_sha256"] != goal_map_sha):
+        raise ValueError("Resume config or frozen data changed")
+    return summary
+
+
 def run(args):
     import torch
     from peft import PeftModel, get_peft_model_state_dict
@@ -228,6 +240,11 @@ def run(args):
     adapter_hash = file_hash(adapter / "adapter_model.safetensors")
     if base_hash != cfg["base_weights_sha256"] or adapter_hash != cfg["adapter_sha256"]:
         raise ValueError("Base model or adapter hash mismatch")
+    config_sha, goal_map_sha = file_hash(args.config), file_hash(args.goal_map)
+    resume = Path(args.resume) if getattr(args, "resume", None) else None
+    parent = resume_metadata(resume, config_sha, splits, goal_map_sha) if resume else None
+    if resume:
+        adapter = resume / "adapter"
     out = Path(args.output)
     out.mkdir(parents=True, exist_ok=False)
     run_id = str(uuid.uuid4())
@@ -250,12 +267,27 @@ def run(args):
         raise ValueError("Expected only LoRA policy parameters to be trainable")
     parameters.extend(critic.parameters())
     optimizer = torch.optim.AdamW(parameters, lr=1e-5, weight_decay=0.0)
+    if resume:
+        critic.load_state_dict(torch.load(resume / "critic.pt", weights_only=True, map_location=model.device))
+        state = torch.load(resume / "training-state.pt", weights_only=True, map_location="cpu")
+        if state["update"] != parent.get("cumulative_updates", 1):
+            raise ValueError("Resume optimizer update index mismatch")
+        optimizer.load_state_dict(state["optimizer"])
+        optimizer_steps = {int(entry["step"]) for entry in optimizer.state.values()}
+        if optimizer_steps != {state["update"]}:
+            raise ValueError("Resume optimizer steps mismatch")
+        torch.set_rng_state(state["cpu_rng"])
+        torch.cuda.set_rng_state_all(state["cuda_rng"])
+    cumulative_updates = parent.get("cumulative_updates", 1) + 1 if parent else 1
     actor_before = tensor_digest(get_peft_model_state_dict(model))
     critic_before = tensor_digest(critic.state_dict())
+    if parent and (actor_before != parent["actor_after"] or critic_before != parent["critic_after"]):
+        raise ValueError("Resume weights do not match the previous run")
     write_json(out / "run.meta.json", {"schema_version": "rl-smoke-v0.1", "run_id": run_id,
         "scope": "one engineering update", "split": "train", "source_commit": git_head(),
-        "config": cfg, "config_sha256": file_hash(args.config), "ids": ids,
-        "ids_sha256": file_hash(args.ids), "split_hashes": splits, "goal_map_sha256": file_hash(args.goal_map),
+        "config": cfg, "config_sha256": config_sha, "ids": ids,
+        "ids_sha256": file_hash(args.ids), "split_hashes": splits, "goal_map_sha256": goal_map_sha,
+        "parent_run_id": parent["run_id"] if parent else None, "update_index": cumulative_updates,
         "health": health, "sampling": generation.to_dict(), "torch_version": torch.__version__,
         "algorithm": {"unit": "assistant_turn", "ratio": "joint_response", "gamma": 1.0, "lambda": 1.0,
                       "clip": CLIP, "beta": 0.0, "kl_coefficient": 0.0, "optimizer_updates": 1,
@@ -279,7 +311,7 @@ def run(args):
     model.save_pretrained(checkpoint)
     torch.save(critic.state_dict(), out / "critic.pt")
     torch.save({"optimizer": optimizer.state_dict(), "cpu_rng": torch.get_rng_state(),
-                "cuda_rng": torch.cuda.get_rng_state_all(), "update": 1}, out / "training-state.pt")
+                "cuda_rng": torch.cuda.get_rng_state_all(), "update": cumulative_updates}, out / "training-state.pt")
     with torch.no_grad():
         expected, expected_value = replay(model, critic, turns[0])
     model.load_adapter(str(checkpoint), adapter_name="smoke_reload")
@@ -295,6 +327,7 @@ def run(args):
     replay_ratio(expected.tolist(), reloaded.tolist(), JOINT_LOGPROB_TOLERANCE)
     torch.testing.assert_close(expected_value, reloaded_value)
     write_json(out / "summary.json", {**report, "run_id": run_id, "updates": 1,
+        "cumulative_updates": cumulative_updates, "parent_run_id": parent["run_id"] if parent else None,
         "turns": len(turns), "environment_calls": sum(t["environment_step_applied"] for t in turns),
         "generated_tokens": sum(len(t["response_token_ids"]) for t in turns),
         "actor_before": actor_before, "actor_after": actor_after,
