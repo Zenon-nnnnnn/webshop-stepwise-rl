@@ -4,9 +4,9 @@ Prepared 2026-11-17. Owner: Jun040504; intended GPU executor: HowseaonLink.
 
 ## Status and boundary
 
-Ready for GPU execution, **not a completed GPU training run**. CPU/tokenizer checks below were executed locally; no loss, VRAM, gradient, adapter or shopping-performance result is claimed. This folder is standalone and does not modify the repository's main branch or training implementation.
+Status updated 2026-11-21: **the original pinned handoff completed target-device two-update training and fresh-process reload/generation, and its evidence was independently accepted**. Later script revisions have CPU verification only and must not inherit the original GPU result. See the acceptance ledger below. This folder remains an engineering handoff, separate from formal training and shopping-performance evidence.
 
-The current split has not passed complete-environment goal-map verification. These real-data subsets are explicitly authorized only as an engineering smoke: no environment actions, formal benchmark, final adapter selection, experiment-register row, or performance claim. The smoke adapter must not become the initialization for a formal model; start formal training from the original verified base after split freezing.
+The exact smoke manifest intentionally retains the preliminary offline split. Later full goal-map alignment was verified separately in PR #10/#15; formal data adoption still requires the Issue #2 owner's confirmation. These real-data subsets are explicitly authorized only as an engineering smoke: no environment actions, formal benchmark, final adapter selection, experiment-register row, or performance claim. The smoke adapter must not become the initialization for a formal model; start formal training from the original verified base after split freezing.
 
 ## Decisions for the executor
 
@@ -42,7 +42,7 @@ The prepared subset was checked with the actual tokenizer at the pinned model re
 
 Prompt/history tokens have labels -100; current assistant suffix tokens match the independently tokenized template suffix. System and current exchange remain intact. A two-example variable-length padding contract check passes. The GPU script additionally checks actual collated torch tensors.
 
-CPU verification completed: preparation, real-tokenizer subset check, Python syntax compilation and `run_smoke.py --help`. GPU execution and fresh-process reload are pending. No model weights were downloaded on the preparation machine.
+CPU verification completed: preparation, real-tokenizer subset check, Python syntax compilation and `run_smoke.py --help`. The original snapshot's GPU execution and fresh-process reload were subsequently accepted; that evidence does not establish GPU execution of this newer script revision. No model weights were downloaded on the preparation machine.
 
 ## Execution on the GPU host
 
@@ -152,16 +152,16 @@ source hashes, actual versions and console logs as a separate provenance sidecar
 Do not relabel it as a run of this update. A new execution must use a fresh output
 directory and matching run/reload script bytes; never overwrite an older result.
 
-Acceptance remains pending until the executor supplies finite per-step loss and
-gradient evidence, changed LoRA tensors, allocated/reserved VRAM, saved outputs,
-and fresh-process reload hash/forward/generation evidence. A review saying the
-CPU preflight passed is not GPU training evidence.
+The original snapshot's required artifacts were subsequently supplied and accepted;
+see the ledger below. Any new execution of the revised scripts requires its own
+finite-step, changed-tensor, memory, save and fresh-process reload records. A CPU
+review alone does not establish GPU behavior of those revisions.
 
 ## Earlier full-data work: summary
 
 - Original SFT verified: 9,312,587 bytes, 1,624 dialogues, SHA-256 `721e46dba410cff900e187bccea91a456c38b105b6d14d068d7762afb7791de3`.
 - 1,599 normalized unique shopping instructions, 8 reward/true_reward disagreements. These rewards are not SFT loss weights.
-- Preliminary split: 1,451 train, 160 validation, 200 reserved test IDs, 13 excluded rows; task-ID intersections and train/validation instruction intersection are zero. Complete-environment goal-map verification remains pending.
+- Preliminary split: 1,451 train, 160 validation, 200 reserved test IDs, 13 excluded rows; task-ID intersections and train/validation instruction intersection are zero. Later complete-environment goal-map checks passed separately; formal owner adoption remains pending in Issue #2.
 - Full train-turn preprocessing: 5,259 candidates, 5,241 retained, 188 history-trimmed, 18 skipped; validation: 605 retained, 27 history-trimmed, zero skipped.
 - Label/history checks passed for all 5,846 retained examples; this is preprocessing evidence, not a GPU/gradient test.
 
@@ -173,4 +173,14 @@ CPU preflight now checks the same three pinned tokenizer/config hashes as the GP
 
 contracts.py supplies the actual list collator shared by CPU preflight and the GPU tensor wrapper. The CPU check examines its output on real unequal-length examples: original inputs/labels preserved, correct pad IDs, zero attention and ignored padding labels. GPU tensor checks remain required; CPU checks do not establish torch/Trainer behavior. Provenance records contracts.py too (five handoff files including config).
 
-Nine CPU tests pass normally and under -O, including corrupt tokenizer/count/padding cases. Real-tokenizer preflight reproduces the exact statistics. Hyperparameters, subset bytes and expected manifests are unchanged. This revision is not GPU-validated; original reported training belongs to an older snapshot and still requires raw artifacts for independent acceptance.
+Nine CPU tests pass normally and under -O, including corrupt tokenizer/count/padding cases. Real-tokenizer preflight reproduces the exact statistics. Hyperparameters, subset bytes and expected manifests are unchanged. This revision is not GPU-validated. The original run belongs to an older snapshot; its subsequently shared artifacts were independently accepted as documented below.
+
+## Target-device acceptance ledger (2026-11-21)
+
+The original handoff at `bcaac8fe0bc3e1bd779f5d80fe8b8ae37168ac81` completed two optimizer updates on the deterministic 53/15-example smoke subset. Retained records show finite step losses 0.7474 / 0.8753, finite gradient norms, 56 changed LoRA tensors and matching recorded saved/reloaded LoRA digest `caf1c2e68b9e7099697a5dcb12cfc1aaa56752bf553baa7ec6eac524b4cd3753`. The fresh-process forward/generation check passed. These are reviewed target-device records; weights were not independently rehashed on the review machine.
+
+[Original private evidence ZIP](https://github.com/Zqqq-qq/webshop-stepwise-rl/releases/download/data-v1/webshop-pr12-original-smoke-evidence.zip), SHA-256 `9521c84a6fe75c44c34aff02cd767778a02d7495fe8e62f4bd7a63302d34b109`. [Executor handoff](https://github.com/Zqqq-qq/webshop-stepwise-rl/pull/12#issuecomment-7008040535). Preserve the original evidence: do not relabel it as a run of `37634bc` or `f10b399`, and do not mark the checklist above as proof of those later scripts.
+
+Separate [PR #14 acceptance](https://github.com/Zqqq-qq/webshop-stepwise-rl/pull/14#issuecomment-7008854291) covers pinned-loader offline loading, near-2048-token short-training capacity and fresh-process generation. [PR #18 review](https://github.com/Zqqq-qq/webshop-stepwise-rl/pull/18#pullrequestreview-5987404594) accepts the accessible local one-epoch candidate records and independently recomputed sanitized 160-task validation metrics. These are distinct runs with distinct adapters and evidence bundles; neither makes the two-update smoke adapter a formal initialization.
+
+The remaining work is formal mapped-data adoption by Zqqq-qq, a run-specific adoption/execution decision in PR #14, and independent formal evaluation provenance/registration by QiuQiu-xuan. GPU smoke execution is no longer waiting for Jun's initial configuration. No rerun or main modification is requested by this status update.
