@@ -64,7 +64,8 @@ def serve(args):
             if self.path == '/health':
                 self.send({'ready': True, 'n_goals': len(goals), 'goal_fingerprint': fingerprint,
                            'alignment_checked': alignment['checked'], 'alignment_mismatches': len(alignment['mismatched']),
-                           'split_status': split_status()})
+                           'split_status': split_status(),
+                           **({'option_state': True} if getattr(args, 'option_state', False) else {})})
             else:
                 self.send({'error': 'Not found'}, 404)
         def do_POST(self):

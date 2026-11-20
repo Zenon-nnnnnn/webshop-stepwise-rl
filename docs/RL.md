@@ -72,6 +72,12 @@ webshop-lab ppo-smoke --config artifacts/ppo-smoke-config.json \
 
 另有 `reward_mode=option_potential` 工程候选，使用 `env-server --option-state`。它按当前已选规格与购物指令的词匹配定义势值，逐轮增加 `Phi(next)-Phi(current)`，购买或步数耗尽时下一状态势值为 0。训练数据记录原任务奖励、势值差与合成奖励。在 gamma=1 时，从零势值出发的完整轨迹总奖励仍等于购买终局奖励，回到同一状态的循环净塑形奖励为零。它是一个规则基线，独立于拟合的逐步进度模型。
 
+### 双臂预检
+
+`webshop-lab ppo-compare` 默认只做 CPU 预检与计划生成。提交一份共同的 FP32 PPO 配置（不含奖励模式），并通过 `--round-ids` 按顺序提供每次更新的训练 ID 文件。共同参数为 `--config`、`--split-dir`、`--goal-map`、`--output` 和 `--candidate`。学习型候选还需 `--progress-model` 与 `--progress-model-sha256`；规格势函数候选执行时需要支持 `--option-state` 的桥接。普通桥接上的 CPU 预检可生成计划，并报告接口尚未就绪。
+
+计划保存各臂配置哈希、相同任务顺序、共同预算上限和逐轮命令。使用 GPU Python、冻结源码和独立新目录添加 `--execute` 才会启动两组。每组首轮从同一 SFT 初始化，随后只续跑本组 checkpoint。实际决策、环境调用和生成 token 可以因为提前结束而不同。训练摘要分别记录实际消耗，正式实验若要求严格匹配实际消耗，须另定停止协议。
+
 ## 原 PPO：可用参考源码，不是已完成的新主线
 
 入口：`upstream/ppo/train_ppo.sh` → `step_ppo.py` → `step_ppotrainer.py`；配置 `upstream/config/StepTool_ppo.json`；合并 `upstream/ppo/merge.py`。
