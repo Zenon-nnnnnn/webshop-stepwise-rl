@@ -19,6 +19,8 @@ webshop-lab progress-predict --model artifacts/progress-linear.json --input arti
 
 注意：annotate 训练轨迹的结果是训练集预测，不应拿其误差当泛化表现。要报告预测误差，使用独立 val 轨迹；如需更严格的奖励标注，考虑按任务交叉拟合，不能把自己训练过的轨迹效果当成 out-of-sample 证据。
 
+可用 `progress-train --guarded` 拟合第二种工程候选。无效动作、相同搜索、同一页面的相同动作和立即反向翻页预测为零。截距只在第一条可计分动作上使用，避免每多走一步就重复增加固定奖励。训练、离线预测与 PPO 使用同一特征规则。原线性权重保留其原有语义。此规则仍需在独立验证集上验证总分误差和动作分配。
+
 ## 奖励导出：已实现
 
 ```bash
