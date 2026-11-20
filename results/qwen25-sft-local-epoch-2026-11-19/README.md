@@ -9,3 +9,9 @@
 [运行摘要](summary.json) 记录配置、数据指纹、源码、运行时版本、训练和重载哈希。运行记录报告的预留显存峰值约 29.31 GiB，高于设备容量 15.93 GiB。该值原样保留，原因未核实，不能作为实际物理显存占用。
 
 本轮按本地预实验记录。验证 loss 用于检查 SFT 流程，购物表现需要另跑同一批任务比较。本 PR 只提交脱敏证据。
+
+## 续训复现证据与验证集对照
+
+[私有 data-v1 Release 证据包](https://github.com/Zqqq-qq/webshop-stepwise-rl/releases/download/data-v1/webshop-pr18-qwen25-sft-and-validation-evidence.zip)，SHA-256 `c62a1a97ac259a4a0f5ffb7d70e054ca2523c14d9866f53a40b56562c6aaae3b`。解压后运行 `sha256sum -c SHA256SUMS`。包内包含三阶段 wrapper 和实际配置、两次续训 launcher、精确 Trainer 补丁、checkpoint 文件身份、原始训练与重载记录，以及 8 任务和 160 任务的配置、meta 和脱敏逐任务结果。首轮命令按现存记录重建。逐 microbatch 消耗、梯度缩放及恢复状态逐项比对没有运行记录。
+
+160 个验证任务配对结果见 [评估评论](https://github.com/Zqqq-qq/webshop-stepwise-rl/pull/18#issuecomment-7026403338)。本地候选满分成功为 50/160，底模为 19/160。正式 B1 配置仍待确认，测试集未使用。
