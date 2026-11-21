@@ -105,6 +105,7 @@ def main():
     s.add_argument("--dimensions", type=int, default=4096)
     s.add_argument("--epochs", type=int, default=100)
     s.add_argument("--seed", type=int, default=42)
+    s.add_argument("--guarded", action="store_true", help="Fit progress with invalid/redundant actions masked")
     s = sub.add_parser("progress-predict", help="Annotate episodes using the low-cost linear estimator")
     s.add_argument("--model", required=True)
     s.add_argument("--input", required=True)
