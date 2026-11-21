@@ -1,5 +1,7 @@
 # Proposal 草案：资源受限 WebShop 智能体的终局奖励与规则势函数塑形对照
 
+> **提交工作稿入口：** [英文proposal与已查参考文献](proposal-submission.md) · [课程要求/提交核对表](course-requirements-checklist.md) · [登记名单](team-registration.md)。本文件保留中文技术解释；最终格式与课程准确截止尚未核实。
+
 > 2026-11-21 路线更新，待填课程名、学号、rubric、篇幅/引用格式并由全组定稿。11/22 组内定稿、11/23 提交；不是已提交版本。详细执行条件见 [有限预算 RL 协议](../docs/RL_EXECUTION_PROTOCOL_20261121.md)。
 
 ## 1. Problem and Motivation
