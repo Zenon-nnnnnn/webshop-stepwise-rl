@@ -1,21 +1,37 @@
 """Small-batch LoRA training. Saves adapters, tokenizer, config and run metadata."""
 import json
 import subprocess
+import time
 from pathlib import Path
 from .common import ROOT, read_json, write_json, file_hash
-from .model import load, training_messages, fit_history
+from .model import load, model_source, training_messages, fit_history
+
+
+def memory_record(torch):
+    """Allocator peaks in GiB, not interchangeable with device-wide free memory."""
+    allocated = torch.cuda.max_memory_allocated() / 1024**3
+    reserved = torch.cuda.max_memory_reserved() / 1024**3
+    return {'peak_allocated_gb': allocated,  # Legacy name retained for readers.
+            'peak_allocated_gib': allocated, 'peak_reserved_gib': reserved,
+            'device_total_gib': torch.cuda.get_device_properties(0).total_memory / 1024**3,
+            'memory_unit': 'GiB (2**30 bytes)',
+            'memory_scope': 'Current process allocator peak from before model load through final evaluation; reserved is not device-wide usage or an OOM guarantee.'}
 
 
 def run(args):
+    cfg = read_json(args.config)
+    if cfg.get('configuration_status') == 'draft':
+        raise ValueError('Draft SFT configuration: complete the acceptance gates in docs/SFT_FORMAL_PLAN.md and freeze a separate run config before execution.')
     import torch
     from peft import LoraConfig, get_peft_model
     from transformers import Trainer, TrainingArguments, set_seed
-    cfg = read_json(args.config)
     set_seed(cfg.get('seed', 42))
     out = Path(cfg['output_dir'])
     if out.exists() and any(out.iterdir()):
         raise ValueError(f'Output already exists: {out}. Use a new run directory.')
+    torch.cuda.reset_peak_memory_stats()
     model, tok, dtype = load(cfg, training=True)
+    source = model_source(cfg, model, tok)
     model = get_peft_model(model, LoraConfig(r=cfg.get('lora_r', 8), lora_alpha=cfg.get('lora_alpha', 16),
         target_modules=cfg.get('target_modules', ['q_proj', 'v_proj']), lora_dropout=.05,
         bias='none', task_type='CAUSAL_LM'))
@@ -62,17 +78,21 @@ def run(args):
         eval_strategy='epoch', save_strategy='epoch', save_total_limit=2,
         logging_steps=cfg.get('logging_steps', 5), report_to='none', seed=cfg.get('seed', 42))
     trainer = Trainer(model=model, args=ta, train_dataset=train, eval_dataset=val, data_collator=collate)
+    start = time.monotonic()
     trainer.train()
+    trainer.save_state()
     adapter = out / 'adapter'
     trainer.save_model(str(adapter))
     tok.save_pretrained(adapter)
     metrics = trainer.evaluate()
+    torch.cuda.synchronize()
     write_json(out / 'config.json', cfg)
     write_json(out / 'run.json', {'config_sha256': file_hash(args.config), 'train_sha256': file_hash(cfg['train_file']),
+        'model_source': source, 'elapsed_train_save_eval_seconds': time.monotonic() - start,
         'val_sha256': file_hash(cfg['val_file']), 'train_examples': len(train), 'val_examples': len(val),
         'skipped_train_examples': train.skipped, 'skipped_val_examples': val.skipped,
         'max_steps_override': args.max_steps, 'gpu': torch.cuda.get_device_name(0),
-        'peak_allocated_gb': torch.cuda.max_memory_allocated() / 1024**3,
+        **memory_record(torch),
         'torch_version': torch.__version__, 'metrics': metrics,
         'git_commit': subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=ROOT, capture_output=True, text=True).stdout.strip(),
         'warning': 'Validation token loss is not shopping success rate. Run real episodes separately.'})

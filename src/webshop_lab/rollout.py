@@ -7,7 +7,7 @@ import urllib.request
 import uuid
 from pathlib import Path
 from .common import read_json, write_json, file_hash, parse_action, is_executable
-from .model import load, fit_history, SYSTEM
+from .model import load, model_source, fit_history, SYSTEM
 
 
 def request(url, body=None):
@@ -49,6 +49,7 @@ def run(args):
         raise ValueError('Empty task list')
     set_seed(cfg.get('seed', 42))
     model, tok, _ = load(cfg)
+    source = model_source(cfg, model, tok)
     model.eval()
     max_steps = int(cfg.get('max_steps', 10))
     if max_steps < 1:
@@ -58,6 +59,7 @@ def run(args):
     out.parent.mkdir(parents=True, exist_ok=True)
     run_id = str(uuid.uuid4())
     write_json(out.with_suffix('.meta.json'), {'run_id': run_id, 'config': cfg,
+        'model_source': source,
         'config_sha256': file_hash(args.config), 'ids_sha256': file_hash(args.ids), 'selected_ids': ids,
         'repeats': args.repeats, 'health': health, 'torch_version': torch.__version__,
         'started_utc': datetime.datetime.now(datetime.timezone.utc).isoformat()})
