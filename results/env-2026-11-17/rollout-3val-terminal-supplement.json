@@ -1,0 +1,66 @@
+{
+  "derived_from": "rollout-3val.jsonl",
+  "source_jsonl_sha256": "fe32f8478c1c72740f6deadc14faa89e83650ab1b45e555bde40d66d95a36483",
+  "source_jsonl_bytes": 46167,
+  "run_id": "1ed67684-a2b2-4fcf-b1a3-2385653ec7a6",
+  "generated_utc": "2026-11-17T11:10:53Z",
+  "definition": {
+    "final_reward_page_score": "As recorded by rollout.py: the environment's last returned reward. Upstream web_agent_text_env.py sets self.reward=search_max on search pages (line 478) and maxr on item pages (line 558); only the purchase path (line 630) yields the task score. Therefore this is a page-match score, NOT the task reward.",
+    "terminal_reward": "reward if done else 0.0 -- the task-level outcome. Zero when the episode never purchased.",
+    "episode_seconds": "Per-episode wall time recorded inside rollout.py (excludes model load)."
+  },
+  "episodes": [
+    {
+      "task_id": 16,
+      "repeat": 0,
+      "done": false,
+      "termination": "max_steps",
+      "final_reward_page_score": 0.75,
+      "terminal_reward": 0.0,
+      "success": false,
+      "steps": 10,
+      "episode_seconds": 12.866341257999977
+    },
+    {
+      "task_id": 75,
+      "repeat": 0,
+      "done": false,
+      "termination": "max_steps",
+      "final_reward_page_score": 1.0,
+      "terminal_reward": 0.0,
+      "success": false,
+      "steps": 10,
+      "episode_seconds": 20.57068565200001
+    },
+    {
+      "task_id": 104,
+      "repeat": 0,
+      "done": false,
+      "termination": "max_steps",
+      "final_reward_page_score": 1.0,
+      "terminal_reward": 0.0,
+      "success": false,
+      "steps": 10,
+      "episode_seconds": 18.952765321000015
+    }
+  ],
+  "aggregates": {
+    "episodes": 3,
+    "successes": 0,
+    "success_rate": 0.0,
+    "purchase_terminated": 0,
+    "mean_final_reward_page_score": 0.9166666666666666,
+    "mean_terminal_reward": 0.0,
+    "mean_steps": 10.0,
+    "sum_episode_seconds": 52.39
+  },
+  "timing_note": "sum_episode_seconds is the sum of the JSONL per-episode 'seconds' fields. The 65 s figure quoted earlier was outer shell wall-clock between two date calls and therefore ALSO includes model loading and process startup; it is not the episode time.",
+  "wilson_note": "rollout-3val-summary.json was produced by the pre-PR#8 'summarize'. Its success_rate_wilson_95 lower bound is 5.551115123125783e-17, a floating-point artifact of 0.0; it should read 0.0. That file also lacks purchase_terminated / terminal_reward fields. It must be regenerated with 'evaluate' after PR #8 merges. This supplement is derived independently from the raw JSONL and is NOT a substitute for the evaluator output.",
+  "upstream_reference": {
+    "file": "upstream/envs/webshop/src/webshop/web_agent_site/envs/web_agent_text_env.py",
+    "search_page_reward_line": 478,
+    "item_page_reward_line": 558,
+    "purchase_reward_line": 630,
+    "status_reward_line": 733
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "run_id": "1ed67684-a2b2-4fcf-b1a3-2385653ec7a6",
+  "purpose": "rollout-3val.meta.json records torch_version but not the model revision. The original meta is preserved unchanged to keep the hash chain reviewers verified; this sidecar supplies the revision the experiment register row needs.",
+  "model_repo": "Qwen/Qwen2.5-1.5B-Instruct",
+  "model_revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+  "model_config_value": "Qwen/Qwen2.5-1.5B-Instruct",
+  "weights_sha256": "dd924a11b4c220f385b51ffa522daea7c9f3d850e31b162bb5661df483c6d3ee",
+  "download_endpoint": "https://hf-mirror.com",
+  "meta_json_sha256": "00cb26270b383c445b4b0eb79ebe12c46939b16a3d74b1288ec62c70af6b532d",
+  "note": "src/webshop_lab/model.py load() does not accept or pass a revision, so the run meta cannot carry it automatically. Cache refs/main was pointed at the verified commit to allow offline loading. See Issue #3 for the proposed fix.",
+  "generated_utc": "2026-11-17T11:10:53Z"
+}
