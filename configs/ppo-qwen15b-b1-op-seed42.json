@@ -12,7 +12,6 @@
   "load_in_4bit": false,
   "seed": 42,
   "policy_dtype": "float32",
-  "reward_mode": "terminal",
   "temperature": 1.0,
   "top_p": 1.0,
   "top_k": 0,
