@@ -1,0 +1,34 @@
+{
+  "date": "2026-11-19",
+  "executor": "Codex Tutor; not independent student execution",
+  "status": "static_mapping_split_verified_live_environment_not_rerun",
+  "goal_map_sha256": "6b5d9dfceee913828871b8dff62fd59720a40306738a92a496d1b0fb6838fa88",
+  "map_bytes": 1969461,
+  "map_tasks": 12087,
+  "counts": {
+    "train": 1451,
+    "val": 160,
+    "test": 200,
+    "excluded": 13
+  },
+  "checks": {
+    "map_sha_matches": true,
+    "map_unique_contiguous_ids": true,
+    "all_sft_instructions_align": true,
+    "test_coverage": true,
+    "all_split_ids_disjoint": true,
+    "all_actual_environment_instructions_disjoint": true,
+    "train_ids.json_matches_environment_blob": true,
+    "val_ids.json_matches_environment_blob": true,
+    "test_ids.json_matches_environment_blob": true,
+    "split-manifest.json_matches_environment_blob": true,
+    "train_records_preserved": true,
+    "val_records_preserved": true
+  },
+  "environment_evidence_commit": "d1d160bcfa44c7caa2c92609d8e5012662a23de6",
+  "reported_goal_fingerprint": "e69c9ae2a0aad88977c44a7baf49f1f5ef7918ba8317923c4ae24dcc1f5638d8",
+  "not_verified": [
+    "No local live WebShop/GPU service started. Fingerprint is from HowseaonLink evidence, not recomputed from the full environment goals.",
+    "Training must still check live health against the adopted IDs and goal fingerprint."
+  ]
+}
