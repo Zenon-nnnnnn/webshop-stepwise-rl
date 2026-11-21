@@ -6,7 +6,7 @@ import uuid
 
 from .common import file_hash, git_head, instruction_hash, is_executable, parse_action, read_json, write_json
 from .model import SYSTEM, fit_history, load
-from .progress import dot, features
+from .progress import GUARDED_KIND, LEGACY_KIND, predict_steps
 from .rollout import request
 
 CLIP = 0.2
@@ -32,9 +32,10 @@ def episode_targets(old_values, purchased, score, turn_rewards=None):
 def assign_episode_rewards(turns, purchased, score, progress_model=None):
     progress = None
     if progress_model is not None:
-        progress = [dot(progress_model["weights"], features(
-            {"observation": turn["observation"], "response": turn["response_text_parsed"]},
-            progress_model["dimensions"])) for turn in turns]
+        steps = [{"observation": turn["observation"], "response": turn["response_text_parsed"],
+                  "grounding": turn["grounding"], "action": turn.get("parsed_action")}
+                 for turn in turns]
+        progress = predict_steps(progress_model, steps)
     outcome, advantages, returns = episode_targets(
         [turn["old_value"] for turn in turns], purchased, score, progress
     )
@@ -65,7 +66,7 @@ def load_progress_model(cfg, split_dir):
     model = read_json(path)
     dimensions = model.get("dimensions")
     weights = model.get("weights")
-    if (model.get("kind") != "hashed-linear-additive-v1" or model.get("target") != "terminal_reward"
+    if (model.get("kind") not in (LEGACY_KIND, GUARDED_KIND) or model.get("target") != "terminal_reward"
             or model.get("goal_fingerprint") != cfg["goal_fingerprint"]
             or type(dimensions) is not int or dimensions < 2
             or not isinstance(weights, list) or len(weights) != dimensions
