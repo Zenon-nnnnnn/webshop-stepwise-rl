@@ -1,0 +1,68 @@
+{
+  "status": "proposed_waiting_protocol_owner_confirmation",
+  "created_utc": "2026-11-21T10:14:41.403271+00:00",
+  "b1_sha256": "c39e2a78e7c5973328e9d2c23fb6320e566352e63cc089562488f3dd46ae5f9c",
+  "arms": [
+    "terminal",
+    "option_potential"
+  ],
+  "seeds": [
+    42,
+    43
+  ],
+  "round_ids": [
+    [
+      7793,
+      1718,
+      3040,
+      4517
+    ],
+    [
+      9258,
+      544,
+      4212,
+      462
+    ],
+    [
+      12,
+      1756,
+      1649,
+      4758
+    ],
+    [
+      4541,
+      1697,
+      1670,
+      9014
+    ]
+  ],
+  "updates_per_arm_per_seed": 4,
+  "episodes_per_arm_per_seed": 16,
+  "max_steps": 8,
+  "max_new_tokens": 128,
+  "context_length": 2048,
+  "policy_dtype": "float32",
+  "load_in_4bit": false,
+  "beta": 0,
+  "kl_coefficient": 0,
+  "learning_rate": 1e-05,
+  "per_arm_per_seed_caps": {
+    "policy_turns": 128,
+    "applied_environment_steps": 128,
+    "generated_tokens": 16384
+  },
+  "budget_basis": "fixed episodes/updates and common hard caps; actual token/step counts reported, not forced equal",
+  "stop": "Finish 4 predetermined batches; stop run on replay/nonfinite/identity/network errors and retain artifacts. No extra updates selected by validation results.",
+  "runtime_estimate_per_seed_pair_hours": [
+    1,
+    4
+  ],
+  "runtime_estimate_two_seed_pairs_hours": [
+    2,
+    8
+  ],
+  "estimate_basis": "engineering meta-to-summary timestamps only; planning allowance, not measured large-run throughput",
+  "validation": "same frozen 160-task val per endpoint; configuration/selection owner acceptance before final test",
+  "test_authorization": false,
+  "proposal_rationale": "Rule shaping is currently executable and cycle-neutral at gamma=1. Learned progress model failed independent baseline/credit checks. This route changes the original study and requires Zqqq/Qiu acceptance."
+}
