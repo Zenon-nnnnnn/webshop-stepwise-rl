@@ -2,7 +2,7 @@
 
 [![CPU checks](https://github.com/Zqqq-qq/webshop-stepwise-rl/actions/workflows/checks.yml/badge.svg)](https://github.com/Zqqq-qq/webshop-stepwise-rl/actions/workflows/checks.yml)
 
-面向 **RTX 5060 Ti 16 GB / i5-13400F / 32 GB RAM** 的购物智能体训练与评估。基于 SPA-RL 的研究问题，先完成可信的 SFT 基线，再研究逐步奖励。项目计划日期：2026-11-22 proposal、2026-11-27 presentation、2026-12-15 report。课程 rubric 尚未提供，最终范围需与 rubric 对齐。
+面向 **RTX 5060 Ti 16 GB / i5-13400F / 32 GB RAM** 的购物智能体训练与评估。基于 SPA-RL 的研究问题，先完成可信的 SFT 基线，再研究逐步奖励。课程节点为 11/23（周一）提交 proposal、本组 11/26（周四）pre；组内约定 11/22（周日）完成 proposal、在 11/25（周三）前完成项目，可提前。组内进度由 Zqqq-qq 统筹。详见 [11/21 交付节点更新](docs/DAILY_PLAN.md#1121-交付节点更新)。课程 rubric 尚未提供，最终范围需与 rubric 对齐。
 
 > **当前状态：项目代码与团队文档已建立，CPU 工具已验证；目标 GPU、完整 WebShop 环境、训练成功率及 PPO 尚未完成验证。没有已训练模型，没有可宣称的性能提升。**
 >
