@@ -32,7 +32,7 @@ def main():
     s.add_argument("--output", required=True)
     s.add_argument("--limit", type=int, default=0)
     s.add_argument("--repeats", type=int, default=1)
-    s = sub.add_parser("ppo-smoke", help="One WebShop PPO engineering update with terminal reward")
+    s = sub.add_parser("ppo-smoke", help="One WebShop PPO engineering update")
     for flag in ("config", "ids", "split-dir", "goal-map", "output"):
         s.add_argument(f"--{flag}", required=True)
     s.add_argument("--resume", help="Continue from a verified ppo-smoke output directory")
