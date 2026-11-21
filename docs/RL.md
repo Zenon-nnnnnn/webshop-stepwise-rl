@@ -52,6 +52,20 @@ SPA 模式缺少任意一步预测即报错；不允许把全 0 或最终奖励�
 
 原脚本会使用相同/包含关系的 train/val 数据，不能照运行后直接报告验证结果。必须按本项目划分收集独立 train/val 轨迹，替换路径并检查 token 截断对每步分数的影响。
 
+## 终局奖励 PPO 工程短跑
+
+`ppo-smoke` 从已存在的 LoRA 初始化，采样 1–8 个冻结 train 任务，使用每条完整助手回复的联合概率做一次 PPO 更新。未购买的购物回合得 0。beta 和 KL 系数为 0，gamma 和 lambda 为 1。逐条回复计算梯度并在整批完成后更新一次。未记录的采集截断与正式实验不在该命令的范围内。指定 `--resume` 可从已成功重载的本地输出继续，恢复 adapter、critic、AdamW 和 PyTorch RNG，然后重新采样。续跑使用相同配置和数据划分，可传新的训练 ID 清单，并写入一个新目录。
+
+```bash
+webshop-lab ppo-smoke --config artifacts/ppo-smoke-config.json \
+  --ids artifacts/ppo-smoke-train-ids.json --split-dir data/processed \
+  --goal-map artifacts/goal-instructions.json --output artifacts/ppo-smoke-run
+```
+
+配置必填项包括本地固定快照目录 `model`、`revision`、`base_weights_sha256`、LoRA 路径 `adapter`、`adapter_sha256`、`environment_url`、`goal_fingerprint`、`context_length`、`max_steps` 和 `max_new_tokens`。使用已验证的 Qwen2.5 单文件权重快照。可指定 `load_in_4bit` 和 `seed`。采样固定为 temperature=1、top_p=1、top_k=0。建议用少量训练任务起步，输出目录必须为新目录。命令会先核对 live health、目标文本和三个数据划分。
+
+成功时生成 `summary.json`，包括概率重放范围、梯度和参数哈希，以及本进程的 adapter/critic 保存重载结果。运行中断可能留下部分文件，以该摘要是否存在作为一次更新通过的判据。训练轨迹保留在本机。首次真实 GPU 验收另核对长回复概率重放和独立进程重载。
+
 ## 原 PPO：可用参考源码，不是已完成的新主线
 
 入口：`upstream/ppo/train_ppo.sh` → `step_ppo.py` → `step_ppotrainer.py`；配置 `upstream/config/StepTool_ppo.json`；合并 `upstream/ppo/merge.py`。
