@@ -2,6 +2,7 @@
 import hashlib
 import math
 from pathlib import Path
+import re
 import uuid
 
 from .common import file_hash, git_head, instruction_hash, is_executable, parse_action, read_json, write_json
@@ -29,23 +30,45 @@ def episode_targets(old_values, purchased, score, turn_rewards=None):
     return reward, [ret - value for ret, value in zip(returns, old_values)], returns
 
 
-def assign_episode_rewards(turns, purchased, score, progress_model=None):
+def option_potential(instruction, selected_options):
+    """Bounded lexical match of the requested item and the active visible selections."""
+    if not isinstance(selected_options, dict) or any(not isinstance(v, str) for v in selected_options.values()):
+        raise ValueError("Reward bridge must supply selected_options")
+    ignore = {"a", "an", "of", "the", "and", "in", "with", "for"}
+    goal = set(re.findall(r"[a-z0-9]+", instruction.lower().split(", and price lower than")[0])) - ignore
+    option = {word for value in selected_options.values()
+              for word in re.findall(r"[a-z0-9]+", value.lower())} - ignore
+    return 0.25 * len(option & goal) / len(option) if option else 0.0
+
+
+def assign_episode_rewards(turns, purchased, score, progress_model=None, *, shaping=False):
     progress = None
     if progress_model is not None:
         steps = [{"observation": turn["observation"], "response": turn["response_text_parsed"],
                   "grounding": turn["grounding"], "action": turn.get("parsed_action")}
                  for turn in turns]
         progress = predict_steps(progress_model, steps)
+    shaping_deltas = None
+    turn_rewards = progress
+    if shaping:
+        final_reward, _, _ = episode_targets([turn["old_value"] for turn in turns], purchased, score)
+        shaping_deltas = [
+            (0.0 if i == len(turns) - 1 else turn["potential_after"]) - turn["potential_before"]
+            for i, turn in enumerate(turns)
+        ]
+        turn_rewards = shaping_deltas.copy()
+        turn_rewards[-1] += final_reward
     outcome, advantages, returns = episode_targets(
-        [turn["old_value"] for turn in turns], purchased, score, progress
+        [turn["old_value"] for turn in turns], purchased, score, turn_rewards
     )
     for i, turn in enumerate(turns):
         has_next = i + 1 < len(turns)
         terminal = 0.0 if has_next else outcome
         prediction = None if progress is None else progress[i]
-        reward = terminal if prediction is None else prediction
+        reward = terminal if turn_rewards is None else turn_rewards[i]
         turn.update(reward=reward, advantage=advantages[i], return_target=returns[i],
                     reward_components={"terminal_outcome": terminal, "progress": prediction,
+                                       "potential_delta": 0.0 if shaping_deltas is None else shaping_deltas[i],
                                        "grounding_bonus": 0.0, "combined": reward},
                     bootstrap_mask=int(has_next), continuation_mask=int(has_next),
                     next_old_value=turns[i + 1]["old_value"] if has_next else 0.0)
@@ -54,9 +77,9 @@ def assign_episode_rewards(turns, purchased, score, progress_model=None):
 
 def load_progress_model(cfg, split_dir):
     mode = cfg.get("reward_mode", "terminal")
-    if mode == "terminal":
+    if mode in ("terminal", "option_potential"):
         if "progress_model" in cfg or "progress_model_sha256" in cfg:
-            raise ValueError("Terminal mode does not accept a progress model")
+            raise ValueError("Only progress mode accepts a progress model")
         return None
     if mode != "progress":
         raise ValueError("Unknown PPO reward mode")
@@ -151,6 +174,7 @@ def collect(model, tokenizer, critic, generation, base, task, cfg, expected_inst
     messages = [{"role": "system", "content": SYSTEM + "\nShopping instruction: " + state["instruction"]},
                 {"role": "user", "content": state["observation"]}]
     turns = []
+    shaping = cfg.get("reward_mode") == "option_potential"
     purchased, score = False, 0.0
     eos = generation.eos_token_id
     eos = {eos} if isinstance(eos, int) else set(eos or [])
@@ -179,6 +203,8 @@ def collect(model, tokenizer, critic, generation, base, task, cfg, expected_inst
             lp, value = replay(model, critic, turn)
         turn["initial_replay_ratio"] = replay_ratio(old, lp.tolist(), JOINT_LOGPROB_TOLERANCE)
         turn["old_value"] = float(value)
+        if shaping:
+            turn["potential_before"] = option_potential(instruction, state["available"].get("selected_options"))
         action, error = None, None
         try:
             action = parse_action(text)
@@ -195,11 +221,14 @@ def collect(model, tokenizer, critic, generation, base, task, cfg, expected_inst
         turn.update(parsed_action=action, parse_error=error, grounding=int(error is None),
                     environment_step_applied=error is None, environment_score=score,
                     next_observation=feedback, purchase_completed_after=purchased)
+        if shaping:
+            turn["potential_after"] = (0.0 if purchased else option_potential(
+                instruction, state["available"].get("selected_options")))
         turns.append(turn)
         messages.extend([{"role": "assistant", "content": text}, {"role": "user", "content": feedback}])
         if purchased:
             break
-    reward = assign_episode_rewards(turns, purchased, score, progress_model)
+    reward = assign_episode_rewards(turns, purchased, score, progress_model, shaping=shaping)
     return {"task_id": task, "turns": turns, "purchase_completed": purchased,
             "terminal_reward": reward, "environment_final_score": score,
             "end": "purchase" if purchased else "max_steps"}
