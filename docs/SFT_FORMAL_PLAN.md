@@ -1,6 +1,6 @@
 # Formal SFT candidate and acceptance gates
 
-Status updated 2026-11-21: **formal configuration remains draft; target-device engineering acceptance and local candidate review are complete**. Owner: Jun040504. GPU executor: HowseaonLink. The reviewed one-epoch run is a local candidate, not an automatically frozen formal B1.
+Status updated 2026-11-21: **formal configuration remains draft; target-device engineering acceptance and local candidate review are complete**. Owner: Jun040504. GPU executor: HowseaonLink. The SFT owner has now selected the original PR #18 adapter as B1 and frozen its identity below. Formal experiment registration and data/protocol gates remain separate.
 
 ## Candidate configuration
 
@@ -142,7 +142,7 @@ The runner records peak_allocated_gib, peak_reserved_gib and device_total_gib in
 
 The previously reported old-loader figures are superseded for this acceptance decision by the pinned-loader long-input evidence. The reviewed PR #14 probe used 16 train examples of 2027–2048 tokens and four validation examples of 2043–2048 tokens, batch 1 / accumulation 8 / two updates. It reported 5.7945 GiB peak allocated and 10.3281 GiB peak reserved on a 15.9283 GiB device. Both step losses and gradient norms were finite. A separate fresh-process supplement matched the recorded LoRA digest and passed a finite forward/eight-token generation check. These checks establish the recorded short-run engineering path, not a guarantee against every future OOM or a shopping score.
 
-## Evidence ledger and adoption decision (2026-11-21)
+## Evidence ledger and adopted B1 identity (2026-11-21)
 
 The following are artifact audits of target-device records, not independent GPU execution on the review machine. Original weights and raw datasets remain outside Git.
 
@@ -153,7 +153,7 @@ The following are artifact audits of target-device records, not independent GPU 
 | PR #14 reload supplement | Same recorded adapter identity, fresh process, finite forward and short generation | [Supplement](https://github.com/Zqqq-qq/webshop-stepwise-rl/releases/download/data-v1/webshop-pr14-0fc5607-reload-generation-supplement.zip), SHA-256 `3a6a7dc1daef57b3c5e43a78105831f0bd423bae75dee139a6bc7d43be0af4a9`; [acceptance](https://github.com/Zqqq-qq/webshop-stepwise-rl/pull/14#issuecomment-7008854291) |
 | PR #18 local one-epoch candidate | Traceable retained execution records and recomputed sanitized validation metrics | Review head `ba768137780e993abf628077b239e1b1ffb49c1c`; [bundle](https://github.com/Zqqq-qq/webshop-stepwise-rl/releases/download/data-v1/webshop-pr18-qwen25-sft-and-validation-evidence.zip), SHA-256 `c62a1a97ac259a4a0f5ffb7d70e054ca2523c14d9866f53a40b56562c6aaae3b`; [Jun review](https://github.com/Zqqq-qq/webshop-stepwise-rl/pull/18#pullrequestreview-5987404594) |
 
-SFT-owner recommendation: preserve PR #18's existing candidate and use it for continued development while explicit formal adoption is resolved. Do not retrain merely to remove a draft label or fill missing historical records. This recommendation is conditional and is not a formal B1 designation or a result-register entry.
+SFT-owner decision (2026-11-21, explicitly authorized by the user): adopt PR #18's original SFT adapter as B1 and the common starting policy for later reward-arm comparisons. Its identity is frozen in [configs/identities/b1-pr18.json](../configs/identities/b1-pr18.json). This closes the SFT-owner model-selection decision. It does not close data-owner sign-off, formal evaluation registration or reward/budget protocol decisions. No retraining is requested.
 
 The candidate used 5241 retained training examples / 605 validation examples, 656 recorded optimizer steps, seed 42, and validation token loss 0.400295227766037. Its executed logging interval was 5, whereas the unexecuted draft above uses 1. Keep the original config bytes and actual wrapper; do not relabel the run as an execution of this draft. Resumed steps and runtime changes are part of its identity.
 
@@ -169,9 +169,19 @@ The first launch command is reconstructed, and microbatch/scaling/state-restorat
 
 This documentation update does not transplant the in-memory patch into production or add resume support to the shared SFT command. Keep it versioned with the candidate evidence. Before a future run relies on resume, review a version-specific implementation and verify partial-accumulation scaling, consumed batches and optimizer/scheduler/RNG restoration. A future fresh run uses a new directory and the original pinned base, not the two-update smoke adapter. Never bypass the draft gate or overwrite existing outputs to reproduce a historical run.
 
-### Remaining formal adoption gates
+### Remaining formal experiment gates
 
 1. Zqqq-qq explicitly confirms the mapped data version in [Issue #2](https://github.com/Zqqq-qq/webshop-stepwise-rl/issues/2): train 1451 / val 160 dialogues, 200 reserved test IDs, 13 exclusions; goal fingerprint `e69c9ae2a0aad88977c44a7baf49f1f5ef7918ba8317923c4ae24dcc1f5638d8`; goal-map SHA-256 `6b5d9dfceee913828871b8dff62fd59720a40306738a92a496d1b0fb6838fa88`.
-2. Jun and How record whether the existing candidate is adopted under its actual resumed execution protocol. Train SHA-256 is `00e9a068f90011ba85eb42e26dc3e048241f94a77820c4e64b8df999f54b045e`, val SHA-256 is `2ac4dcb4388735c031be4ffc46eb3454301340238f15c9bef01f616b2216b8b3`. Record the actual config/wrapper/adapter hashes, environment optimization and disclosed resume limits in a run-specific adoption record. Do not change historical configs to say frozen retroactively.
+2. The SFT owner has adopted this exact adapter under its disclosed historical execution protocol. How must resolve the local original adapter path and recheck the locked file hashes before use. Train SHA-256 is `00e9a068f90011ba85eb42e26dc3e048241f94a77820c4e64b8df999f54b045e`, val SHA-256 is `2ac4dcb4388735c031be4ffc46eb3454301340238f15c9bef01f616b2216b8b3`. The versioned identity lock records actual config/wrapper/adapter hashes and links the retained execution evidence. Record environment optimization and evaluation provenance in each run-specific record. Do not change historical configs to say frozen retroactively.
 3. Qiu independently accepts evaluation provenance and decides what can enter the formal register. Preserve full raw trajectories/meta/configs and evaluator/source identities through an accessible private channel. Frozen val IDs SHA-256 is `45440d724b33e69e13916d0adbe243cc63ce3bd67677b8220feff9f30b866c36`; the reserved test set remains untouched.
 4. If data or protocol changes invalidate adoption, scope and review the affected rerun first. No new training is launched by this update; the formal JSON retains `configuration_status: draft`.
+
+## Applying the frozen B1 identity
+
+The lock is an identity/adoption record, not a JSON accepted by the SFT or rollout command. Its status freezes the selected artifact, not all experiment settings. Keep the original formal-training draft guard unchanged because this decision adopts an existing artifact rather than launching that unexecuted draft.
+
+Use the PR #18 original `output/adapter/` directory. On the target device, verify both `adapter_model.safetensors` and `adapter_config.json` against `configs/identities/b1-pr18.json`; the latter fixes LoRA scaling and module configuration as well as the weight file. Verify the same pinned base/tokenizer file identities. Stop on a mismatch and identify the different artifact rather than editing the lock to fit it.
+
+For PPO execution configs, set `adapter` to that verified local directory, `adapter_sha256` to `c39e2a78e7c5973328e9d2c23fb6320e566352e63cc089562488f3dd46ae5f9c`, `revision` to `989aa7980e4cf806f80c7fef2b1adb7bc71aa306`, and `base_weights_sha256` to the lock's base-weight digest. Both initial arms must use this same artifact. A resumed round loads its own arm's PPO checkpoint; record that new checkpoint separately and preserve the B1 source.
+
+For evaluation, a B1 config points to the same original SFT adapter; PPO-updated policies must be labeled separately. Each run retains its actual execution config hash, source, environment and task/decoding provenance. Selecting B1 does not by itself authorize formal result registration, final test execution, merging a PR, or changing main.

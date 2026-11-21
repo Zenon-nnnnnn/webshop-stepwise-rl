@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "record_type": "sft_adapter_identity_lock",
+  "model_id": "b1-qwen25-pr18-epoch1-seed42",
+  "decision": {
+    "status": "adopted_by_sft_owner",
+    "date": "2026-11-21",
+    "owner": "Jun040504",
+    "scope": "Use the existing PR #18 original SFT adapter as B1 and the common starting policy for subsequent reward-arm comparisons.",
+    "authorization": "Explicit user confirmation in the SFT-owner chat; recorded on GitHub by Jun040504.",
+    "new_training_requested": false
+  },
+  "base_model": {
+    "repository": "Qwen/Qwen2.5-1.5B-Instruct",
+    "revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+    "files_sha256": {
+      "model.safetensors": "dd924a11b4c220f385b51ffa522daea7c9f3d850e31b162bb5661df483c6d3ee",
+      "tokenizer.json": "c0382117ea329cdf097041132f6d735924b697924d6f6fc3945713e96ce87539",
+      "tokenizer_config.json": "5b5d4f65d0acd3b2d56a35b56d374a36cbc1c8fa5cf3b3febbbfabf22f359583",
+      "vocab.json": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910",
+      "merges.txt": "599bab54075088774b1733fde865d5bd747cbcc7a547c5bc12610e874e26f5e3"
+    }
+  },
+  "adapter": {
+    "artifact_kind": "original_sft_adapter_not_ppo_checkpoint",
+    "files_sha256": {
+      "adapter_model.safetensors": "c39e2a78e7c5973328e9d2c23fb6320e566352e63cc089562488f3dd46ae5f9c",
+      "adapter_config.json": "18993c388788ec14de72fd4f6f9ff86ce761ffc3aad5d0923b33f4365be03d97"
+    },
+    "recorded_trained_lora_tensor_sha256": "93760afbdf4b2a24d4d89bfa2e986ec2db7576ce516f9fc439e485558f304640",
+    "recorded_reloaded_lora_tensor_sha256": "93760afbdf4b2a24d4d89bfa2e986ec2db7576ce516f9fc439e485558f304640",
+    "tensor_digest_note": "Name-sorted LoRA parameters converted to contiguous float32 bytes; these are matching target-device records, not an independent rehash of tensor payloads on the review machine.",
+    "storage": "Existing target-device PR #18 original output/adapter directory; resolve its local path and verify files before use. No weights are committed."
+  },
+  "training_provenance": {
+    "pr": 18,
+    "reviewed_pr_head": "ba768137780e993abf628077b239e1b1ffb49c1c",
+    "executed_source_commit": "0fc56073740d7fbf8b9dc320451517fbb2cc7a40",
+    "executed_config_sha256": "0fd1e8163202546ccb1ab3ccc040455345538a9d77c606c50e19a66c20d8a330",
+    "final_wrapper_sha256": "8fd4121d259a982fe2e01a9b96343e9e48121b6181683190857055e84891ddf4",
+    "input_sha256": {
+      "train.json": "00e9a068f90011ba85eb42e26dc3e048241f94a77820c4e64b8df999f54b045e",
+      "val.json": "2ac4dcb4388735c031be4ffc46eb3454301340238f15c9bef01f616b2216b8b3",
+      "split-manifest.json": "397c3c597444c0f2b650235bda1e9210d0a6f681c8401d26b8a6d8eee22cb663"
+    },
+    "optimizer_steps": 656,
+    "epoch": 1,
+    "seed": 42,
+    "resumed_from_checkpoint_steps": [
+      100,
+      600
+    ]
+  },
+  "evidence": {
+    "release_url": "https://github.com/Zqqq-qq/webshop-stepwise-rl/releases/download/data-v1/webshop-pr18-qwen25-sft-and-validation-evidence.zip",
+    "zip_sha256": "c62a1a97ac259a4a0f5ffb7d70e054ca2523c14d9866f53a40b56562c6aaae3b",
+    "review_url": "https://github.com/Zqqq-qq/webshop-stepwise-rl/pull/18#pullrequestreview-5987404594"
+  },
+  "usage": {
+    "verify_adapter_and_base_file_hashes_before_use": true,
+    "ppo_initialization": "Both arms must use the same locked original SFT adapter. Subsequent PPO checkpoints get separate identities and outputs.",
+    "not_a_training_or_evaluation_command_config": true
+  },
+  "remaining_project_gates": {
+    "data_owner_adoption": "pending Issue #2 confirmation by Zqqq-qq",
+    "formal_evaluation_registration": "pending actual-source/config/environment/raw-trajectory acceptance by QiuQiu-xuan",
+    "reward_and_budget_protocol": "pending Issue #4 confirmation",
+    "formal_experiment_ready": false
+  },
+  "limitations": [
+    "Historical first invocation is reconstructed; microbatch order, gradient scaling and state restoration equivalence were not recorded.",
+    "The recorded 29.31 GiB reserved-memory anomaly is not a physical VRAM measurement.",
+    "SFT-owner model adoption does not rewrite original run provenance or register local validation as a formal test result."
+  ]
+}
