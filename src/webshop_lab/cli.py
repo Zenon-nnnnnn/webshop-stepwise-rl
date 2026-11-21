@@ -32,6 +32,10 @@ def main():
     s.add_argument("--output", required=True)
     s.add_argument("--limit", type=int, default=0)
     s.add_argument("--repeats", type=int, default=1)
+    s = sub.add_parser("ppo-smoke", help="One WebShop PPO engineering update with terminal reward")
+    for flag in ("config", "ids", "split-dir", "goal-map", "output"):
+        s.add_argument(f"--{flag}", required=True)
+    s.add_argument("--resume", help="Continue from a verified ppo-smoke output directory")
     s = sub.add_parser("summarize", help="Summarize episode metrics with confidence interval")
     s.add_argument("--input", required=True)
     s.add_argument("--output", required=True)
@@ -107,6 +111,7 @@ def main():
     s.add_argument("--output", required=True)
     args = p.parse_args()
     mapping = {
+        "ppo-smoke": ("ppo", "run"),
         "import-assets": ("data", "import_assets"), "audit": ("data", "audit"), "split": ("data", "split"),
         "doctor": ("doctor", "run"), "sft": ("sft", "run"), "env-server": ("environment", "serve"),
         "rollout": ("rollout", "run"), "summarize": ("metrics", "run"), "reward-export": ("rewards", "run"),
