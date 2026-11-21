@@ -1,5 +1,5 @@
 {
-  "status": "proposed_waiting_protocol_owner_confirmation",
+  "status": "approved_limited_budget_after_preflight",
   "created_utc": "2026-11-21T10:14:41.403271+00:00",
   "b1_sha256": "c39e2a78e7c5973328e9d2c23fb6320e566352e63cc089562488f3dd46ae5f9c",
   "arms": [
@@ -62,7 +62,57 @@
     8
   ],
   "estimate_basis": "engineering meta-to-summary timestamps only; planning allowance, not measured large-run throughput",
-  "validation": "same frozen 160-task val per endpoint; configuration/selection owner acceptance before final test",
+  "validation": "Run fixed 160-task FP32 validation only for B1 and each final fourth-update policy; no outcome-adaptive extra training.",
   "test_authorization": false,
-  "proposal_rationale": "Rule shaping is currently executable and cycle-neutral at gamma=1. Learned progress model failed independent baseline/credit checks. This route changes the original study and requires Zqqq/Qiu acceptance."
+  "proposal_rationale": "Rule shaping is currently executable and cycle-neutral at gamma=1. Learned progress model failed independent baseline/credit checks. This route changes the original study and requires Zqqq/Qiu acceptance.",
+  "decision": {
+    "recorded_by": "Tutor for Zqqq-qq under explicit delegated review/route decision request",
+    "date": "2026-11-21",
+    "scope": "Limited-budget terminal vs rule option-potential study; not learned progress/neural SPA reproduction",
+    "runtime_training_started_by_this_change": false
+  },
+  "protocol_path": "docs/RL_EXECUTION_PROTOCOL_20261121.md",
+  "gamma": 1.0,
+  "gae_lambda": 1.0,
+  "optimization_unit": "assistant_turn",
+  "ratio_unit": "joint_response",
+  "clip_epsilon": 0.2,
+  "value_coefficient": 0.5,
+  "max_gradient_norm": 1.0,
+  "advantage_normalization": false,
+  "optimizer": "AdamW",
+  "weight_decay": 0.0,
+  "optimizer_steps_per_batch": 1,
+  "checkpoint_selection": "precommitted final fourth update; no best-val checkpoint selection",
+  "execution_source": {
+    "reviewed_ppo_commit": "b3024cf19ee4d0223592210d8e0494e4220e9056",
+    "integration_changes_require_new_record_and_checks": true
+  },
+  "evaluation": {
+    "split": "val",
+    "task_count": 160,
+    "ids_sha256": "45440d724b33e69e13916d0adbe243cc63ce3bd67677b8220feff9f30b866c36",
+    "repeats": 1,
+    "policy_dtype": "float32",
+    "do_sample": false,
+    "max_steps": 10,
+    "max_new_tokens": 128,
+    "context_length": 2048,
+    "baseline": "original locked B1 evaluated under same settings; old 4-bit 160-task result not substituted",
+    "runner_sha256": "ff91196a99813656469c769c2bb2562026e16b717101094b9f5ffb0aa136a89e"
+  },
+  "sampling": {
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "top_k": 0,
+    "do_sample": true,
+    "dropout": "disabled with model.eval while gradients enabled during update"
+  },
+  "preflight_required": [
+    "Jun checks original B1 file/config/base/tokenizer identities and round recovery record; Qiu checks protocol and split/metrics",
+    "Record actual clean execution commit/tree and any wrapper SHA; use option-state-enabled local bridge, valid live health/fingerprint",
+    "Generate and inspect both seeds/arms plans before GPU work; exact shared initial B1 and train-only round IDs, no resume from prior smoke",
+    "Share new same8 B1 config/meta/IDs/check/raw or derived per-task payload plus raw hash for independent baseline validation",
+    "Save concrete configs/IDs/hashes and expected outputs; pass existing CPU checks and model/probability replay guards"
+  ]
 }
