@@ -1,0 +1,239 @@
+{
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "tokenizer_revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+  "max_length": 2048,
+  "scope": "offline train/validation only; no test-based tuning; no training",
+  "datasets": {
+    "train": {
+      "rows": 1451,
+      "source_sha256": "00e9a068f90011ba85eb42e26dc3e048241f94a77820c4e64b8df999f54b045e",
+      "candidate_assistant_turns": 5259,
+      "kept_examples": 5241,
+      "skipped_examples": 18,
+      "history_trimmed_examples": 188,
+      "raw_over_2048": 206,
+      "raw_lengths": {
+        "count": 5259,
+        "min": 135,
+        "median": 975,
+        "p90": 1605,
+        "p95": 1934,
+        "p99": 2988,
+        "max": 15624,
+        "mean": 956.28
+      },
+      "fitted_lengths": {
+        "count": 5241,
+        "min": 135,
+        "median": 974,
+        "p90": 1533,
+        "p95": 1744,
+        "p99": 1980,
+        "max": 2048,
+        "mean": 897.39
+      },
+      "supervised_suffix_lengths": {
+        "count": 5241,
+        "min": 15,
+        "median": 43,
+        "p90": 67,
+        "p95": 75,
+        "p99": 91,
+        "max": 192,
+        "mean": 46.57
+      },
+      "minimum_current_exchange_lengths": {
+        "count": 5259,
+        "min": 135,
+        "median": 329,
+        "p90": 862,
+        "p95": 916,
+        "p99": 1138,
+        "max": 5001,
+        "mean": 458.4
+      },
+      "removed_exchange_pairs": {
+        "count": 5241,
+        "min": 0,
+        "median": 0,
+        "p90": 0,
+        "p95": 0,
+        "p99": 2,
+        "max": 5,
+        "mean": 0.07
+      },
+      "mask_or_retention_failures": [],
+      "skipped_details": [
+        {
+          "task_id": 114,
+          "assistant_turn": 6,
+          "raw_tokens": 5818
+        },
+        {
+          "task_id": 114,
+          "assistant_turn": 8,
+          "raw_tokens": 10721
+        },
+        {
+          "task_id": 114,
+          "assistant_turn": 10,
+          "raw_tokens": 15624
+        },
+        {
+          "task_id": 6426,
+          "assistant_turn": 6,
+          "raw_tokens": 3209
+        },
+        {
+          "task_id": 203,
+          "assistant_turn": 6,
+          "raw_tokens": 5143
+        },
+        {
+          "task_id": 203,
+          "assistant_turn": 8,
+          "raw_tokens": 9236
+        },
+        {
+          "task_id": 203,
+          "assistant_turn": 10,
+          "raw_tokens": 13279
+        },
+        {
+          "task_id": 9067,
+          "assistant_turn": 6,
+          "raw_tokens": 2810
+        },
+        {
+          "task_id": 9067,
+          "assistant_turn": 8,
+          "raw_tokens": 4884
+        },
+        {
+          "task_id": 9067,
+          "assistant_turn": 10,
+          "raw_tokens": 6949
+        },
+        {
+          "task_id": 9067,
+          "assistant_turn": 12,
+          "raw_tokens": 9025
+        },
+        {
+          "task_id": 9067,
+          "assistant_turn": 14,
+          "raw_tokens": 11090
+        },
+        {
+          "task_id": 9067,
+          "assistant_turn": 16,
+          "raw_tokens": 13166
+        },
+        {
+          "task_id": 9067,
+          "assistant_turn": 18,
+          "raw_tokens": 15242
+        },
+        {
+          "task_id": 365,
+          "assistant_turn": 6,
+          "raw_tokens": 3007
+        },
+        {
+          "task_id": 365,
+          "assistant_turn": 8,
+          "raw_tokens": 5113
+        },
+        {
+          "task_id": 365,
+          "assistant_turn": 10,
+          "raw_tokens": 7219
+        },
+        {
+          "task_id": 365,
+          "assistant_turn": 12,
+          "raw_tokens": 9298
+        }
+      ]
+    },
+    "val": {
+      "rows": 160,
+      "source_sha256": "2ac4dcb4388735c031be4ffc46eb3454301340238f15c9bef01f616b2216b8b3",
+      "candidate_assistant_turns": 605,
+      "kept_examples": 605,
+      "skipped_examples": 0,
+      "history_trimmed_examples": 27,
+      "raw_over_2048": 27,
+      "raw_lengths": {
+        "count": 605,
+        "min": 154,
+        "median": 1011,
+        "p90": 1675,
+        "p95": 2022,
+        "p99": 2682,
+        "max": 6450,
+        "mean": 990.04
+      },
+      "fitted_lengths": {
+        "count": 605,
+        "min": 154,
+        "median": 1010,
+        "p90": 1640,
+        "p95": 1843,
+        "p99": 2020,
+        "max": 2048,
+        "mean": 950.89
+      },
+      "supervised_suffix_lengths": {
+        "count": 605,
+        "min": 15,
+        "median": 44,
+        "p90": 71,
+        "p95": 78,
+        "p99": 90,
+        "max": 103,
+        "mean": 48.09
+      },
+      "minimum_current_exchange_lengths": {
+        "count": 605,
+        "min": 154,
+        "median": 354,
+        "p90": 848,
+        "p95": 927,
+        "p99": 1140,
+        "max": 1885,
+        "mean": 460.89
+      },
+      "removed_exchange_pairs": {
+        "count": 605,
+        "min": 0,
+        "median": 0,
+        "p90": 0,
+        "p95": 0,
+        "p99": 2,
+        "max": 4,
+        "mean": 0.08
+      },
+      "mask_or_retention_failures": [],
+      "skipped_details": []
+    }
+  },
+  "padding_checks": {
+    "different_length_examples": 2,
+    "width": 887,
+    "padding_attention_zero_and_label_ignored": true,
+    "method": "list-level reconstruction of sft.py collator; GPU/Trainer not executed"
+  },
+  "tokenizer_files_sha256": {
+    "tokenizer_config.json": "5b5d4f65d0acd3b2d56a35b56d374a36cbc1c8fa5cf3b3febbbfabf22f359583",
+    "config.json": "98d2ff8cc47488d08a2b0b3acf4eb99ef210779b42bd48605f6b8e36acdbf670",
+    "tokenizer.json": "c0382117ea329cdf097041132f6d735924b697924d6f6fc3945713e96ce87539"
+  },
+  "split_checks": {
+    "train_val_id_overlap": 0,
+    "train_test_id_overlap": 0,
+    "val_test_id_overlap": 0,
+    "train_val_instruction_overlap": 0,
+    "environment_goal_map_verified": false
+  }
+}
