@@ -13,9 +13,9 @@
 
 ## 1. 结论：提交前必须改的 4 处（含 11/19 状态）
 
-| # | 位置 | `main` 草案的缺口 | 11/22 前待补 | PR #13（`8fc00a7`）与相关证据 |
+| # | 位置 | `main` 草案的缺口 | 11/22 前待补（最新工程状态见 §7） | PR #13（`8fc00a7`）与相关证据 |
 |---|---|---|---|---|
-| 1 | §4 | 缺少两臂共享的辅助奖励规则 | 写明 R-TG（终局任务奖励）与 R-PG（逐步进度奖励）共用同一动作合法性奖励公式和权重。说明带共用辅助项的 TG 路径仍待实现，辅助项权重待冻结 | 草案已更新进度估计器的终局任务奖励目标；实验协议已列共同辅助项 |
+| 1 | §4 | 缺少两臂共享的辅助奖励规则 | 写明 R-TG（终局任务奖励）与 R-PG（逐步进度奖励）共用同一动作合法性奖励公式和权重。说明工程候选的实测范围，以及正式两臂奖励规则与权重的冻结状态 | 草案已更新进度估计器的终局任务奖励目标；实验协议已列共同辅助项 |
 | 2 | §4 | “保持可比”缺少可核对字段 | 列出共享的初始化、算法、模型/revision、量化、提示词、采样配置、上下文、`max_steps`、环境/fingerprint、任务 ID 顺序、repeats 和预算。评估配置用 `preflight` 和 `check-parity` 核对，训练预算另按运行日志核对 | 草案仍为通用表述；协议和 `configs/eval-*-frozen.json` 可供核对 |
 | 3 | §5 | 成功分母、购买计数和区间方法待定义 | 完整运行以全部尝试的 episode 为分母，每臂报告任务数、episode 数、购买数、满分成功数及区间。每任务一次时报告单臂 Wilson 95% 区间，重复采样时按任务簇 bootstrap；两臂差值使用配对任务 bootstrap | 草案已补购买且满奖励才算成功、平均终局任务奖励及页面分仅供诊断；分母、购买单列和区间仍待补 |
 | 4 | §3 | 缺少按真实环境映射验证后的划分规模 | 写明 1451 train / 160 val / 200 reserved test、排除 13、seed 42、ID 与指令跨集合零交叉；test 只在 12/07 冻结后使用 | §3 沿用 `main` 表述；PR #15 提供真实 goal-map 的验证证据 |
@@ -90,3 +90,21 @@ git cat-file blob HEAD:results/eval-frozen-20261120/val_ids.json | sha256sum   #
 **proposal 可以怎么用**：作为"160 个冻结 val 任务上的候选对照"引用，并写明本地 1 epoch LoRA、非正式冻结、test 未用、未登记；沿用旧运行的登记以团队审定的方法和配置为准；正式 B1 结果还需满足正式训练的验收。
 
 其余仍未变：五类真实失败案例只覆盖 loop / format（full-160 只提供脱敏 per-task 记录，没有动作级日志）。PR #13 / #14 仍待合并，proposal 技术整合可按 §1 的剩余清单推进。
+
+## 7. 11/21 复核与 proposal 定稿证据
+
+- **数据划分。** 环境证据中的 train/val/test ID 分别为 1451/160/200 个，逐集合核对无重复、集合间无交叉，排除 13 条。环境与映射复核使用同一个 split manifest Git blob。冻结 val 清单也与环境侧逐字节相同。目标机的归档 health 记录了 1624 条指令对齐、0 条不匹配和 0 条跨集合指令交叉。本次复核使用已归档的 health。 [映射复核](https://github.com/Zqqq-qq/webshop-stepwise-rl/blob/d2bd4741913f8aae6335da78b8a1b04a60513662/results/mapped-split-20261119-zqq/validation.json) · [环境 health](https://github.com/Zqqq-qq/webshop-stepwise-rl/blob/d1d160bcfa44c7caa2c92609d8e5012662a23de6/results/env-2026-11-17/health-frozen.json)
+- **评估可比性。** 两份冻结评估配置仅 adapter 不同。两臂共用模型与 revision、4-bit 量化、seed 42、贪心解码、2048 上下文、128 个生成 token 上限、10 步上限、环境指纹和 val 清单。候选 full-160 的实际执行配置单独见归档，引用时注明本地 LoRA 候选、val 160 项和正式登记状态。 [冻结配置与清单](https://github.com/Zqqq-qq/webshop-stepwise-rl/blob/aa0919903f1fee764597e2dd9643863dd84fa5c9/results/eval-frozen-20261120/manifest.json) · [候选运行验收](https://github.com/Zqqq-qq/webshop-stepwise-rl/blob/d37a06eb794a2e317a1bd7ef3d661f1d579e568a/results/eval-20261119-full160/verification.json)
+- **模型与训练。** 目标机已有两次更新的 SFT 工程验证、固定模型 revision 的容量探针和新进程重载记录。候选运行的 train/val SHA 与 SFT 交接记录一致，adapter 文件 SHA 与训练后/重载张量摘要是两种不同的校验值。正式 B1 采用及候选评估登记仍待验收。 [SFT 验收与来源](https://github.com/Zqqq-qq/webshop-stepwise-rl/blob/8a2c4ebe6565ad4c9cbd03b33cf1fd662d41e3e0/docs/SFT_FORMAL_PLAN.md)
+- **PPO 对照。** 规则型规格势函数候选已有单次更新后的 8 项配对 val 检查，两臂均购买 8/8、满分 5/8、逐任务终局奖励相同。双臂编排已有 CPU 预检，可匹配起始模型、每轮任务、更新次数和最大允许预算。记录实际决策、应用的 `/step` 调用和生成 token，分别用于判断两臂实际消耗是否可比。正式奖励方案、B1 和多轮 GPU 对照仍待验收。 [单次更新与小样本验证](https://github.com/Zqqq-qq/webshop-stepwise-rl/pull/27) · [双臂预检](https://github.com/Zqqq-qq/webshop-stepwise-rl/pull/28)
+
+| 标识 | 核对值 |
+|---|---|
+| 原始 SFT、环境 goal-map SHA-256 | `721e46dba410cff900e187bccea91a456c38b105b6d14d068d7762afb7791de3` / `6b5d9dfceee913828871b8dff62fd59720a40306738a92a496d1b0fb6838fa88`（Release digest 与划分记录一致） |
+| 冻结 val ID SHA-256 | `45440d724b33e69e13916d0adbe243cc63ce3bd67677b8220feff9f30b866c36` |
+| 冻结 B0 / B1 评估配置 SHA-256 | `91d3f8ad5150a724dfd76eaf478a7d1aa68a8ba8f03235740b62436abddb07ac` / `03cce78c6f2a208b59e14e923927968fdfcc43d8f9dda3b0c4d70a652702990f` |
+| 上游保留 test 清单 SHA-256 | `8ccc37a8b89392359d2d124e321b0dd47d6072bf4410847f606762a211a0f189`（与环境导出的 200 个 ID 集合一致，文件的顺序和格式各自保留；最终测试按 12/07 冻结后的配置使用） |
+| Qwen2.5-1.5B-Instruct revision | `989aa7980e4cf806f80c7fef2b1adb7bc71aa306` |
+| 环境 goal fingerprint | `e69c9ae2a0aad88977c44a7baf49f1f5ef7918ba8317923c4ae24dcc1f5638d8` |
+| 候选训练输入 train / val SHA-256 | `00e9a068f90011ba85eb42e26dc3e048241f94a77820c4e64b8df999f54b045e` / `2ac4dcb4388735c031be4ffc46eb3454301340238f15c9bef01f616b2216b8b3`（核对归档记录） |
+| 候选 adapter 文件 SHA-256 / 重载张量摘要 | `c39e2a78e7c5973328e9d2c23fb6320e566352e63cc089562488f3dd46ae5f9c` / `93760afbdf4b2a24d4d89bfa2e986ec2db7576ce516f9fc439e485558f304640`（核对归档记录） |
