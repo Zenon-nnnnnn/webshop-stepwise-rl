@@ -37,6 +37,14 @@ def main():
     for flag in ("config", "ids", "split-dir", "goal-map", "output"):
         s.add_argument(f"--{flag}", required=True)
     s.add_argument("--resume", help="Continue from a verified ppo-smoke output directory")
+    s = sub.add_parser("ppo-compare", help="Prepare or execute a paired PPO engineering comparison")
+    for flag in ("config", "split-dir", "goal-map", "output"):
+        s.add_argument(f"--{flag}", required=True)
+    s.add_argument("--round-ids", action="append", required=True)
+    s.add_argument("--candidate", choices=["progress", "option_potential"], required=True)
+    s.add_argument("--progress-model")
+    s.add_argument("--progress-model-sha256")
+    s.add_argument("--execute", action="store_true", help="Run training instead of CPU preflight")
     s = sub.add_parser("summarize", help="Summarize episode metrics with confidence interval")
     s.add_argument("--input", required=True)
     s.add_argument("--output", required=True)
@@ -113,6 +121,7 @@ def main():
     s.add_argument("--output", required=True)
     args = p.parse_args()
     mapping = {
+        "ppo-compare": ("ppo_comparison", "run"),
         "ppo-smoke": ("ppo", "run"),
         "import-assets": ("data", "import_assets"), "audit": ("data", "audit"), "split": ("data", "split"),
         "doctor": ("doctor", "run"), "sft": ("sft", "run"), "env-server": ("environment", "serve"),
