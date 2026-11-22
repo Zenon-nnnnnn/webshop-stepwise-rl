@@ -14,6 +14,10 @@ from .common import read_json, write_json, file_hash, instruction_hash
 from .evaluation import load_episodes, terminal_reward
 
 
+LEGACY_KIND = 'hashed-linear-additive-v1'
+GUARDED_KIND = 'hashed-linear-guarded-v2'
+
+
 def features(step, dimensions):
     tokens = re.findall(r'[a-z0-9]+', (step['observation'] + '\n' + step['response']).lower())
     result = {0: 1.}  # Per-step bias is part of the additive estimator.
@@ -23,12 +27,47 @@ def features(step, dimensions):
     return result
 
 
-def total_features(episode, dimensions):
+def trajectory_features(steps, dimensions, kind=LEGACY_KIND):
+    if kind == LEGACY_KIND:
+        return [features(step, dimensions) for step in steps]
+    if kind != GUARDED_KIND:
+        raise ValueError("Unsupported estimator format")
+    searches = set()
+    previous_action = None
+    seen_state_actions = set()
+    vectors = []
+    initial_bias_used = False
+    for step in steps:
+        vector = {}
+        if step["grounding"]:
+            action = ' '.join(step["action"].lower().split())
+            state_action = (step["observation"], action)
+            repeats = action in searches or state_action in seen_state_actions
+            reverses = {action, previous_action} == {'click[next >]', 'click[< prev]'}
+            if not repeats and not reverses:
+                vector = features(step, dimensions)
+                if initial_bias_used:
+                    del vector[0]
+                initial_bias_used = True
+            if action.startswith('search['):
+                searches.add(action)
+            seen_state_actions.add(state_action)
+            previous_action = action
+        vectors.append(vector)
+    return vectors
+
+
+def total_features(episode, dimensions, kind=LEGACY_KIND):
     result = {}
-    for step in episode['steps']:
-        for key, value in features(step, dimensions).items():
+    for vector in trajectory_features(episode['steps'], dimensions, kind):
+        for key, value in vector.items():
             result[key] = result.get(key, 0.) + value
     return result
+
+
+def predict_steps(model, steps):
+    return [dot(model['weights'], vector) for vector in
+            trajectory_features(steps, model['dimensions'], model.get('kind', LEGACY_KIND))]
 
 
 def dot(weights, vector):
@@ -48,10 +87,11 @@ def train(args):
     train_targets = [terminal_reward(row) for row in train_rows]
     if len(set(train_targets)) < 2:
         raise ValueError('Training rewards have no variation; collect more diverse trajectories')
+    kind = GUARDED_KIND if getattr(args, "guarded", False) else LEGACY_KIND
     w = [0.] * args.dimensions
-    data = [(total_features(row, args.dimensions), target)
+    data = [(total_features(row, args.dimensions, kind), target)
             for row, target in zip(train_rows, train_targets)]
-    validation = [(total_features(row, args.dimensions), terminal_reward(row)) for row in val_rows]
+    validation = [(total_features(row, args.dimensions, kind), terminal_reward(row)) for row in val_rows]
     best_loss, best_w, best_epoch = math.inf, None, None
     rng = random.Random(args.seed)
     for epoch in range(args.epochs):
@@ -65,7 +105,7 @@ def train(args):
         loss = sum((dot(w, x) - y)**2 for x, y in validation) / len(validation)
         if loss < best_loss:
             best_loss, best_w, best_epoch = loss, list(w), epoch + 1
-    write_json(args.output, {'kind': 'hashed-linear-additive-v1', 'dimensions': args.dimensions,
+    write_json(args.output, {'kind': kind, 'dimensions': args.dimensions,
         'weights': best_w, 'target': 'terminal_reward', 'best_epoch': best_epoch, 'validation_mse': best_loss, 'seed': args.seed,
         'train_sha256': file_hash(args.train), 'val_sha256': file_hash(args.val),
         'goal_fingerprint': train_rows[0].get('goal_fingerprint'),
@@ -77,7 +117,7 @@ def train(args):
 
 def predict(args):
     model = read_json(args.model)
-    if model.get('kind') != 'hashed-linear-additive-v1':
+    if model.get('kind') not in (LEGACY_KIND, GUARDED_KIND):
         raise ValueError('Unsupported estimator format')
     rows = load_episodes(args.input)
     output = Path(args.output)
@@ -88,8 +128,8 @@ def predict(args):
         for row in rows:
             if row.get('goal_fingerprint') != model['goal_fingerprint']:
                 raise ValueError('Estimator/environment mismatch')
-            for step in row['steps']:
-                step['progress'] = dot(model['weights'], features(step, model['dimensions']))
+            for step, score in zip(row['steps'], predict_steps(model, row['steps'])):
+                step['progress'] = score
             row['progress_model_sha256'] = file_hash(args.model)
             f.write(json.dumps(row, ensure_ascii=False) + '\n')
     print(f'Annotated {len(rows)} trajectories; predictions are not policy improvements.')

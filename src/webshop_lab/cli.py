@@ -26,16 +26,25 @@ def main():
     s.add_argument("--max-steps", type=int, default=-1)
     s = sub.add_parser("env-server", help="Local single-client WebShop environment HTTP bridge")
     s.add_argument("--port", type=int, default=8765)
+    s.add_argument("--option-state", action="store_true", help="Expose selected options for reward diagnostics")
     s = sub.add_parser("rollout", help="Collect real episodes against the environment bridge")
     s.add_argument("--config", required=True)
     s.add_argument("--ids", required=True)
     s.add_argument("--output", required=True)
     s.add_argument("--limit", type=int, default=0)
     s.add_argument("--repeats", type=int, default=1)
-    s = sub.add_parser("ppo-smoke", help="One WebShop PPO engineering update with terminal reward")
+    s = sub.add_parser("ppo-smoke", help="One WebShop PPO engineering update")
     for flag in ("config", "ids", "split-dir", "goal-map", "output"):
         s.add_argument(f"--{flag}", required=True)
     s.add_argument("--resume", help="Continue from a verified ppo-smoke output directory")
+    s = sub.add_parser("ppo-compare", help="Prepare or execute a paired PPO engineering comparison")
+    for flag in ("config", "split-dir", "goal-map", "output"):
+        s.add_argument(f"--{flag}", required=True)
+    s.add_argument("--round-ids", action="append", required=True)
+    s.add_argument("--candidate", choices=["progress", "option_potential"], required=True)
+    s.add_argument("--progress-model")
+    s.add_argument("--progress-model-sha256")
+    s.add_argument("--execute", action="store_true", help="Run training instead of CPU preflight")
     s = sub.add_parser("summarize", help="Summarize episode metrics with confidence interval")
     s.add_argument("--input", required=True)
     s.add_argument("--output", required=True)
@@ -105,12 +114,14 @@ def main():
     s.add_argument("--dimensions", type=int, default=4096)
     s.add_argument("--epochs", type=int, default=100)
     s.add_argument("--seed", type=int, default=42)
+    s.add_argument("--guarded", action="store_true", help="Fit progress with invalid/redundant actions masked")
     s = sub.add_parser("progress-predict", help="Annotate episodes using the low-cost linear estimator")
     s.add_argument("--model", required=True)
     s.add_argument("--input", required=True)
     s.add_argument("--output", required=True)
     args = p.parse_args()
     mapping = {
+        "ppo-compare": ("ppo_comparison", "run"),
         "ppo-smoke": ("ppo", "run"),
         "import-assets": ("data", "import_assets"), "audit": ("data", "audit"), "split": ("data", "split"),
         "doctor": ("doctor", "run"), "sft": ("sft", "run"), "env-server": ("environment", "serve"),

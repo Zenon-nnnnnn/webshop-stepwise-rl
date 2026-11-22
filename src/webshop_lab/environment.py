@@ -43,6 +43,15 @@ def serve(args):
         overlaps = {f'{a}-{b}': len(hashes[a] & hashes[b]) for a, b in [(0, 1), (0, 2), (1, 2)]}
         id_overlaps = [len(sets[a] & sets[b]) for a, b in [(0, 1), (0, 2), (1, 2)]]
         return {'verified': not any(overlaps.values()) and not any(id_overlaps), 'instruction_overlaps': overlaps}
+    def available_actions():
+        available = env.get_available_actions()
+        if getattr(args, "option_state", False):
+            session = env.server.user_sessions.get(env.session, {})
+            available["selected_options"] = (
+                dict(session.get("options", {})) if "buy now" in available["clickables"] else {}
+            )
+        return available
+
     class Handler(BaseHTTPRequestHandler):
         def send(self, obj, status=200):
             body = json.dumps(obj, ensure_ascii=False).encode()
@@ -55,7 +64,8 @@ def serve(args):
             if self.path == '/health':
                 self.send({'ready': True, 'n_goals': len(goals), 'goal_fingerprint': fingerprint,
                            'alignment_checked': alignment['checked'], 'alignment_mismatches': len(alignment['mismatched']),
-                           'split_status': split_status()})
+                           'split_status': split_status(),
+                           **({'option_state': True} if getattr(args, 'option_state', False) else {})})
             else:
                 self.send({'error': 'Not found'}, 404)
         def do_POST(self):
@@ -70,14 +80,14 @@ def serve(args):
                         raise ValueError('Task ID outside environment goal range')
                     obs, _ = env.reset(task)
                     self.send({'observation': obs, 'instruction': env.instruction_text,
-                               'available': env.get_available_actions(), 'goal_fingerprint': fingerprint})
+                               'available': available_actions(), 'goal_fingerprint': fingerprint})
                 elif self.path == '/step':
                     action = parse_action('Action: ' + body['action'])
                     if not is_executable(action, env.get_available_actions()):
                         raise ValueError('Action is not available in current state')
                     obs, reward, done, _ = env.step(action)
                     self.send({'observation': obs, 'reward': float(reward), 'done': bool(done),
-                               'available': env.get_available_actions()})
+                               'available': available_actions()})
                 else:
                     self.send({'error': 'Not found'}, 404)
             except (ValueError, KeyError, AssertionError, TypeError) as e:

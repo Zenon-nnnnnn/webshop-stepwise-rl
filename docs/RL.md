@@ -21,6 +21,8 @@ webshop-lab progress-predict --model artifacts/progress-linear.json --input arti
 
 注意：annotate 训练轨迹的结果是训练集预测，不应拿其误差当泛化表现。要报告预测误差，使用独立 val 轨迹；如需更严格的奖励标注，考虑按任务交叉拟合，不能把自己训练过的轨迹效果当成 out-of-sample 证据。
 
+可用 `progress-train --guarded` 拟合第二种工程候选。无效动作、相同搜索、同一页面的相同动作和立即反向翻页预测为零。截距只在第一条可计分动作上使用，避免每多走一步就重复增加固定奖励。训练、离线预测与 PPO 使用同一特征规则。原线性权重保留其原有语义。此规则仍需在独立验证集上验证总分误差和动作分配。
+
 ## 奖励导出：已实现
 
 ```bash
@@ -65,6 +67,18 @@ webshop-lab ppo-smoke --config artifacts/ppo-smoke-config.json \
 配置必填项包括本地固定快照目录 `model`、`revision`、`base_weights_sha256`、LoRA 路径 `adapter`、`adapter_sha256`、`environment_url`、`goal_fingerprint`、`context_length`、`max_steps` 和 `max_new_tokens`。使用已验证的 Qwen2.5 单文件权重快照。可指定 `load_in_4bit` 和 `seed`。采样固定为 temperature=1、top_p=1、top_k=0。建议用少量训练任务起步，输出目录必须为新目录。命令会先核对 live health、目标文本和三个数据划分。
 
 成功时生成 `summary.json`，包括概率重放范围、梯度和参数哈希，以及本进程的 adapter/critic 保存重载结果。运行中断可能留下部分文件，以该摘要是否存在作为一次更新通过的判据。训练轨迹保留在本机。首次真实 GPU 验收另核对长回复概率重放和独立进程重载。
+
+### 逐步奖励接入
+
+工程对照可在同一初始 SFT adapter 上分别启动两臂。默认 `reward_mode=terminal` 在购买结束时发放终局奖励。逐步臂显式指定 `reward_mode=progress`、`progress_model` 和 `progress_model_sha256`，固定线性进度估计器并对照训练、验证划分。两臂 beta 为 0。逐步臂每轮只发放一次预测进度，购买终局分照常为评估保留。续跑仍要求与父轮配置逐字节相同。
+
+另有 `reward_mode=option_potential` 工程候选，使用 `env-server --option-state`。它按当前已选规格与购物指令的词匹配定义势值，逐轮增加 `Phi(next)-Phi(current)`，购买或步数耗尽时下一状态势值为 0。训练数据记录原任务奖励、势值差与合成奖励。在 gamma=1 时，从零势值出发的完整轨迹总奖励仍等于购买终局奖励，回到同一状态的循环净塑形奖励为零。它是一个规则基线，独立于拟合的逐步进度模型。
+
+### 双臂预检
+
+`webshop-lab ppo-compare` 默认只做 CPU 预检与计划生成。提交一份共同的 FP32 PPO 配置（不含奖励模式），并通过 `--round-ids` 按顺序提供每次更新的训练 ID 文件。共同参数为 `--config`、`--split-dir`、`--goal-map`、`--output` 和 `--candidate`。学习型候选还需 `--progress-model` 与 `--progress-model-sha256`；规格势函数候选执行时需要支持 `--option-state` 的桥接。普通桥接上的 CPU 预检可生成计划，并报告接口尚未就绪。
+
+计划保存各臂配置哈希、相同任务顺序、共同预算上限和逐轮命令。使用 GPU Python、冻结源码和独立新目录添加 `--execute` 才会启动两组。每组首轮从同一 SFT 初始化，随后只续跑本组 checkpoint。实际决策、环境调用和生成 token 可以因为提前结束而不同。训练摘要分别记录实际消耗，正式实验若要求严格匹配实际消耗，须另定停止协议。
 
 ## 原 PPO：可用参考源码，不是已完成的新主线
 
