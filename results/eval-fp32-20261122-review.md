@@ -1,8 +1,8 @@
-# FP32 开发验证复核（11 月 22 日）
+# 非量化默认精度开发验证复核（11 月 22 日）
 
-从两份私有证据包中的分批 JSONL 独立复算。整包 SHA-256 与 Release 一致，基线包 27 项、PPO 包 90 项载荷的清单哈希全部通过。六组各有相同的 159 个不重复验证任务，每任务一次。冻结清单中的 6700 因技术中断缺失。分母为本次覆盖的 159 个任务，保留测试集未使用。 [基线原件](https://github.com/Zqqq-qq/webshop-stepwise-rl/releases/download/data-v1/webshop-nov22-fp32-b0-b1-160-evidence.zip) · [PPO 原件](https://github.com/Zqqq-qq/webshop-stepwise-rl/releases/download/data-v1/webshop-nov22-seed42-43-ppo-four-update-evidence.zip)
+从两份私有证据包中的分批 JSONL 独立复算。11/23 对执行脚本和加载入口复核后，更正本报告原有 FP32 标签。原全量 CLI 未显式指定 dtype，加载器默认按设备选择 BF16/FP16，历史实际 dtype 未记录。这批结果按非量化默认精度开发验证引用。早先八任务 FP32 wrapper 和 PPO 训练的精度记录各有独立来源。整包 SHA-256 与 Release 一致，基线包 27 项、PPO 包 90 项载荷的清单哈希全部通过。六组各有相同的 159 个不重复验证任务，每任务一次。冻结清单中的 6700 因技术中断缺失。分母为本次覆盖的 159 个任务，保留测试集未使用。 [基线原件](https://github.com/Zqqq-qq/webshop-stepwise-rl/releases/download/data-v1/webshop-nov22-fp32-b0-b1-160-evidence.zip) · [PPO 原件](https://github.com/Zqqq-qq/webshop-stepwise-rl/releases/download/data-v1/webshop-nov22-seed42-43-ppo-four-update-evidence.zip)
 
-## 同任务 FP32 开发结果
+## 同任务开发结果
 
 满分成功要求购买完成且奖励至少为 `1 - 1e-6`。未购买的终局任务奖励记 0，正常步数耗尽留在分母。无效动作率按无效决策数除以总决策数。单臂区间用 Wilson 95%。
 
@@ -42,4 +42,8 @@ B1 减 B0 的执行方区间上界为 +28.93 pp，本次明确指定的重采样
 
 基线使用四批，覆盖数 40/40/39/40。PPO 终点评估使用五个文件，覆盖数 40/40/20/40/19。第五个文件补回第三批未完成的 19 项，合并后仅缺 6700。两组基线和四个终点的配置在去掉 seed 与 adapter 后一致，原始轨迹的 goal fingerprint 一致。
 
-两个基线均有四个原始 run ID，四个 PPO 终点均有五个。证据包仅含三个终点的 `rollout.meta.json`，这些 meta 各声明 160 项，run ID 与所附批次的原始行均不匹配。正式登记仍须补各实际批次的 meta、执行来源及模型/adapter 身份，并由协议负责人确定 6700 的处理和是否接受分批偏差。当前可引用为 **159/160 覆盖的 FP32 开发验证**。正式登记和保留测试放行仍待验收。 [执行协议](https://github.com/Zqqq-qq/webshop-stepwise-rl/blob/8ae948fd991a9c10b4ba2d4b19eb536f024e60e4/docs/RL_EXECUTION_PROTOCOL_20261121.md)
+两个基线均有四个原始 run ID，四个 PPO 终点均有五个。11/23 补充包找回了 28 份实际批次 meta。本次独立校验全部 111 项载荷，逐批 run ID、config/IDs SHA、完成任务前缀、health/fingerprint 及合并后的唯一覆盖全部通过。28 个原始 JSONL 与先前证据包逐字节相同，批次 meta 缺口已关闭。 [补充证据包](https://github.com/Zqqq-qq/webshop-stepwise-rl/releases/download/data-v1/webshop-nov23-eval-metadata-precision-correction.zip)
+
+按冻结任务 ID 顺序重算的统计与补充包 audit.json 一致，浮点容差为 1e-12。Windows 使用 `python -X utf8` 执行复算脚本，路径分隔符归一化后比较。当前文件哈希的采集时间明确保留，历史加载时的 dtype 和权重身份仍待证明。
+
+现接受此批结果为 **159/160 覆盖的非量化默认精度开发验证**。任务 6700 单列技术中断，正常策略失败保留在 159 的统计分母中。正式完整验证须解决该任务或由 Zqqq/Qiu 共同记录新的覆盖方案。后续显式 FP32 重评使用 #38 修复入口、六份配置和新输出目录，逐批记录实际参数 dtype、执行源码和模型/adapter 身份。正式登记与保留测试门禁仍待验收。 [精度修复](https://github.com/Zqqq-qq/webshop-stepwise-rl/pull/38)
