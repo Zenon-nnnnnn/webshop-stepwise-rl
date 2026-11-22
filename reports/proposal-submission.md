@@ -54,7 +54,9 @@ Each seed is reported separately, with task-paired differences, bootstrap interv
 
 Environment, SFT handoff and data checks have retained artifacts: the WebShop bridge reports `alignment_checked=1624` with zero mismatches and a verified split, the B1 adapter identity is locked (`c39e2a78…`), and reviewers checked artifact integrity, probability/mask/reward relationships, checkpoint chains and fresh-process reload records for the earlier three-update engineering run. That was record-based verification, not independent GPU reproduction.
 
-The frozen-budget comparison is complete for both seeds. Each arm ran four updates over 16 training episodes, giving 16 optimizer updates and 64 episodes across 2 seeds × 2 arms, inside the shared caps (272 decisions, 220 applied `/step` calls and 16,128 generated tokens in total). Endpoint evaluation used one greedy FP32 episode per frozen validation task. One task was excluded as a technical interruption: the environment stops responding to `/step` for its long search query, reproduced in isolation, so every row below uses **159 of 160** tasks.
+The planned PPO training ran for both seeds: four updates and 16 episodes per arm, totalling 16 optimizer updates, 64 episodes, 272 decisions, 220 applied `/step` calls and 16,128 generated tokens. Training explicitly selected FP32. Endpoint evaluation produced the following stored development results on the same **159 of 160** validation tasks; task 6700 was interrupted by an environment timeout.
+
+**Precision correction (23 November).** The retained full-evaluation scripts called CLI rollout without the FP32 wrapper or an explicit dtype. In that source version, nonquantized loading defaults to BF16 on supported hardware and otherwise FP16. Historical batch metadata did not log actual parameter dtypes. These records must therefore be labelled **nonquantized, automatic-precision development evaluation**, with historical runtime dtype unverified, rather than completed FP32 validation. The earlier eight-task FP32 wrapper check is separate.
 
 | stage | full successes | success rate | Wilson 95% | invalid actions |
 |---|---:|---:|---|---:|
@@ -62,16 +64,19 @@ The frozen-budget comparison is complete for both seeds. Each arm ran four updat
 | B1 SFT LoRA | 52/159 | 32.70% | 25.90–40.33% | 8.08% |
 | TG, seed 42 | 52/159 | 32.70% | 25.90–40.33% | 10.94% |
 | TG, seed 43 | 52/159 | 32.70% | 25.90–40.33% | 9.15% |
-| OP, seed 42 | 50/159 | 31.45% | 24.70–39.03% | 10.44% |
-| OP, seed 43 | 50/159 | 31.45% | 24.70–39.03% | 12.68% |
+| OP, seed 42 | 50/159 | 31.45% | 24.74–39.03% | 10.44% |
+| OP, seed 43 | 50/159 | 31.45% | 24.74–39.03% | 12.68% |
 
-Task-paired bootstrap (10,000 task-level resamples, seed 42): B1 − B0 = +35 tasks (+22.01 pp, 95% CI +15.09 to +28.93); TG − B1 = 0 tasks (0.00 pp, −5.66 to +5.66); OP − B1 = −2 tasks (−1.26 pp, −6.29 to +3.77); OP − TG = −2 tasks in both seeds (−6.92 to +4.40 and −6.29 to +3.77).
+Task-paired bootstrap uses 10,000 resamples, Python `random.Random(42).choices`, frozen validation-ID order and linear quantiles. B1 − B0 is +35 tasks (+22.01 pp, 95% CI +15.09 to +29.56). TG − B1 is 0.00 pp [−5.66, +5.66] in each seed; OP − B1 is −1.26 pp [−6.29, +3.77]. OP − TG is −1.26 pp, with intervals [−6.92, +4.40] and [−6.29, +3.77] for seeds 42 and 43.
 
-Interpretation: SFT is the step that changes behaviour (+22 pp, interval excluding zero). Four PPO updates at this budget produced **no measurable change** relative to the SFT starting policy, and the two reward arms are indistinguishable. We therefore report a bounded negative result — no improvement and no observed difference — not equivalence, and not a claim that stepwise shaping is ineffective in general.
+The retained records show a higher SFT success rate, and no observed OP success-rate improvement over TG at this budget and evaluation path. Equal TG/B1 success totals do **not** imply unchanged behaviour: each seed has ten tasks switching from success to failure and ten switching in the other direction. The intervals do not establish equivalence or general ineffectiveness of shaping.
 
-Deviations and limitations: (i) endpoint evaluation had to run in fixed chunks (4×40 + 1×39) with an env-server restart before each chunk, because the server degrades after roughly 100 consecutive interactions; batch IDs are fixed with no duplicate or missing task, every batch used the same config/adapter/source/environment fingerprint, failures were retained and deduplicated before aggregation, and we do not claim equivalence to a single continuous run; (ii) the denominator is 159 rather than 160 for all six rows; (iii) precision matters — the same B0 scores 19/160 under 4-bit loading (47.99% invalid) but 17/159 under FP32 (72.96% invalid), so historical 4-bit numbers are reference only; (iv) four updates per arm and two training seeds sharing the same 160 tasks give limited power, with no KL regularisation.
+Terminal task rewards count non-purchases as zero; the last page-match score is diagnostic only. Under that definition, OP − TG mean reward differences are −0.00933 [−0.03983, +0.02107] and −0.01426 [−0.04277, +0.01373]. Historical 4-bit results remain separate; differences across these runs cannot be attributed solely to precision.
 
-Evidence: private release packs `webshop-nov22-seed42-43-ppo-four-update-evidence.zip` (SHA-256 `37487c88…4ef4`) and `webshop-nov22-fp32-b0-b1-160-evidence.zip` (SHA-256 `69c8ead1…3bb59`), containing per-round summaries, per-batch JSONL and `SHA256SUMS`. Formal registration and test authorisation remain with the protocol owners; the test split is untouched.
+Execution deviations remain explicit. Baselines have four batches of 40/40/39/40 completed tasks. PPO endpoints have five files of 40/40/20/40/19; the fifth supplies nineteen tasks not completed in the third, leaving only task 6700 missing. Twenty-eight actual per-batch metadata files have been recovered and match the raw run IDs and config/ID hashes. Old top-level metadata belongs to failed whole-run attempts and is not metadata for concatenated batches. Chunking, technical-task handling, actual historical precision and load-time identities still require protocol-owner acceptance.
+
+The [23 November correction and evidence handoff](../results/eval-nov22-closeout-20261123/README.md) provides the reproducible audit, original batch metadata and retained execution source. Current file hashes and a post-fix load check are explicitly collection-time evidence, not historical attestation. The corrected loader supports explicit FP32 evaluation and records actual parameter dtypes. Formal registration and held-out test remain pending; the test split is untouched.
+
 
 ## 6. Schedule and responsibilities
 

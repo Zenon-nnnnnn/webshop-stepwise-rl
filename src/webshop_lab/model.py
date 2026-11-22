@@ -14,6 +14,15 @@ def load(config, training=False, *, dtype=None):
     if not torch.cuda.is_available():
         raise RuntimeError('Training/rollout configuration requires a CUDA GPU; run CPU tools separately.')
     name = config['model']
+    policy_dtype = config.get('policy_dtype', 'auto')
+    if policy_dtype not in ('auto', 'float32'):
+        raise ValueError('policy_dtype must be auto or float32')
+    if policy_dtype == 'float32':
+        if config.get('load_in_4bit'):
+            raise ValueError('float32 policy requires nonquantized weights')
+        if dtype is not None and dtype != torch.float32:
+            raise ValueError('Explicit dtype conflicts with policy_dtype=float32')
+        dtype = torch.float32
     if dtype is None:
         dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
     revision_kwargs = {'revision': config['revision']} if config.get('revision') else {}
@@ -75,3 +84,16 @@ def training_messages(row):
         turns = turns[2:]
     return [{'role': 'system', 'content': SYSTEM + '\nShopping instruction: ' + goal_text(row)}] + [
         {'role': 'user' if t['from'] == 'human' else 'assistant', 'content': t['value']} for t in turns]
+
+
+def precision_record(model, loaded_dtype):
+    """Report the observed parameter mix, including PEFT's possible FP32 adapters."""
+    parameters, trainable = {}, {}
+    for _, parameter in model.named_parameters():
+        key = str(parameter.dtype)
+        parameters[key] = parameters.get(key, 0) + parameter.numel()
+        if parameter.requires_grad:
+            trainable[key] = trainable.get(key, 0) + parameter.numel()
+    return {'selected_load_dtype': str(loaded_dtype),
+            'parameter_numel_by_dtype': parameters,
+            'trainable_numel_by_dtype': trainable}
