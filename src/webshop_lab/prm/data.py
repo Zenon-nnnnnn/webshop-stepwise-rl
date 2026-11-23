@@ -1,7 +1,7 @@
 """Rollout JSONL → PRM 样本，并在任务/指令层面隔离 fit 与 dev。
 
 只做数据转换与切分，不加载模型；tokenizer 由调用方传入。
-强制要求输入来自冻结 train 池，val/test 一律拒绝。
+强制要求输入来自冻结 train 池，并用已锁定 goal-map 校验指令身份；val/test 一律拒绝。
 """
 import argparse
 import hashlib
@@ -25,7 +25,7 @@ class TechnicalInterruption(ValueError):
 
 
 class SourceNotAllowed(ValueError):
-    """输入轨迹属于冻结 val/test，不能进入 PRM 训练集。"""
+    """输入轨迹不属于冻结 train 池，或指令身份不匹配，不能进入 PRM 训练集。"""
 
 
 def normalize_instruction(text):
@@ -103,10 +103,14 @@ def episode_messages(row, require_labels=True):
     return messages
 
 
+def _sha256(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
 def load_split(split_dir):
-    """读取冻结划分；返回 task id 集合与指令哈希集合。"""
+    """读取冻结划分 ID；返回 id 集合与文件 SHA。"""
     split_dir = Path(split_dir)
-    result = {}
+    result, digests = {}, {}
     for name in ('train', 'val', 'test'):
         path = split_dir / (name + '_ids.json')
         if not path.exists():
@@ -115,9 +119,60 @@ def load_split(split_dir):
         if not isinstance(ids, list) or not ids:
             raise ValueError('%s 必须是非空列表' % path.name)
         result[name] = {int(v) for v in ids}
+        digests[name + '_ids'] = _sha256(path)
     if result['train'] & result['val'] or result['train'] & result['test']:
         raise ValueError('冻结划分之间存在任务交叉')
-    return result
+    return result, digests
+
+
+def load_goal_map(path):
+    """读取已锁定 goal-map：task_id → 官方指令。缺失或不可解析直接报错。"""
+    path = Path(path)
+    if not path.exists():
+        raise ValueError('缺少 goal-map: %s' % path)
+    rows = json.loads(path.read_text(encoding='utf-8'))
+    if not isinstance(rows, list) or not rows:
+        raise ValueError('goal-map 结构不符')
+    mapping = {}
+    for row in rows:
+        if not isinstance(row, dict) or 'task_id' not in row or 'instruction' not in row:
+            raise ValueError('goal-map 条目缺少 task_id/instruction')
+        task = int(row['task_id'])
+        if task in mapping:
+            raise ValueError('goal-map 中 task_id 重复: %d' % task)
+        mapping[task] = row['instruction']
+    return mapping, _sha256(path)
+
+
+def gate_train_pool(episodes, splits, goal_map):
+    """强制检查：任务属于冻结 train、指令与 goal-map 一致、且不与 val/test 指令重合。"""
+    train = splits['train']
+    forbidden_ids = splits['val'] | splits['test']
+    outside = sorted({int(r['task_id']) for r in episodes} - train)
+    if outside:
+        raise SourceNotAllowed(
+            '有 %d 个任务不在冻结 train 池内（例如 %s），val/test 轨迹不能训练 PRM'
+            % (len(outside), outside[:5]))
+    missing = sorted({int(r['task_id']) for r in episodes} - set(goal_map))
+    if missing:
+        raise SourceNotAllowed('goal-map 缺少任务指令: %s' % missing[:5])
+    mismatched, leaked = [], []
+    forbidden_instructions = {normalize_instruction(goal_map[t])
+                              for t in forbidden_ids if t in goal_map}
+    for row in episodes:
+        task = int(row['task_id'])
+        actual = normalize_instruction(row['instruction'])
+        if actual != normalize_instruction(goal_map[task]):
+            mismatched.append(task)
+        if actual in forbidden_instructions:
+            leaked.append(task)
+    if mismatched:
+        raise SourceNotAllowed('任务指令与 goal-map 不一致: %s' % sorted(set(mismatched))[:5])
+    if leaked:
+        raise SourceNotAllowed('指令与 val/test 重合: %s' % sorted(set(leaked))[:5])
+    return {'train_tasks': len(train), 'forbidden_tasks': len(forbidden_ids),
+            'goal_map_entries': len(goal_map), 'forbidden_instructions': len(forbidden_instructions),
+            'instruction_overlap_with_eval': 0}
 
 
 def load_episodes(paths):
@@ -125,8 +180,7 @@ def load_episodes(paths):
     episodes, seen, sources = [], set(), []
     for path in paths:
         p = Path(path)
-        digest = hashlib.sha256(p.read_bytes()).hexdigest()
-        sources.append({'path': str(p), 'sha256': digest})
+        sources.append({'path': str(p), 'sha256': _sha256(p)})
         with p.open(encoding='utf-8') as stream:
             for line_no, line in enumerate(stream, 1):
                 line = line.strip()
@@ -145,23 +199,6 @@ def load_episodes(paths):
     if not episodes:
         raise ValueError('没有可用轨迹')
     return episodes, sources
-
-
-def gate_train_pool(episodes, splits, label_instructions):
-    """强制检查输入属于冻结 train 池，且指令不与 val/test 重合。"""
-    train = splits['train']
-    forbidden = splits['val'] | splits['test']
-    outside = sorted({int(r['task_id']) for r in episodes} - train)
-    if outside:
-        raise SourceNotAllowed(
-            '有 %d 个任务不在冻结 train 池内（例如 %s），val/test 轨迹不能训练 PRM'
-            % (len(outside), outside[:5]))
-    leaked = [r for r in episodes
-              if normalize_instruction(r['instruction']) in label_instructions]
-    if leaked:
-        raise SourceNotAllowed('有 %d 条轨迹的指令与 val/test 重合，需移除' % len(leaked))
-    return {'train_tasks': len(train), 'forbidden_tasks': len(forbidden),
-            'instruction_overlap_with_eval': 0}
 
 
 def split_by_task(episodes, fit_fraction=0.8, seed=42):
@@ -199,32 +236,36 @@ def reward_distribution(episodes):
 
 
 def build_samples(episodes, tokenizer, max_length):
-    """把 episode 编码成 PRM 样本；超长/技术中断/空动作显式计数，绝不截断。"""
+    """编码样本；超长/技术中断/空动作显式记录被剔除的 task 与指令哈希，绝不截断。"""
     samples, rejected = [], Counter()
+    dropped = []
     for row in episodes:
+        task = int(row['task_id'])
+        sha = hashlib.sha256(normalize_instruction(row['instruction']).encode()).hexdigest()
+        reason = None
         try:
             messages = episode_messages(row)
             encoded = tokenize_trajectory(tokenizer, messages, max_length)
         except TrajectoryTooLong:
-            rejected['too_long'] += 1
-            continue
+            reason = 'too_long'
         except TechnicalInterruption:
-            rejected['technical_interruption'] += 1
-            continue
+            reason = 'technical_interruption'
         except ValueError as exc:
-            reason = str(exc)
-            if '空的 assistant' in reason:
-                rejected['empty_action'] += 1
-            elif 'template token' in reason.lower():
-                rejected['reserved_token'] += 1
+            text = str(exc)
+            if '空的 assistant' in text:
+                reason = 'empty_action'
+            elif 'template token' in text.lower():
+                reason = 'reserved_token'
             else:
-                rejected['invalid_label_or_schema'] += 1
+                reason = 'invalid_label_or_schema'
+        if reason:
+            rejected[reason] += 1
+            dropped.append({'task_id': task, 'instruction_sha256': sha, 'reason': reason})
             continue
         samples.append({
-            'task_id': int(row['task_id']),
+            'task_id': task,
             'repeat': int(row.get('repeat', 0)),
-            'instruction_sha256': hashlib.sha256(
-                normalize_instruction(row['instruction']).encode()).hexdigest(),
+            'instruction_sha256': sha,
             'terminal_reward': terminal_reward(row),
             'num_turns': len(encoded['turn_end_indices']),
             'num_tokens': len(encoded['input_ids']),
@@ -232,11 +273,13 @@ def build_samples(episodes, tokenizer, max_length):
             'source': row.get('_source', {}),
             'encoded': encoded,
         })
-    return samples, dict(rejected)
+    return samples, dict(rejected), dropped
 
 
 def write_dataset(out_dir, config_fingerprint, sources, split_summary, fit_samples, dev_samples,
-                  rejections, tokenizer_identity):
+                  rejections, dropped, tokenizer_identity, goal_map_sha256, split_sha256):
+    if not fit_samples or not dev_samples:
+        raise ValueError('过滤后 fit 或 dev 为空，应停止正式训练流程而不是继续')
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=False)
     payload = {}
@@ -245,20 +288,25 @@ def write_dataset(out_dir, config_fingerprint, sources, split_summary, fit_sampl
         with path.open('w', encoding='utf-8') as stream:
             for row in rows:
                 stream.write(json.dumps(row, ensure_ascii=False) + '\n')
-        with path.open('rb') as stream:
-            digest = hashlib.sha256(stream.read()).hexdigest()
-        payload[name] = {'path': str(path), 'sha256': digest, 'samples': len(rows),
+        payload[name] = {'path': str(path), 'sha256': _sha256(path), 'samples': len(rows),
+                         'tasks': len({r['task_id'] for r in rows}),
                          'turns': sum(r['num_turns'] for r in rows),
-                         'label_mean': (sum(r['terminal_reward'] for r in rows) / len(rows))
-                         if rows else 0.0}
+                         'label_mean': sum(r['terminal_reward'] for r in rows) / len(rows),
+                         'label_buckets': dict(Counter(
+                             'zero' if r['terminal_reward'] <= 0 else
+                             ('full' if r['terminal_reward'] >= 1 else 'partial') for r in rows))}
     manifest = {
         'schema_version': SCHEMA_VERSION,
         'config_fingerprint': config_fingerprint,
         'tokenizer_identity': tokenizer_identity,
+        'goal_map_sha256': goal_map_sha256,
+        'split_sha256': split_sha256,
         'sources': sources,
         'split': split_summary,
         'files': payload,
         'rejections': rejections,
+        'dropped': dropped,
+        'dropped_tasks': sorted({d['task_id'] for d in dropped}),
         'score_position': 'assistant_im_end',
         'truncation': 'forbidden: overlong trajectories are rejected and counted',
     }
@@ -271,8 +319,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description='Build PRM fit/dev data from rollout JSONL')
     parser.add_argument('--rollout', action='append', required=True)
     parser.add_argument('--config', required=True)
-    parser.add_argument('--split-dir', required=True,
-                        help='frozen data/processed directory with train/val/test ids')
+    parser.add_argument('--split-dir', required=True)
+    parser.add_argument('--goal-map', required=True)
     parser.add_argument('--output', required=True)
     parser.add_argument('--fit-fraction', type=float, default=0.8)
     parser.add_argument('--seed', type=int, default=42)
@@ -283,16 +331,10 @@ def main(argv=None):
     if config.load_in_4bit:
         raise SystemExit('PRM 只按非量化路径构建样本')
 
-    splits = load_split(args.split_dir)
+    splits, split_sha = load_split(args.split_dir)
+    goal_map, goal_sha = load_goal_map(args.goal_map)
     episodes, sources = load_episodes(args.rollout)
-    eval_instructions = set()
-    for name in ('val', 'test'):
-        path = Path(args.split_dir) / (name + '.json')
-        if path.exists():
-            for row in json.loads(path.read_text(encoding='utf-8')):
-                if isinstance(row, dict) and 'instruction' in row:
-                    eval_instructions.add(normalize_instruction(row['instruction']))
-    gate = gate_train_pool(episodes, splits, eval_instructions)
+    gate = gate_train_pool(episodes, splits, goal_map)
 
     from transformers import AutoTokenizer
     tokenizer = AutoTokenizer.from_pretrained(config.tokenizer, revision=config.tokenizer_revision,
@@ -302,15 +344,18 @@ def main(argv=None):
                               tokenizer.chat_template.encode()).hexdigest()}
 
     fit, dev, summary = split_by_task(episodes, args.fit_fraction, args.seed)
-    fit_samples, fit_rejected = build_samples(fit, tokenizer, config.max_length)
-    dev_samples, dev_rejected = build_samples(dev, tokenizer, config.max_length)
+    fit_samples, fit_rejected, fit_dropped = build_samples(fit, tokenizer, config.max_length)
+    dev_samples, dev_rejected, dev_dropped = build_samples(dev, tokenizer, config.max_length)
     rejections = {'fit': fit_rejected, 'dev': dev_rejected}
     summary['train_pool_gate'] = gate
     manifest = write_dataset(args.output, config.fingerprint(), sources, summary,
-                             fit_samples, dev_samples, rejections, tokenizer_identity)
+                             fit_samples, dev_samples, rejections, fit_dropped + dev_dropped,
+                             tokenizer_identity, goal_sha, split_sha)
     print(json.dumps({'fit': manifest['files']['fit']['samples'],
                       'dev': manifest['files']['dev']['samples'],
-                      'rejections': rejections}, ensure_ascii=False))
+                      'rejections': rejections,
+                      'fit_label_buckets': manifest['files']['fit']['label_buckets']},
+                     ensure_ascii=False))
 
 
 if __name__ == '__main__':

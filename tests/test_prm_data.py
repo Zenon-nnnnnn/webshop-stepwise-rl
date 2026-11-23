@@ -1,6 +1,5 @@
 """CPU tests for PRM data conversion, split gating and fit/dev isolation."""
 import json
-import math
 import tempfile
 import unittest
 from pathlib import Path
@@ -84,43 +83,65 @@ class MessageTests(unittest.TestCase):
             data.episode_messages(row)
 
 
-class SplitsGateTests(unittest.TestCase):
-    def make_split_dir(self, tmp, train, val, test):
+class GateTests(unittest.TestCase):
+    def build(self, tmp, train, val, test, goal):
         d = Path(tmp)
         for name, ids in (('train', train), ('val', val), ('test', test)):
             (d / (name + '_ids.json')).write_text(json.dumps(ids), encoding='utf-8')
-            (d / (name + '.json')).write_text(json.dumps([]), encoding='utf-8')
-        return d
+        map_path = d / 'goal.json'
+        map_path.write_text(json.dumps(goal), encoding='utf-8')
+        splits, digests = data.load_split(d)
+        mapping, sha = data.load_goal_map(map_path)
+        return splits, mapping, digests, sha
 
     def test_val_tasks_are_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
-            d = self.make_split_dir(tmp, [1, 2, 3], [4, 5], [6])
-            splits = data.load_split(d)
-            rows = [episode(4, 'val task', final=0.5)]
+            goal = [{'task_id': i, 'instruction': 'inst %d' % i} for i in range(1, 7)]
+            splits, mapping, _, _ = self.build(tmp, [1, 2, 3], [4, 5], [6], goal)
             with self.assertRaises(data.SourceNotAllowed):
-                data.gate_train_pool(rows, splits, set())
+                data.gate_train_pool([episode(4, 'inst 4', final=0.5)], splits, mapping)
 
-    def test_train_tasks_pass_the_gate(self):
+    def test_train_tasks_pass_with_matching_goal_map(self):
         with tempfile.TemporaryDirectory() as tmp:
-            d = self.make_split_dir(tmp, [1, 2, 3], [4], [5])
-            splits = data.load_split(d)
-            rows = [episode(1, 'train task', final=0.5)]
-            info = data.gate_train_pool(rows, splits, set())
+            goal = [{'task_id': i, 'instruction': 'inst %d' % i} for i in range(1, 7)]
+            splits, mapping, _, _ = self.build(tmp, [1, 2, 3], [4], [5], goal)
+            info = data.gate_train_pool([episode(1, 'inst 1', final=0.5)], splits, mapping)
             self.assertEqual(info['instruction_overlap_with_eval'], 0)
+            self.assertEqual(info['forbidden_instructions'], 2)
 
-    def test_instruction_leak_is_rejected(self):
+    def test_instruction_mismatch_against_goal_map_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
-            d = self.make_split_dir(tmp, [1, 2], [4], [5])
-            splits = data.load_split(d)
-            rows = [episode(1, 'Buy  Socks', final=0.5)]
+            goal = [{'task_id': i, 'instruction': 'inst %d' % i} for i in range(1, 7)]
+            splits, mapping, _, _ = self.build(tmp, [1, 2, 3], [4], [5], goal)
             with self.assertRaises(data.SourceNotAllowed):
-                data.gate_train_pool(rows, splits, {data.normalize_instruction('buy socks')})
+                data.gate_train_pool([episode(1, 'different text', final=0.5)], splits, mapping)
+
+    def test_task_missing_from_goal_map_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            goal = [{'task_id': i, 'instruction': 'inst %d' % i} for i in range(1, 3)]
+            splits, mapping, _, _ = self.build(tmp, [1, 2, 3], [4], [5], goal)
+            with self.assertRaises(data.SourceNotAllowed):
+                data.gate_train_pool([episode(3, 'inst 3', final=0.5)], splits, mapping)
+
+    def test_val_instruction_leak_is_rejected_even_for_train_task(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            goal = [{'task_id': 1, 'instruction': 'shared text'},
+                    {'task_id': 4, 'instruction': 'Shared  Text'},
+                    {'task_id': 2, 'instruction': 'inst 2'},
+                    {'task_id': 5, 'instruction': 'inst 5'}]
+            splits, mapping, _, _ = self.build(tmp, [1, 2], [4], [5], goal)
+            with self.assertRaises(data.SourceNotAllowed):
+                data.gate_train_pool([episode(1, 'shared text', final=0.5)], splits, mapping)
+
+    def test_missing_goal_map_raises(self):
+        with self.assertRaises(ValueError):
+            data.load_goal_map('does-not-exist.json')
 
     def test_overlapping_splits_are_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
-            d = self.make_split_dir(tmp, [1, 2], [2], [3])
+            goal = [{'task_id': i, 'instruction': 'x'} for i in range(1, 4)]
             with self.assertRaises(ValueError):
-                data.load_split(d)
+                self.build(tmp, [1, 2], [2], [3], goal)
 
 
 class SplitTests(unittest.TestCase):
@@ -150,44 +171,59 @@ class BuildTests(unittest.TestCase):
 
         data.tokenize_trajectory = boom
         try:
-            samples, rejected = data.build_samples(rows, object(), 8)
+            samples, rejected, dropped = data.build_samples(rows, object(), 8)
         finally:
             data.tokenize_trajectory = original
         self.assertEqual(samples, [])
         self.assertEqual(rejected['too_long'], 1)
+        self.assertEqual(dropped[0]['task_id'], 1)
+        self.assertEqual(dropped[0]['reason'], 'too_long')
 
     def test_technical_interruption_is_counted_separately(self):
         rows = [episode(1, 'a', done=False, final=0.0)]
         rows[0]['termination'] = 'environment_error'
-        samples, rejected = data.build_samples(rows, object(), 2048)
+        samples, rejected, dropped = data.build_samples(rows, object(), 2048)
         self.assertEqual(samples, [])
         self.assertEqual(rejected['technical_interruption'], 1)
 
     def test_empty_action_is_counted(self):
         rows = [episode(1, 'a')]
         rows[0]['steps'][0]['response'] = '  '
-        samples, rejected = data.build_samples(rows, object(), 2048)
+        samples, rejected, _ = data.build_samples(rows, object(), 2048)
         self.assertEqual(samples, [])
         self.assertEqual(rejected.get('empty_action'), 1)
 
 
 class ManifestTests(unittest.TestCase):
-    def test_manifest_records_sources_split_and_rejections(self):
-        samples = [{'task_id': 1, 'repeat': 0, 'instruction_sha256': 'a' * 64,
-                    'terminal_reward': 1.0, 'num_turns': 2, 'num_tokens': 10,
-                    'template_sha256': 'b' * 64, 'source': {}, 'encoded': {}}]
+    def samples(self):
+        return [{'task_id': 1, 'repeat': 0, 'instruction_sha256': 'a' * 64,
+                 'terminal_reward': 1.0, 'num_turns': 2, 'num_tokens': 10,
+                 'template_sha256': 'b' * 64, 'source': {}, 'encoded': {}}]
+
+    def test_manifest_records_identity_and_drops(self):
         with tempfile.TemporaryDirectory() as tmp:
             manifest = data.write_dataset(
                 Path(tmp) / 'ds', 'f' * 64, [{'path': 'r.jsonl', 'sha256': 'c' * 64}],
                 {'seed': 42, 'fit_fraction': 0.8, 'fit_tasks': 1, 'dev_tasks': 1,
                  'fit_episodes': 1, 'dev_episodes': 1, 'instruction_overlap': 0},
-                samples, [], {'fit': {}, 'dev': {}},
-                {'path': 'tok', 'revision': 'd' * 40, 'template_sha256': 'b' * 64})
-            self.assertEqual(manifest['score_position'], 'assistant_im_end')
-            self.assertEqual(manifest['split']['instruction_overlap'], 0)
-            self.assertIn('truncation', manifest)
-            on_disk = json.loads((Path(tmp) / 'ds' / 'manifest.json').read_text(encoding='utf-8'))
-            self.assertEqual(on_disk['files']['fit']['samples'], 1)
+                self.samples(), self.samples(),
+                {'fit': {'too_long': 1}, 'dev': {}},
+                [{'task_id': 9, 'instruction_sha256': 'e' * 64, 'reason': 'too_long'}],
+                {'path': 'tok', 'revision': 'd' * 40, 'template_sha256': 'b' * 64},
+                '1' * 64, {'train_ids': '2' * 64, 'val_ids': '3' * 64, 'test_ids': '4' * 64})
+            self.assertEqual(manifest['goal_map_sha256'], '1' * 64)
+            self.assertEqual(manifest['split_sha256']['val_ids'], '3' * 64)
+            self.assertEqual(manifest['dropped_tasks'], [9])
+            self.assertEqual(manifest['files']['fit']['label_buckets'], {'full': 1})
+
+    def test_empty_split_is_refused(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(ValueError):
+                data.write_dataset(
+                    Path(tmp) / 'ds', 'f' * 64, [], {},
+                    self.samples(), [], {'fit': {}, 'dev': {}}, [],
+                    {'path': 'tok', 'revision': 'd' * 40, 'template_sha256': 'b' * 64},
+                    '1' * 64, {})
 
 
 if __name__ == '__main__':

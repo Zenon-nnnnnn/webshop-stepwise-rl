@@ -8,7 +8,7 @@ from .data import episode_messages, terminal_reward
 from .tokenize import collate_trajectories, tokenize_trajectory
 
 REQUIRED_IDENTITY = ('base_revision', 'base_sha256', 'tokenizer_sha256',
-                     'initialization', 'init_files_sha256', 'config_fingerprint',
+                     'initialization', 'config_fingerprint',
                      'template_sha256', 'source_commit')
 
 
@@ -47,6 +47,12 @@ def identity_from(config, template_sha256, source_commit):
     missing = [k for k in REQUIRED_IDENTITY if not identity.get(k)]
     if missing:
         raise ValueError('身份字段缺失: %s' % missing)
+    if config.initialization == 'sft_b1':
+        if set(identity['init_files_sha256']) != {'adapter_model.safetensors',
+                                                  'adapter_config.json'}:
+            raise ValueError('sft_b1 身份必须包含原 B1 的 adapter 两个文件 SHA')
+    elif identity['init_files_sha256']:
+        raise ValueError('base 初始化不应携带 SFT adapter 身份')
     return identity
 
 
