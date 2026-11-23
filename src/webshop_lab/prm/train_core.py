@@ -15,4 +15,5 @@ def optimizer_step(model, batch, optimizer, max_grad_norm=1.0):
         raise ValueError('PRM梯度路径被切断')
     norm = torch.nn.utils.clip_grad_norm_(parameters, max_grad_norm, error_if_nonfinite=True)
     optimizer.step()
-    return {'loss': float(loss.detach()), 'gradient_norm': float(norm)}
+    return {'loss': float(loss.detach()), 'gradient_norm': float(norm),
+            'totals_before_update': output['totals'].detach().cpu().tolist()}

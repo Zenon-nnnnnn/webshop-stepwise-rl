@@ -51,4 +51,4 @@ fit/dev 训练与选择；报总分 MSE vs 常数/长度基线、动作分诊断
 
 ## Jun模型与重载交接
 
-新增可集成模型/损失核心、草稿短训契约和六项CPU测试，见[模型与重载交接](PRM_MODEL_RELOAD_CONTRACT.md)。尚无完整Qwen模板/构建/训练/独立进程推理入口，真实GPU训练与重载待执行。执行遵守[设备契约](PRM_DEVICE_CONTRACT.md)的固定FP32与依赖；head零初始化首步backbone梯度为0属预期，须检查后续PRM LoRA更新。Jun本次只补独立核心文件及此交接，后续多人改动应避免覆盖集成负责人的文件。
+已接入#44固定版本的配置/tokenizer，新增完整Qwen/B1初始化、短训、独立进程推理与续训入口，见[模型交接](PRM_MODEL_RELOAD_CONTRACT.md)和[运行说明](PRM_RUNTIME_HANDOFF.md)。24项CPU测试实际通过，含真实tokenizer及小型真实Qwen/PEFT训练/重载，不代表项目1.5B/GPU验收。真实数据转换与采集、fit/dev核验、GPU容量及正式PRM泛化仍待完成。执行遵守固定FP32与依赖；head零初始化首步LoRA梯度为0属预期，须检查后续变化。不改upstream，不覆盖原B1。
