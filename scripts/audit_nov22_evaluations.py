@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 def read(path):
-    return json.loads(path.read_text())
+    return json.loads(path.read_text(encoding='utf-8'))
 
 
 def digest(path):
@@ -61,7 +61,7 @@ def audit(root):
             meta = read(meta_path)
             ids_path = path.with_name(path.stem.replace('rollout-', 'ids-') + '.json')
             ids = read(ids_path)
-            rows = [json.loads(line) for line in path.read_text().splitlines()]
+            rows = [json.loads(line) for line in path.read_text(encoding='utf-8').splitlines()]
             assert meta['config'] == config, path
             assert meta['config_sha256'] == digest(directory / 'config.json'), path
             assert meta['ids_sha256'] == digest(ids_path), path
@@ -109,5 +109,5 @@ if __name__ == '__main__':
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
     result = audit(args.root)
-    args.output.write_text(json.dumps(result, indent=2) + '\n')
+    args.output.write_text(json.dumps(result, indent=2) + '\n', encoding='utf-8')
     print('Verified 28 batches, six runs of 159 tasks. Historical dtype remains unverified.')
