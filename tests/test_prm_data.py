@@ -140,6 +140,15 @@ class GateTests(unittest.TestCase):
             self.assertEqual(info['forbidden_tasks'], 2)
             self.assertEqual(info['forbidden_instructions'], 2)
 
+    def test_environment_instruction_prefix_matches_goal_map(self):
+        """环境回传的指令带 `Instruction:` 前缀，身份比对必须先去掉。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            goal = [{'task_id': i, 'instruction': 'inst %d' % i} for i in range(1, 5)]
+            splits, mapping, _, _ = self.build(tmp, [1, 2], [3], [4], goal)
+            info = data.gate_train_pool([episode(1, 'Instruction: inst 1', final=0.5)],
+                                        splits, mapping)
+            self.assertEqual(info['instruction_overlap_with_eval'], 0)
+
     def test_val_instruction_leak_is_rejected_even_for_train_task(self):
         with tempfile.TemporaryDirectory() as tmp:
             goal = [{'task_id': 1, 'instruction': 'shared text'},

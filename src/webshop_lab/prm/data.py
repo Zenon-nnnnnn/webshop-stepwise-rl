@@ -8,6 +8,7 @@ import hashlib
 import json
 import math
 import random
+import re
 from collections import Counter
 from pathlib import Path
 
@@ -28,10 +29,18 @@ class SourceNotAllowed(ValueError):
     """输入轨迹不属于冻结 train 池，或指令身份不匹配，不能进入 PRM 训练集。"""
 
 
+INSTRUCTION_PREFIX = re.compile(r'^instruction\s*:\s*', re.IGNORECASE)
+
+
 def normalize_instruction(text):
     if not isinstance(text, str):
         raise ValueError('instruction 必须是字符串')
     return ' '.join(text.lower().split())
+
+
+def identity_instruction(text):
+    """环境回传的指令带 `Instruction:` 前缀，身份比对时要先去掉。"""
+    return INSTRUCTION_PREFIX.sub('', normalize_instruction(text)).strip()
 
 
 def raw_reward(row):
@@ -165,11 +174,11 @@ def gate_train_pool(episodes, splits, goal_map):
             'goal-map 未覆盖 %d 个冻结划分任务（例如 %s），不能据此声称零重叠'
             % (len(missing), missing[:5]))
     mismatched, leaked = [], []
-    forbidden_instructions = {normalize_instruction(goal_map[t]) for t in forbidden_ids}
+    forbidden_instructions = {identity_instruction(goal_map[t]) for t in forbidden_ids}
     for row in episodes:
         task = int(row['task_id'])
-        actual = normalize_instruction(row['instruction'])
-        if actual != normalize_instruction(goal_map[task]):
+        actual = identity_instruction(row['instruction'])
+        if actual != identity_instruction(goal_map[task]):
             mismatched.append(task)
         if actual in forbidden_instructions:
             leaked.append(task)
@@ -223,8 +232,8 @@ def split_by_task(episodes, fit_fraction=0.8, seed=42):
     fit_tasks = set(ordered[:target])
     fit = [r for r in episodes if int(r['task_id']) in fit_tasks]
     dev = [r for r in episodes if int(r['task_id']) not in fit_tasks]
-    overlap = ({normalize_instruction(r['instruction']) for r in fit}
-               & {normalize_instruction(r['instruction']) for r in dev})
+    overlap = ({identity_instruction(r['instruction']) for r in fit}
+               & {identity_instruction(r['instruction']) for r in dev})
     if overlap:
         raise ValueError('fit/dev 指令重叠 %d 条，需重新切分' % len(overlap))
     return fit, dev, {'seed': seed, 'fit_fraction': fit_fraction,
@@ -248,7 +257,7 @@ def build_samples(episodes, tokenizer, max_length):
     dropped = []
     for row in episodes:
         task = int(row['task_id'])
-        sha = hashlib.sha256(normalize_instruction(row['instruction']).encode()).hexdigest()
+        sha = hashlib.sha256(identity_instruction(row['instruction']).encode()).hexdigest()
         reason = None
         try:
             messages = episode_messages(row)
@@ -322,6 +331,41 @@ def write_dataset(out_dir, config_fingerprint, sources, split_summary, fit_sampl
     return manifest
 
 
+def training_row(row, policy_adapter_sha256):
+    """转换成训练入口要求的文档 schema：messages + 标签 + 来源/策略身份。"""
+    if not isinstance(policy_adapter_sha256, str) or len(policy_adapter_sha256) != 64:
+        raise ValueError('policy_adapter_sha256 必须是 64 位十六进制')
+    source = row.get('_source') or {}
+    if not isinstance(source.get('sha256'), str) or len(source['sha256']) != 64:
+        raise ValueError('训练样本必须保留来源文件 SHA')
+    return {
+        'schema_version': 'prm-training-sample-v1',
+        'task_id': int(row['task_id']),
+        'messages': episode_messages(row),
+        'terminal_reward': terminal_reward(row),
+        'done': row['done'],
+        'termination': row['termination'],
+        'source_sha256': source['sha256'],
+        'source_path': source.get('path', ''),
+        'policy_adapter_sha256': policy_adapter_sha256,
+        'instruction_sha256': hashlib.sha256(
+            identity_instruction(row['instruction']).encode()).hexdigest(),
+    }
+
+
+def write_training_jsonl(episodes, path, policy_adapter_sha256):
+    """写出训练入口可读的样本文件；不合法标签会直接报错而不是被丢弃。"""
+    rows = [training_row(row, policy_adapter_sha256) for row in episodes]
+    if not rows:
+        raise ValueError('训练样本为空')
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with target.open('w', encoding='utf-8') as stream:
+        for row in rows:
+            stream.write(json.dumps(row, ensure_ascii=False) + '\n')
+    return {'path': str(target), 'samples': len(rows), 'sha256': _sha256(target)}
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description='Build PRM fit/dev data from rollout JSONL')
     parser.add_argument('--rollout', action='append', required=True)
@@ -331,6 +375,10 @@ def main(argv=None):
     parser.add_argument('--output', required=True)
     parser.add_argument('--fit-fraction', type=float, default=0.8)
     parser.add_argument('--seed', type=int, default=42)
+    parser.add_argument('--training-jsonl', action='append', default=[],
+                        help='额外输出训练入口 schema：fit=<path> 或 dev=<path>')
+    parser.add_argument('--policy-adapter-sha256', default='',
+                        help='行为策略 adapter SHA（sft_b1 初始化时必填）')
     args = parser.parse_args(argv)
 
     from .config import load_config
@@ -358,11 +406,20 @@ def main(argv=None):
     manifest = write_dataset(args.output, config.fingerprint(), sources, summary,
                              fit_samples, dev_samples, rejections, fit_dropped + dev_dropped,
                              tokenizer_identity, goal_sha, split_sha)
+    emitted = {}
+    for spec in args.training_jsonl:
+        name, _, target = spec.partition('=')
+        if name not in ('fit', 'dev') or not target:
+            raise SystemExit('--training-jsonl 需写成 fit=<path> 或 dev=<path>')
+        rows = fit if name == 'fit' else dev
+        policy_sha = args.policy_adapter_sha256 or \
+            config.sft_adapter_files_sha256.get('adapter_model.safetensors', '')
+        emitted[name] = write_training_jsonl(rows, target, policy_sha)
     print(json.dumps({'fit': manifest['files']['fit']['samples'],
                       'dev': manifest['files']['dev']['samples'],
                       'rejections': rejections,
-                      'fit_label_buckets': manifest['files']['fit']['label_buckets']},
-                     ensure_ascii=False))
+                      'fit_label_buckets': manifest['files']['fit']['label_buckets'],
+                      'training_jsonl': emitted}, ensure_ascii=False))
 
 
 if __name__ == '__main__':
