@@ -8,7 +8,8 @@ from .data import episode_messages, terminal_reward
 from .tokenize import collate_trajectories, tokenize_trajectory
 
 REQUIRED_IDENTITY = ('base_revision', 'base_sha256', 'tokenizer_sha256',
-                     'initialization', 'template_sha256', 'source_commit')
+                     'initialization', 'init_files_sha256', 'config_fingerprint',
+                     'template_sha256', 'source_commit')
 
 
 def build_backbone(config, device='cuda'):
@@ -30,11 +31,30 @@ def build_backbone(config, device='cuda'):
     return base
 
 
+def identity_from(config, template_sha256, source_commit):
+    """身份必须绑定实际初始化文件，不能只写 initialization 字符串。"""
+    base_sha = hashlib.sha256(Path(config.model, 'model.safetensors').read_bytes()).hexdigest()
+    identity = {
+        'base_revision': config.revision,
+        'base_sha256': base_sha,
+        'tokenizer_sha256': config.tokenizer_files_sha256.get('tokenizer.json', ''),
+        'initialization': config.initialization,
+        'init_files_sha256': dict(sorted(config.sft_adapter_files_sha256.items())),
+        'config_fingerprint': config.fingerprint(),
+        'template_sha256': template_sha256,
+        'source_commit': source_commit,
+    }
+    missing = [k for k in REQUIRED_IDENTITY if not identity.get(k)]
+    if missing:
+        raise ValueError('身份字段缺失: %s' % missing)
+    return identity
+
+
 def load_prm(config, checkpoint, expected_identity, device='cuda'):
     import torch
-    from .model_core import NeuralPRM, restore_head, verify_prm
     from peft import PeftModel
     from transformers import AutoTokenizer
+    from .model_core import NeuralPRM, restore_head, verify_prm
 
     manifest = verify_prm(checkpoint, expected_identity)
     base = build_backbone(config, device=device)
@@ -48,10 +68,10 @@ def load_prm(config, checkpoint, expected_identity, device='cuda'):
 
 
 def score_episode(model, tokenizer, row, max_length, device='cuda'):
-    """对一条轨迹逐回合输出 p_t 与总和；推理不读 terminal_reward。"""
+    """对一条轨迹逐回合输出 p_t 与总和；推理路径不要求也不读取终局标签。"""
     import torch
 
-    messages = episode_messages(row)
+    messages = episode_messages(row, require_labels=False)
     encoded = tokenize_trajectory(tokenizer, messages, max_length)
     batch = collate_trajectories([encoded], tokenizer.pad_token_id)
     ids = torch.tensor(batch['input_ids'], dtype=torch.long, device=device)
@@ -62,30 +82,24 @@ def score_episode(model, tokenizer, row, max_length, device='cuda'):
         out = model(input_ids=ids, attention_mask=attention, turn_end_indices=ends, turn_mask=turns)
     valid = turns[0]
     scores = out['step_scores'][0][valid].float().cpu().tolist()
-    return {'task_id': int(row['task_id']), 'turn_scores': scores,
-            'total': float(out['totals'][0]), 'turns': len(scores),
-            'tokens': len(encoded['input_ids']),
-            'template_sha256': encoded['template_sha256'],
-            'score_position': encoded['score_position']}
-
-
-def identity_from(config, template_sha256, source_commit):
-    digest = hashlib.sha256(Path(config.model, 'model.safetensors').read_bytes()).hexdigest()
-    identity = {'base_revision': config.revision, 'base_sha256': digest,
-                'tokenizer_sha256': config.tokenizer_files_sha256.get('tokenizer.json', ''),
-                'initialization': config.initialization,
-                'template_sha256': template_sha256, 'source_commit': source_commit}
-    missing = [k for k in REQUIRED_IDENTITY if not identity.get(k)]
-    if missing:
-        raise ValueError('身份字段缺失: %s' % missing)
-    return identity
+    result = {'task_id': int(row['task_id']), 'turn_scores': scores,
+              'total': float(out['totals'][0]), 'turns': len(scores),
+              'tokens': len(encoded['input_ids']),
+              'template_sha256': encoded['template_sha256'],
+              'score_position': encoded['score_position']}
+    if 'done' in row:
+        try:
+            result['terminal_reward_for_diagnosis'] = terminal_reward(row)
+        except ValueError:
+            result['terminal_reward_for_diagnosis'] = None
+    return result
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description='Score one rollout trajectory with a saved PRM')
     parser.add_argument('--config', required=True)
     parser.add_argument('--checkpoint', required=True)
-    parser.add_argument('--rollout', required=True, help='rollout JSONL, one episode per line')
+    parser.add_argument('--rollout', required=True)
     parser.add_argument('--task-id', type=int, required=True)
     parser.add_argument('--source-commit', required=True)
     parser.add_argument('--device', default='cuda', choices=['cuda', 'cpu'])
@@ -117,7 +131,6 @@ def main(argv=None):
 
     model, tokenizer, manifest = load_prm(config, args.checkpoint, identity, device=args.device)
     result = score_episode(model, tokenizer, row, config.max_length, device=args.device)
-    result['terminal_reward'] = terminal_reward(row)
     result['checkpoint_identity'] = identity
     result['vocab_size'] = manifest['vocab_size']
     text = json.dumps(result, ensure_ascii=False, indent=2) + '\n'
