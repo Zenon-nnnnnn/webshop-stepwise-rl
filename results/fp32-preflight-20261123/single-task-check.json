@@ -1,0 +1,31 @@
+{
+  "scope": "single validation task diagnostic; not full evaluation, registration or test",
+  "started_utc": "2026-11-23T02:13:32.023378+00:00",
+  "identity_preflight_sha256": "e108db9f65e3f577c753c7aec566172f877166fadbb88c10f149714d43df5667",
+  "driver_sha256": "fdaee3c0374da3683468e4135bb44ee856df6be8c1b80e2a46dd05e444990e30",
+  "config_sha256": "8523cda1bfba8f0eee28cb9420a783d122bf7f41d687b70cc374e59b3d564806",
+  "backend": {
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false,
+    "autocast_enabled": false,
+    "cudnn_enabled": true,
+    "torch": "2.8.0+cu128",
+    "cuda": "12.8",
+    "device": "NVIDIA GeForce RTX 5060 Ti"
+  },
+  "test_authorization": false,
+  "status": "complete",
+  "output_sha256": "36d0f33492553a3023afffe0567f7467bb7938aa8db3d0cadfa87e315e9c6f72",
+  "meta_sha256": "117f221c58fe86becaf3ef822bb6b78ff98989288da2956460172231688ed8bf",
+  "run_id": "8c74d5ec-bce3-47c8-95bc-b0718f6edfe6",
+  "task_summary": {
+    "task_id": 6700,
+    "done": false,
+    "success": false,
+    "final_reward": 0.75,
+    "termination": "max_steps",
+    "decisions": 10
+  },
+  "elapsed_seconds": 63.36159923499508
+}

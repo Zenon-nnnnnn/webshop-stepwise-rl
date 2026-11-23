@@ -1,0 +1,79 @@
+{
+  "scope": "current preflight only, not historical execution or test authorization",
+  "collected_utc": "2026-11-23T02:11:45.727896+00:00",
+  "base_weights_sha256": "dd924a11b4c220f385b51ffa522daea7c9f3d850e31b162bb5661df483c6d3ee",
+  "base_revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+  "test_authorization": false,
+  "policies": {
+    "b0": {
+      "base_weights_sha256": "dd924a11b4c220f385b51ffa522daea7c9f3d850e31b162bb5661df483c6d3ee",
+      "adapter_files": null,
+      "config_path": "/root/webshop-main/artifacts/fp32-preflight-20261123/prepared-configs/b0.json",
+      "config_sha256": "e40d59785c442f486a1da70225fc88755159b3a73d4123b051e8f375602017a7",
+      "policy_dtype": "float32"
+    },
+    "b1": {
+      "base_weights_sha256": "dd924a11b4c220f385b51ffa522daea7c9f3d850e31b162bb5661df483c6d3ee",
+      "adapter_files": {
+        "adapter_model.safetensors": "c39e2a78e7c5973328e9d2c23fb6320e566352e63cc089562488f3dd46ae5f9c",
+        "adapter_config.json": "18993c388788ec14de72fd4f6f9ff86ce761ffc3aad5d0923b33f4365be03d97"
+      },
+      "config_path": "/root/webshop-main/artifacts/fp32-preflight-20261123/prepared-configs/b1.json",
+      "config_sha256": "8523cda1bfba8f0eee28cb9420a783d122bf7f41d687b70cc374e59b3d564806",
+      "policy_dtype": "float32"
+    },
+    "tg42": {
+      "base_weights_sha256": "dd924a11b4c220f385b51ffa522daea7c9f3d850e31b162bb5661df483c6d3ee",
+      "adapter_files": {
+        "adapter_model.safetensors": "4cd499cc5dc2cd6ede2d300c37503451a4652db4790a70a7e3c067252296f197",
+        "adapter_config.json": "18993c388788ec14de72fd4f6f9ff86ce761ffc3aad5d0923b33f4365be03d97"
+      },
+      "actor_tensor_digest": "617d62745d108ba4f89ef2969a49c51e153da2d5ccccf63ce04a820974ecac14",
+      "training_run_id": "a260e671-2f89-44b4-9e91-dd36fab596ff",
+      "endpoint_update": 4,
+      "config_path": "/root/webshop-main/artifacts/fp32-preflight-20261123/prepared-configs/tg42.json",
+      "config_sha256": "1d3e07a412ee4309193fb94207c182a45229874f949c219d0c851d112f96fbd4",
+      "policy_dtype": "float32"
+    },
+    "op42": {
+      "base_weights_sha256": "dd924a11b4c220f385b51ffa522daea7c9f3d850e31b162bb5661df483c6d3ee",
+      "adapter_files": {
+        "adapter_model.safetensors": "6fff8fd9fdf1626fd1950c702c24e9dc20c50b23b8db53c725d169191b4ef9e4",
+        "adapter_config.json": "18993c388788ec14de72fd4f6f9ff86ce761ffc3aad5d0923b33f4365be03d97"
+      },
+      "actor_tensor_digest": "66e4958b30576887663154538ab473f9bc27f4d86c809bb7bd2ffdba55a532d7",
+      "training_run_id": "46b4f33f-41cc-45ab-b740-2ceb782333f5",
+      "endpoint_update": 4,
+      "config_path": "/root/webshop-main/artifacts/fp32-preflight-20261123/prepared-configs/op42.json",
+      "config_sha256": "f1d6c713ae64a85627b1f1f4488a4a80a12c8aa323cbb640f38b92b7c1001d76",
+      "policy_dtype": "float32"
+    },
+    "tg43": {
+      "base_weights_sha256": "dd924a11b4c220f385b51ffa522daea7c9f3d850e31b162bb5661df483c6d3ee",
+      "adapter_files": {
+        "adapter_model.safetensors": "4cfc87797a8c62d2edd69b497c88fc1da23e938c06bd21ceac9c39831f7e2f0d",
+        "adapter_config.json": "18993c388788ec14de72fd4f6f9ff86ce761ffc3aad5d0923b33f4365be03d97"
+      },
+      "actor_tensor_digest": "88eb4b335f702849b689c131ee85cd4915405a9d26fad12e4e38dfa7d4306c03",
+      "training_run_id": "11132d39-6b6b-46f4-ace1-b6ccb82a6dfc",
+      "endpoint_update": 4,
+      "config_path": "/root/webshop-main/artifacts/fp32-preflight-20261123/prepared-configs/tg43.json",
+      "config_sha256": "21c19366b7bd107375ea07a626d49429ba36a4246cfb9f99ad4129c84db151cf",
+      "policy_dtype": "float32"
+    },
+    "op43": {
+      "base_weights_sha256": "dd924a11b4c220f385b51ffa522daea7c9f3d850e31b162bb5661df483c6d3ee",
+      "adapter_files": {
+        "adapter_model.safetensors": "fe2223fdc21a564ee8edc880328197a6ea791b521184977e8e377592c37536ff",
+        "adapter_config.json": "18993c388788ec14de72fd4f6f9ff86ce761ffc3aad5d0923b33f4365be03d97"
+      },
+      "actor_tensor_digest": "f96c1659c0fce8b2b2907bb3be77768ae3c98c0135986c0e7d3d40ba119f09b3",
+      "training_run_id": "bf248f43-2131-43be-a5f6-c1fdc0054a7f",
+      "endpoint_update": 4,
+      "config_path": "/root/webshop-main/artifacts/fp32-preflight-20261123/prepared-configs/op43.json",
+      "config_sha256": "f02d622609d3a6a8cc7f69d736f87f0022a96eacd0dcad4a6c0ec309cad25819",
+      "policy_dtype": "float32"
+    }
+  },
+  "val_ids_sha256": "45440d724b33e69e13916d0adbe243cc63ce3bd67677b8220feff9f30b866c36"
+}
