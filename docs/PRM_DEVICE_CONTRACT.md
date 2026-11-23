@@ -1,7 +1,8 @@
 # PRM 运行契约（执行侧提供，其他人按此实现）
 
 > 由 GPU 执行方维护。所有 PRM 代码必须能在下面这套环境里直接跑通；**不要按自己电脑的环境适配**。
-> 你在本机只能做 CPU 检查；GPU 的 forward/backward、峰值显存、保存与独立重载由执行方跑并回传结果。
+> 如果你有自己的 GPU，可以自行做 smoke 测试，但**不要按自己的卡改 batch size、精度（如 bf16）或依赖版本**；
+> 最终验收（forward/backward、峰值显存、保存与独立重载、正式泛化对比）在下面这张卡上做，由执行方回传结果。
 
 ## 主机与环境
 
@@ -59,15 +60,16 @@ SHA256SUMS          逐文件哈希
 - 显存目标 ≤16GB；batch size 默认 1，梯度检查点等优化需实测后写进配置。
 - 记录 `torch.cuda.max_memory_allocated()` 与实际耗时，写入 `summary.json`。
 
-## 你在本机能做的检查
+## 提交前的自测（可在自己的 GPU 或 CPU 上做）
 
 - tokenizer/chat template 结果、assistant spans、turn_end_indices、mask 分离、变长 padding
 - 数据集构建、fit/dev 隔离、R 语义（购买完成为任务分，未购买为 0）
 - 形状/边界/单样本 sum(p_t) 与标签对齐
+- 若自有 GPU：可用小 batch 做一次 forward/backward smoke，但需注明所用卡型/精度，且不得据此调整本契约里的 FP32 设置
 
-## 由执行方跑的验收
+## 执行方在本卡上的最终验收
 
-- GPU 真实 forward/backward、梯度非零、参数变化
+- 本契约规格（FP32、关 TF32/autocast、单卡 16GB）下的 forward/backward、梯度非零、参数变化
 - 保存与独立进程重载、逐步预测
 - 峰值显存与耗时、正式数据上的泛化对比
 
