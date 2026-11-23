@@ -123,6 +123,23 @@ class GateTests(unittest.TestCase):
             with self.assertRaises(data.SourceNotAllowed):
                 data.gate_train_pool([episode(3, 'inst 3', final=0.5)], splits, mapping)
 
+    def test_partial_map_covering_only_input_is_rejected(self):
+        """Zqqq 复现的绕过：map 只覆盖输入 train 任务、漏掉 val/test 时不能报零重叠。"""
+        with tempfile.TemporaryDirectory() as tmp:
+            splits, mapping, _, _ = self.build(tmp, [1, 2], [3], [4],
+                                               [{'task_id': 1, 'instruction': 'buy socks'}])
+            with self.assertRaises(data.SourceNotAllowed) as ctx:
+                data.gate_train_pool([episode(1, 'buy socks', final=0.5)], splits, mapping)
+            self.assertIn('goal-map', str(ctx.exception))
+
+    def test_complete_map_passes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            goal = [{'task_id': i, 'instruction': 'inst %d' % i} for i in range(1, 5)]
+            splits, mapping, _, _ = self.build(tmp, [1, 2], [3], [4], goal)
+            info = data.gate_train_pool([episode(1, 'inst 1', final=0.5)], splits, mapping)
+            self.assertEqual(info['forbidden_tasks'], 2)
+            self.assertEqual(info['forbidden_instructions'], 2)
+
     def test_val_instruction_leak_is_rejected_even_for_train_task(self):
         with tempfile.TemporaryDirectory() as tmp:
             goal = [{'task_id': 1, 'instruction': 'shared text'},

@@ -145,7 +145,10 @@ def load_goal_map(path):
 
 
 def gate_train_pool(episodes, splits, goal_map):
-    """强制检查：任务属于冻结 train、指令与 goal-map 一致、且不与 val/test 指令重合。"""
+    """强制检查：任务属于冻结 train、指令与 goal-map 一致、且不与 val/test 指令重合。
+
+    goal-map 必须覆盖全部冻结划分任务；缺失或空指令直接拒绝，绝不静默跳过。
+    """
     train = splits['train']
     forbidden_ids = splits['val'] | splits['test']
     outside = sorted({int(r['task_id']) for r in episodes} - train)
@@ -153,12 +156,16 @@ def gate_train_pool(episodes, splits, goal_map):
         raise SourceNotAllowed(
             '有 %d 个任务不在冻结 train 池内（例如 %s），val/test 轨迹不能训练 PRM'
             % (len(outside), outside[:5]))
-    missing = sorted({int(r['task_id']) for r in episodes} - set(goal_map))
+    required = train | forbidden_ids
+    missing = sorted(t for t in required
+                     if t not in goal_map or not isinstance(goal_map[t], str)
+                     or not goal_map[t].strip())
     if missing:
-        raise SourceNotAllowed('goal-map 缺少任务指令: %s' % missing[:5])
+        raise SourceNotAllowed(
+            'goal-map 未覆盖 %d 个冻结划分任务（例如 %s），不能据此声称零重叠'
+            % (len(missing), missing[:5]))
     mismatched, leaked = [], []
-    forbidden_instructions = {normalize_instruction(goal_map[t])
-                              for t in forbidden_ids if t in goal_map}
+    forbidden_instructions = {normalize_instruction(goal_map[t]) for t in forbidden_ids}
     for row in episodes:
         task = int(row['task_id'])
         actual = normalize_instruction(row['instruction'])
