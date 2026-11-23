@@ -2,14 +2,50 @@
 import hashlib
 import json
 import random
+from functools import wraps
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from .common import ROOT, parse_action, is_executable, write_json, read_json, goal_text, normalize_instruction, instruction_hash
 
 
+def cached_type_score_page(page, goal_module):
+    """Reuse deterministic type scores within one render of the single-client bridge.
+
+    The original scorer does not depend on selected options. Other score components
+    and the option-combination loop still run unchanged. Never use this wrapper
+    in a concurrent server: it temporarily replaces a module-level function.
+    """
+    @wraps(page)
+    def render(*args, **kwargs):
+        original = goal_module.get_type_reward
+        cache = {}
+
+        def cached(product, target):
+            key = (id(product), id(target))
+            if key not in cache:
+                # Retain inputs so Python cannot reuse their IDs within this render.
+                cache[key] = (product, target, dict(original(product, target)))
+            return dict(cache[key][2])
+
+        goal_module.get_type_reward = cached
+        try:
+            return page(*args, **kwargs)
+        finally:
+            goal_module.get_type_reward = original
+    render._page_type_cache = True
+    return render
+
+
 def serve(args):
     # Import only inside the environment venv, avoiding old WebShop dependencies in GPU venv.
-    from webshop.web_agent_site.envs.web_agent_text_env import WebAgentTextEnv
+    from webshop.web_agent_site.envs.web_agent_text_env import WebAgentTextEnv, SimServer
+    cache_type_reward = bool(getattr(args, 'cache_type_reward', False))
+    if cache_type_reward:
+        from webshop.web_agent_site.engine import goal
+        for name in ('search_results', 'item_page'):
+            page = getattr(SimServer, name)
+            if not getattr(page, '_page_type_cache', False):
+                setattr(SimServer, name, cached_type_score_page(page, goal))
     random.seed(42)
     env = WebAgentTextEnv(observation_mode='text', human_goals=True, num_products=None)
     goals = env.server.goals
@@ -64,6 +100,7 @@ def serve(args):
             if self.path == '/health':
                 self.send({'ready': True, 'n_goals': len(goals), 'goal_fingerprint': fingerprint,
                            'alignment_checked': alignment['checked'], 'alignment_mismatches': len(alignment['mismatched']),
+                           'type_reward_cache': 'page-local-v1' if cache_type_reward else 'off',
                            'split_status': split_status(),
                            **({'option_state': True} if getattr(args, 'option_state', False) else {})})
             else:

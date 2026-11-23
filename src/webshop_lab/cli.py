@@ -27,6 +27,8 @@ def main():
     s = sub.add_parser("env-server", help="Local single-client WebShop environment HTTP bridge")
     s.add_argument("--port", type=int, default=8765)
     s.add_argument("--option-state", action="store_true", help="Expose selected options for reward diagnostics")
+    s.add_argument("--cache-type-reward", action="store_true",
+                   help="Reuse identical type scores within a page render (single-client server only)")
     s = sub.add_parser("rollout", help="Collect real episodes against the environment bridge")
     s.add_argument("--config", required=True)
     s.add_argument("--ids", required=True)
