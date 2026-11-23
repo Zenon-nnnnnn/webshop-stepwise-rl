@@ -1,0 +1,16 @@
+{
+  "scope": "current diagnostic source files; source is PR38 plus the cache patch under review",
+  "collected_utc": "2026-11-23T02:15:45.178564+00:00",
+  "base_commit": "991a2797dd3a2279a0b0f5c81761358fa36b9257",
+  "file_sha256": {
+    "/root/webshop-main/artifacts/fp32-preflight-20261123/source/src/webshop_lab/environment.py": "230c8b621d81c6c781cf143b949dd2ba524d529cf7c7fde8958a5a0b4068d9a2",
+    "/root/webshop-main/artifacts/fp32-preflight-20261123/source/src/webshop_lab/model.py": "5cb8be7618e786a554ae7db356eb03e1138e430a75647ce517509ac77c5fba77",
+    "/root/webshop-main/artifacts/fp32-preflight-20261123/source/src/webshop_lab/rollout.py": "64c0946d4aab3970f91c855abba282acaf46fd4b389f54c610d8e920975d128c",
+    "/root/webshop-main/artifacts/fp32-preflight-20261123/source/src/webshop_lab/common.py": "dd75f402438d1b3b275be442271b8397bdd186131ec7ef5df13c83c835b6c72e",
+    "/root/webshop-main/artifacts/fp32-preflight-20261123/source/src/webshop_lab/cli.py": "d3db4d00549cef523cdcdc42d138f4db6d11feed9ec6476a7f0241e85a7a343b",
+    "/root/webshop-main/artifacts/fp32-preflight-20261123/source/src/webshop_lab/ppo.py": "27bcc359418d857bc1966e57ebb441b3f94630508cb26484b284607590a67f28",
+    "/root/webshop-stepwise-rl/upstream/envs/webshop/src/webshop/web_agent_site/engine/goal.py": "bae4e3ad4c2c8e4f43eec146e337de8033774fb37da4b0eaa4f8eb68617cc3e7",
+    "/root/webshop-stepwise-rl/upstream/envs/webshop/src/webshop/web_agent_site/engine/engine.py": "214d1fa4f93d8fa9da7c067a4a109803a8357abbd970d34f2e389ccec27fc415",
+    "/root/webshop-stepwise-rl/upstream/envs/webshop/src/webshop/web_agent_site/envs/web_agent_text_env.py": "1854bbf5443c731d42eacc3d74cb5a091f974f66ed2893c0ab78642a86496802"
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "scope": "manual environment regression; not a policy episode, success-rate result or test",
+  "task_id": 6700,
+  "action": "search[2 pack of 20ft long quadshield solid copper black coaxial]",
+  "health": {
+    "ready": true,
+    "n_goals": 12087,
+    "goal_fingerprint": "e69c9ae2a0aad88977c44a7baf49f1f5ef7918ba8317923c4ae24dcc1f5638d8",
+    "alignment_checked": 1624,
+    "alignment_mismatches": 0,
+    "type_reward_cache": "page-local-v1",
+    "split_status": {
+      "verified": true,
+      "instruction_overlaps": {
+        "0-1": 0,
+        "0-2": 0,
+        "1-2": 0
+      }
+    },
+    "option_state": true
+  },
+  "runs": [
+    {
+      "repeat": 0,
+      "seconds": 1.948900172006688,
+      "page_reward": 0.6286764705882353,
+      "done": false,
+      "observation_sha256": "eedb10a012b6873128884f3a8d671e3521e56bfbd9f649cae2c8336353a2d3cb",
+      "available": {
+        "has_search_bar": false,
+        "clickables": [
+          "back to search",
+          "next >",
+          "b07h9g2rpm",
+          "b07h9gyzpd",
+          "b074741b7g",
+          "b07cq96g4f",
+          "b07cqb2fzk",
+          "b073xbgg5q",
+          "b073l44zbg",
+          "b073vb832j",
+          "b073kr5d4w",
+          "b073krlvbr"
+        ],
+        "selected_options": {}
+      }
+    },
+    {
+      "repeat": 1,
+      "seconds": 0.8203613960067742,
+      "page_reward": 0.6286764705882353,
+      "done": false,
+      "observation_sha256": "eedb10a012b6873128884f3a8d671e3521e56bfbd9f649cae2c8336353a2d3cb",
+      "available": {
+        "has_search_bar": false,
+        "clickables": [
+          "back to search",
+          "next >",
+          "b07h9g2rpm",
+          "b07h9gyzpd",
+          "b074741b7g",
+          "b07cq96g4f",
+          "b07cqb2fzk",
+          "b073xbgg5q",
+          "b073l44zbg",
+          "b073vb832j",
+          "b073kr5d4w",
+          "b073krlvbr"
+        ],
+        "selected_options": {}
+      }
+    },
+    {
+      "repeat": 2,
+      "seconds": 0.9093234179890715,
+      "page_reward": 0.6286764705882353,
+      "done": false,
+      "observation_sha256": "eedb10a012b6873128884f3a8d671e3521e56bfbd9f649cae2c8336353a2d3cb",
+      "available": {
+        "has_search_bar": false,
+        "clickables": [
+          "back to search",
+          "next >",
+          "b07h9g2rpm",
+          "b07h9gyzpd",
+          "b074741b7g",
+          "b07cq96g4f",
+          "b07cqb2fzk",
+          "b073xbgg5q",
+          "b073l44zbg",
+          "b073vb832j",
+          "b073kr5d4w",
+          "b073krlvbr"
+        ],
+        "selected_options": {}
+      }
+    }
+  ],
+  "collected_utc": "2026-11-23T02:12:43.796940+00:00"
+}
