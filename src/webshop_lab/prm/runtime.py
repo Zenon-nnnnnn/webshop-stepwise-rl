@@ -46,6 +46,38 @@ def tensor_batch(examples, pad_token_id, device, training):
     return result
 
 
+def checkpoint_identity(config, tokenizer, inputs, device):
+    """训练与所有推理入口共用的严格身份；不接收外部伪造的source或manifest。"""
+    source = {name: sha(Path(__file__).with_name(name)) for name in
+              ('runtime.py','model_core.py','train_core.py','tokenize.py','config.py')}
+    git = subprocess.run(['git','rev-parse','HEAD'], cwd=Path(__file__).parent,
+                         capture_output=True,text=True)
+    status = subprocess.run(['git','status','--porcelain','--untracked-files=no'],
+                            cwd=Path(__file__).parent,capture_output=True,text=True)
+    tracked = subprocess.run(['git','ls-files','--error-unmatch',*source],
+                             cwd=Path(__file__).parent,capture_output=True,text=True)
+    clean = git.returncode == status.returncode == tracked.returncode == 0 and not status.stdout.strip()
+    if device == 'cuda' and not clean:
+        raise ValueError('目标GPU须在包含全部PRM源码的干净Git检出执行')
+    return {
+        'base_revision':config.revision, 'base_sha256':config.base_weights_sha256,
+        'tokenizer_sha256':config.tokenizer_files_sha256,
+        'tokenizer_revision':config.tokenizer_revision,
+        'auxiliary_input_sha256':{path:digest for path,digest in inputs.items()
+                                 if Path(path).name in ('config.json','generation_config.json',
+                                     'special_tokens_map.json','added_tokens.json','chat_template.jinja')},
+        'template_sha256':hashlib.sha256(tokenizer.chat_template.encode()).hexdigest(),
+        'initialization':{'kind':config.initialization,
+                          'sft_adapter_files_sha256':config.sft_adapter_files_sha256},
+        'source_commit':git.stdout.strip() if git.returncode == 0 else '未记录Git提交（仅结构测试）',
+        'source_tracked_clean':clean,
+        'source_sha256':source,
+        'prm_lora':{'rank':config.lora_r,'alpha':config.lora_alpha,
+                    'target_modules':list(config.target_modules),'dropout':0.05},
+        'score_position':config.score_position, 'max_length':config.max_length,
+        'policy_dtype':'float32'}
+
+
 def build_prm(config, checkpoint=None, device='cuda', training=True):
     from transformers import AutoModelForCausalLM, AutoTokenizer
     from peft import LoraConfig, PeftModel, get_peft_model
@@ -68,34 +100,7 @@ def build_prm(config, checkpoint=None, device='cuda', training=True):
         trust_remote_code=False, use_fast=True)
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token = tokenizer.eos_token
-    source = {name: sha(Path(__file__).with_name(name)) for name in
-              ('runtime.py','model_core.py','train_core.py','tokenize.py','config.py')}
-    git = subprocess.run(['git','rev-parse','HEAD'], cwd=Path(__file__).parent,
-                         capture_output=True,text=True)
-    status = subprocess.run(['git','status','--porcelain','--untracked-files=no'],
-                            cwd=Path(__file__).parent,capture_output=True,text=True)
-    tracked = subprocess.run(['git','ls-files','--error-unmatch',*source],
-                             cwd=Path(__file__).parent,capture_output=True,text=True)
-    clean = git.returncode == status.returncode == tracked.returncode == 0 and not status.stdout.strip()
-    if device == 'cuda' and not clean:
-        raise ValueError('目标GPU须在包含全部PRM源码的干净Git检出执行')
-    identity = {
-        'base_revision':config.revision, 'base_sha256':config.base_weights_sha256,
-        'tokenizer_sha256':config.tokenizer_files_sha256,
-        'tokenizer_revision':config.tokenizer_revision,
-        'auxiliary_input_sha256':{path:digest for path,digest in before.items()
-                                 if Path(path).name in ('config.json','generation_config.json',
-                                     'special_tokens_map.json','added_tokens.json','chat_template.jinja')},
-        'template_sha256':hashlib.sha256(tokenizer.chat_template.encode()).hexdigest(),
-        'initialization':{'kind':config.initialization,
-                          'sft_adapter_files_sha256':config.sft_adapter_files_sha256},
-        'source_commit':git.stdout.strip() if git.returncode == 0 else '未记录Git提交（仅结构测试）',
-        'source_tracked_clean':clean,
-        'source_sha256':source,
-        'prm_lora':{'rank':config.lora_r,'alpha':config.lora_alpha,
-                    'target_modules':list(config.target_modules),'dropout':0.05},
-        'score_position':config.score_position, 'max_length':config.max_length,
-        'policy_dtype':'float32'}
+    identity = checkpoint_identity(config,tokenizer,before,device)
     if checkpoint is not None:
         verify_prm(checkpoint,identity)
     base = AutoModelForCausalLM.from_pretrained(config.model, revision=config.revision,
