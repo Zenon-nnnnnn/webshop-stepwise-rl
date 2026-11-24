@@ -1,149 +1,83 @@
-"""加载与运行 PRM：独立进程、只依赖已保存的 adapter + head + manifest。"""
+"""共用runtime完整重载；支持转换后samples及原始rollout，推理均不读取标签。"""
 import argparse
-import hashlib
 import json
 from pathlib import Path
-
-from .data import episode_messages, terminal_reward
-from .tokenize import collate_trajectories, tokenize_trajectory
-
-REQUIRED_IDENTITY = ('base_revision', 'base_sha256', 'tokenizer_sha256',
-                     'initialization', 'config_fingerprint',
-                     'template_sha256', 'source_commit')
+from .config import load_config
+from .runtime import build_prm, write_json, verify_runtime_inputs
+from .train import load_samples, predict
+from .predictions import compare_predictions, validate_predictions
 
 
-def build_backbone(config, device='cuda'):
-    """FP32 非量化；sft_b1 初始化时把 B1 合并进底模，再挂 PRM 专用 adapter。"""
-    import torch
-    from transformers import AutoModelForCausalLM
-
-    torch.backends.cuda.matmul.allow_tf32 = False
-    torch.backends.cudnn.allow_tf32 = False
-    torch.set_float32_matmul_precision('highest')
-
-    base = AutoModelForCausalLM.from_pretrained(
-        config.model, revision=config.revision, torch_dtype=torch.float32,
-        device_map={'': 0} if device == 'cuda' else None, trust_remote_code=False,
-        attn_implementation='sdpa')
-    if config.initialization == 'sft_b1':
-        from peft import PeftModel
-        base = PeftModel.from_pretrained(base, config.sft_adapter).merge_and_unload()
-    return base
-
-
-def identity_from(config, template_sha256, source_commit):
-    """身份必须绑定实际初始化文件，不能只写 initialization 字符串。"""
-    base_sha = hashlib.sha256(Path(config.model, 'model.safetensors').read_bytes()).hexdigest()
-    identity = {
-        'base_revision': config.revision,
-        'base_sha256': base_sha,
-        'tokenizer_sha256': config.tokenizer_files_sha256.get('tokenizer.json', ''),
-        'initialization': config.initialization,
-        'init_files_sha256': dict(sorted(config.sft_adapter_files_sha256.items())),
-        'config_fingerprint': config.fingerprint(),
-        'template_sha256': template_sha256,
-        'source_commit': source_commit,
-    }
-    missing = [k for k in REQUIRED_IDENTITY if not identity.get(k)]
-    if missing:
-        raise ValueError('身份字段缺失: %s' % missing)
-    if config.initialization == 'sft_b1':
-        if set(identity['init_files_sha256']) != {'adapter_model.safetensors',
-                                                  'adapter_config.json'}:
-            raise ValueError('sft_b1 身份必须包含原 B1 的 adapter 两个文件 SHA')
-    elif identity['init_files_sha256']:
-        raise ValueError('base 初始化不应携带 SFT adapter 身份')
-    return identity
-
-
-def load_prm(config, checkpoint, expected_identity, device='cuda'):
-    import torch
-    from peft import PeftModel
-    from transformers import AutoTokenizer
-    from .model_core import NeuralPRM, restore_head, verify_prm
-
-    manifest = verify_prm(checkpoint, expected_identity)
-    base = build_backbone(config, device=device)
-    backbone = PeftModel.from_pretrained(base, str(Path(checkpoint) / 'adapter'), is_trainable=False)
-    model = NeuralPRM(backbone).to(base.dtype)
-    restore_head(model, checkpoint, expected_identity)
-    model.eval()
-    tokenizer = AutoTokenizer.from_pretrained(config.tokenizer, revision=config.tokenizer_revision,
-                                              trust_remote_code=False)
-    return model, tokenizer, manifest
-
-
-def score_episode(model, tokenizer, row, max_length, device='cuda'):
-    """对一条轨迹逐回合输出 p_t 与总和；推理路径不要求也不读取终局标签。"""
-    import torch
-
-    messages = episode_messages(row, require_labels=False)
-    encoded = tokenize_trajectory(tokenizer, messages, max_length)
-    batch = collate_trajectories([encoded], tokenizer.pad_token_id)
-    ids = torch.tensor(batch['input_ids'], dtype=torch.long, device=device)
-    attention = torch.tensor(batch['attention_mask'], dtype=torch.long, device=device)
-    ends = torch.tensor(batch['turn_end_indices'], dtype=torch.long, device=device)
-    turns = torch.tensor(batch['turn_mask'], dtype=torch.bool, device=device)
-    with torch.inference_mode():
-        out = model(input_ids=ids, attention_mask=attention, turn_end_indices=ends, turn_mask=turns)
-    valid = turns[0]
-    scores = out['step_scores'][0][valid].float().cpu().tolist()
-    result = {'task_id': int(row['task_id']), 'turn_scores': scores,
-              'total': float(out['totals'][0]), 'turns': len(scores),
-              'tokens': len(encoded['input_ids']),
-              'template_sha256': encoded['template_sha256'],
-              'score_position': encoded['score_position']}
-    if 'done' in row:
+def load_rollout_samples(path,tokenizer,max_length,task_id=None,repeat=None):
+    # 保留How的原始rollout适配，禁止在本模块再构造另一套模型或检查点身份。
+    from .data import episode_messages
+    from .tokenize import tokenize_trajectory, TrajectoryTooLong
+    raw=[json.loads(line) for line in Path(path).read_text(encoding='utf-8').splitlines() if line.strip()]
+    selected=[r for r in raw if (task_id is None or r.get('task_id')==task_id)
+              and (repeat is None or r.get('repeat',0)==repeat)]
+    if not selected:
+        raise ValueError('原始轨迹中没有匹配的任务/repeat')
+    rows=[];rejected=[];seen=set()
+    for row in selected:
+        task=row.get('task_id')
+        if type(task) is not int or task in seen:
+            raise ValueError('原始轨迹任务重复或ID无效；请用--task-id/--repeat选择唯一轨迹')
+        seen.add(task)
         try:
-            result['terminal_reward_for_diagnosis'] = terminal_reward(row)
-        except ValueError:
-            result['terminal_reward_for_diagnosis'] = None
-    return result
+            encoded=tokenize_trajectory(tokenizer,episode_messages(row,require_labels=False),max_length)
+        except TrajectoryTooLong as error:
+            rejected.append({'task_id':task,'repeat':row.get('repeat',0),'reason':str(error)})
+            continue
+        rows.append((task,encoded))
+    return rows,rejected,len(selected)
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description='Score one rollout trajectory with a saved PRM')
-    parser.add_argument('--config', required=True)
-    parser.add_argument('--checkpoint', required=True)
-    parser.add_argument('--rollout', required=True)
-    parser.add_argument('--task-id', type=int, required=True)
-    parser.add_argument('--source-commit', required=True)
-    parser.add_argument('--device', default='cuda', choices=['cuda', 'cpu'])
-    parser.add_argument('--output')
-    args = parser.parse_args(argv)
+    p=argparse.ArgumentParser(description=__doc__)
+    for key in ('config','checkpoint','output'):
+        p.add_argument('--'+key,required=True,type=Path)
+    source=p.add_mutually_exclusive_group(required=True)
+    source.add_argument('--samples',type=Path)
+    source.add_argument('--rollout',type=Path)
+    p.add_argument('--task-id',type=int)
+    p.add_argument('--repeat',type=int)
+    p.add_argument('--source-commit',help='可选断言实际runtime源码提交；不能用来改写checkpoint身份')
+    p.add_argument('--reference',type=Path)
+    p.add_argument('--atol',type=float,default=1e-5)
+    p.add_argument('--rtol',type=float,default=1e-5)
+    p.add_argument('--device',choices=('cuda','cpu'),default='cuda')
+    args=p.parse_args(argv)
+    if args.samples and any(v is not None for v in (args.task_id,args.repeat)):
+        raise ValueError('--task-id/--repeat仅用于原始rollout输入')
+    if args.output.exists() or args.checkpoint.resolve() in args.output.resolve().parents:
+        raise ValueError('新输出须位于检查点之外，不能覆盖旧证据')
+    cfg=load_config(args.config)
+    model,tok,identity,inputs=build_prm(cfg,args.checkpoint,args.device,False)
+    if args.source_commit is not None and args.source_commit!=identity['source_commit']:
+        raise ValueError('声明的源码提交与当前runtime不符')
+    if args.samples:
+        rows,rejected,total=load_samples(args.samples,tok,cfg.max_length,training=False)
+    else:
+        rows,rejected,total=load_rollout_samples(args.rollout,tok,cfg.max_length,args.task_id,args.repeat)
+    if not rows:
+        raise ValueError('无可评分的完整轨迹')
+    actual=validate_predictions(predict(model,tok,rows))
+    if args.reference:
+        if rejected:
+            raise ValueError('重载验收输入有剔除项，不能只比较保留子集')
+        compare_predictions(actual,json.loads(args.reference.read_text(encoding='utf-8')),args.atol,args.rtol)
+    else:
+        # 无reference仍检查容差是否合法，不能把非法值写入证据。
+        compare_predictions(actual,actual,args.atol,args.rtol)
+    if verify_runtime_inputs(cfg)!=inputs:
+        raise ValueError('推理过程中初始化文件改变')
+    args.output.parent.mkdir(parents=True,exist_ok=True)
+    write_json(args.output,{'predictions':actual,'identity':identity,'device':args.device,
+                          'total_samples':total,'rejected':rejected,
+                          'input_schema':'samples' if args.samples else 'rollout',
+                          'reference_match':True if args.reference else None,
+                          'atol':args.atol,'rtol':args.rtol,'test_authorization':False})
 
-    from .config import load_config, verify_input_files
-    config = load_config(args.config)
-    verify_input_files(config)
 
-    row = None
-    with Path(args.rollout).open(encoding='utf-8') as stream:
-        for line in stream:
-            line = line.strip()
-            if not line:
-                continue
-            candidate = json.loads(line)
-            if int(candidate['task_id']) == args.task_id:
-                row = candidate
-                break
-    if row is None:
-        raise SystemExit('轨迹中找不到 task_id=%d' % args.task_id)
-
-    from transformers import AutoTokenizer
-    tokenizer = AutoTokenizer.from_pretrained(config.tokenizer, revision=config.tokenizer_revision,
-                                              trust_remote_code=False)
-    template_sha256 = hashlib.sha256(tokenizer.chat_template.encode()).hexdigest()
-    identity = identity_from(config, template_sha256, args.source_commit)
-
-    model, tokenizer, manifest = load_prm(config, args.checkpoint, identity, device=args.device)
-    result = score_episode(model, tokenizer, row, config.max_length, device=args.device)
-    result['checkpoint_identity'] = identity
-    result['vocab_size'] = manifest['vocab_size']
-    text = json.dumps(result, ensure_ascii=False, indent=2) + '\n'
-    if args.output:
-        Path(args.output).write_text(text, encoding='utf-8')
-    print(text)
-
-
-if __name__ == '__main__':
+if __name__=='__main__':
     main()

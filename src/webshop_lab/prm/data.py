@@ -341,6 +341,7 @@ def training_row(row, policy_adapter_sha256):
     return {
         'schema_version': 'prm-training-sample-v1',
         'task_id': int(row['task_id']),
+        'repeat': int(row.get('repeat',0)),
         'messages': episode_messages(row),
         'terminal_reward': terminal_reward(row),
         'done': row['done'],
@@ -360,10 +361,21 @@ def write_training_jsonl(episodes, path, policy_adapter_sha256):
         raise ValueError('训练样本为空')
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
-    with target.open('w', encoding='utf-8') as stream:
+    with target.open('x', encoding='utf-8') as stream:
         for row in rows:
             stream.write(json.dumps(row, ensure_ascii=False) + '\n')
     return {'path': str(target), 'samples': len(rows), 'sha256': _sha256(target)}
+
+
+def retained_episodes(episodes,samples):
+    """按build_samples唯一保留键取回原轨迹；禁止把剔除项重新导出。"""
+    keyed={(int(r['task_id']),int(r.get('repeat',0))):r for r in episodes}
+    if len(keyed)!=len(episodes):
+        raise ValueError('原轨迹task/repeat重复')
+    keys=[(r['task_id'],r['repeat']) for r in samples]
+    if len(keys)!=len(set(keys)) or any(k not in keyed for k in keys):
+        raise ValueError('保留样本与原轨迹身份不一致')
+    return [keyed[k] for k in keys]
 
 
 def main(argv=None):
@@ -380,6 +392,19 @@ def main(argv=None):
     parser.add_argument('--policy-adapter-sha256', default='',
                         help='行为策略 adapter SHA（sft_b1 初始化时必填）')
     args = parser.parse_args(argv)
+    exports={}
+    reserved={ (Path(args.output)/n).resolve() for n in ('fit.jsonl','dev.jsonl','manifest.json') }
+    inputs={Path(p).resolve() for p in args.rollout+[args.config,args.goal_map]}
+    inputs.update((Path(args.split_dir)/(n+'_ids.json')).resolve() for n in ('train','val','test'))
+    for spec in args.training_jsonl:
+        name,_,target=spec.partition('=')
+        resolved=Path(target).resolve()
+        if name not in ('fit','dev') or not target or name in exports:
+            raise ValueError('--training-jsonl需唯一的fit=<path>/dev=<path>')
+        if (resolved in reserved|inputs or resolved in [p.resolve() for p in exports.values()]
+                or resolved.exists()):
+            raise ValueError('导出路径不能覆盖数据集、输入或已有文件')
+        exports[name]=Path(target)
 
     from .config import load_config
     config = load_config(args.config)
@@ -407,14 +432,15 @@ def main(argv=None):
                              fit_samples, dev_samples, rejections, fit_dropped + dev_dropped,
                              tokenizer_identity, goal_sha, split_sha)
     emitted = {}
-    for spec in args.training_jsonl:
-        name, _, target = spec.partition('=')
-        if name not in ('fit', 'dev') or not target:
-            raise SystemExit('--training-jsonl 需写成 fit=<path> 或 dev=<path>')
-        rows = fit if name == 'fit' else dev
+    for name,target in exports.items():
+        rows = retained_episodes(fit,fit_samples) if name=='fit' else retained_episodes(dev,dev_samples)
         policy_sha = args.policy_adapter_sha256 or \
             config.sft_adapter_files_sha256.get('adapter_model.safetensors', '')
         emitted[name] = write_training_jsonl(rows, target, policy_sha)
+        emitted[name]['sample_keys']=[[int(r['task_id']),int(r.get('repeat',0))] for r in rows]
+    manifest['training_files']=emitted
+    (Path(args.output)/'manifest.json').write_text(
+        json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     print(json.dumps({'fit': manifest['files']['fit']['samples'],
                       'dev': manifest['files']['dev']['samples'],
                       'rejections': rejections,
