@@ -33,6 +33,27 @@ def finite_number(value):
     return float(value)
 
 
+def fit_fixed_representation(features, labels, rcond):
+    """Solve the fixed linear problem and check its FP32 CPU reconstruction."""
+    import numpy as np
+
+    F64, y64 = features.astype(np.float64), labels.astype(np.float64)
+    theta, _, rank, singular = np.linalg.lstsq(F64, y64, rcond=rcond)
+    residual = F64 @ theta - y64
+    fp32 = F64.astype(np.float32) @ theta.astype(np.float32)
+    return theta, {
+        'rcond': rcond, 'rank': int(rank), 'singular_values': singular.tolist(),
+        'rank_cutoff': float(rcond * singular[0]),
+        'nonzero_spectrum_condition': float(singular[0] / singular[rank - 1]) if rank else None,
+        'full_row_rank': int(rank) == len(labels),
+        'solution_l2': float(np.linalg.norm(theta)),
+        'solution_max_abs': float(np.abs(theta).max()),
+        'residual_max_abs': float(np.abs(residual).max()),
+        'residual_rms': float(np.sqrt(np.mean(residual ** 2))),
+        'fp32_aggregated_max_abs_label_error': float(np.abs(fp32 - y64).max()),
+    }
+
+
 def audit(features, samples, positions, manifest, rcond=1e-10, tokenizer=None,
           expected_samples=8):
     import numpy as np
@@ -145,11 +166,7 @@ def audit(features, samples, positions, manifest, rcond=1e-10, tokenizer=None,
                              for a, b in zip(offsets[:-1], offsets[1:])])
             if not np.allclose(sums, F[:, :-1], atol=1e-5, rtol=1e-6):
                 raise ValueError('F does not reconstruct from per-step raw logits')
-        F64, y64 = F.astype(np.float64), y.astype(np.float64)
-        theta, _, rank, singular = np.linalg.lstsq(F64, y64, rcond=rcond)
-        predicted = F64 @ theta
-        residual = predicted - y64
-        fp32 = F.astype(np.float32) @ theta.astype(np.float32)
+        theta, fit = fit_fixed_representation(F, y, rcond)
         result = {
             'schema_version': 'prm-representation-audit-v1',
             'scope': 'fixed-representation fit only; no model forward or GPU training',
@@ -160,16 +177,7 @@ def audit(features, samples, positions, manifest, rcond=1e-10, tokenizer=None,
             'extraction_runtime_reproduced': False,
             'tokenizer_boundaries_recomputed': tokenizer is not None,
             'F_reconstructed_from_raw_steps': step_verified,
-            'rcond': rcond, 'rank': int(rank), 'singular_values': singular.tolist(),
-            'rank_cutoff': float(rcond * singular[0]),
-            'nonzero_spectrum_condition': (float(singular[0] / singular[rank - 1])
-                                           if rank else None),
-            'full_row_rank': int(rank) == len(rows),
-            'solution_l2': float(np.linalg.norm(theta)),
-            'solution_max_abs': float(np.abs(theta).max()),
-            'residual_max_abs': float(np.abs(residual).max()),
-            'residual_rms': float(np.sqrt(np.mean(residual ** 2))),
-            'fp32_aggregated_max_abs_label_error': float(np.abs(fp32 - y64).max()),
+            **fit,
             'memory_training_passed': None, 'generalization_passed': None,
             'step_attribution_passed': None,
             'budget_inference': 'No step-count lower bound follows from this solution or lr',
@@ -181,7 +189,8 @@ def audit(features, samples, positions, manifest, rcond=1e-10, tokenizer=None,
             per_step = z @ theta[:-1].astype(np.float32) + np.float32(theta[-1])
             totals = np.array([per_step[a:b].sum(dtype=np.float32)
                                for a, b in zip(offsets[:-1], offsets[1:])])
-            result['fp32_step_then_sum_max_abs_label_error'] = float(np.abs(totals - y64).max())
+            result['fp32_step_then_sum_max_abs_label_error'] = float(
+                np.abs(totals - y.astype(np.float64)).max())
         result['status'] = ('representation_inputs_checked' if step_verified and tokenizer is not None
                             else 'partial_requires_raw_steps_or_real_tokenizer')
         result['limitations'] = [

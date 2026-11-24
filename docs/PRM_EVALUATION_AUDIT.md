@@ -1,6 +1,25 @@
 # PRM 表示诊断：评估侧复算契约
 
-对应 [Issue #48 最新分工](https://github.com/Zqqq-qq/webshop-stepwise-rl/issues/48#issuecomment-7127949072)。负责人 QiuQiu-xuan。本交付是只读 CPU 复算入口、验收层级与原件清单，不执行训练、不批准新的预算或 test。
+QiuQiu-xuan 提交了最初的 CPU 复算入口和验收判据。后续在同一 PR 补齐真实补包复算，以及固定特征上的 CPU 评分头对照。[Issue #48 分工](https://github.com/Zqqq-qq/webshop-stepwise-rl/issues/48#issuecomment-7129258628)
+
+## 复跑已发布的补包和 CPU 对照
+
+将 8 样本主包和补包保存为下方的两个 ZIP，直接运行。Python 环境需要 NumPy 和支持 `weights_only=True` 的 PyTorch。程序验证两个发布包的 SHA256 和内部文件清单，再用 CPU 读取已归档的优化器状态。训练输入来自包中的固定特征矩阵，重跑只需要这两个 ZIP。
+
+```bash
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python scripts/audit_prm_supplement.py \
+  --bundle /evidence/prm-evidence-20261124.zip \
+  --supplement /evidence/prm-evidence-supplement-20261124.zip \
+  --output-dir /new/prm-evaluation
+```
+
+输出目录内生成 `supplement-review.json` 和 `cpu-head-comparison.json`。使用尚未包含这两份报告的目录。归档数据源见 [8 样本主包](https://github.com/Zqqq-qq/webshop-stepwise-rl/releases/download/data-v1/prm-evidence-20261124.zip) 和 [补包](https://github.com/Zqqq-qq/webshop-stepwise-rl/releases/download/data-v1/prm-evidence-supplement-20261124.zip)。
+
+磁盘上的 `F.npy` 是重提的 `[8, 151936]` raw logits 求和矩阵。附件的列说明把回合数 `N` 写在第 151936 列，该列实际从原检查点记录的评分位数量取得。程序先核对样本顺序、标签和回合数，再在内存中追加 `N`，得到用于求解的 `[8, 151937]`。报告保留这两种形状和来源记录。逐步 logits 未包含在补包中。
+
+CPU 学习率对照沿用同 8 条任务顺序，使用 FP32、零初始化线性头、AdamW、原 weight decay 0.01 和 clip=1。三个学习率为 `1e-7`、`3e-7`、`1e-6`。逐条更新每组上限 512 步，每 64 条样本处理后评估全部 8 条，同时记录裁剪次数和实际更新数。MSE 严格小于 0.001 且每条绝对误差严格小于 0.1 时停止。出现非有限值也会停止并记录原因。三个学习率均未达标时，用 512 步终点 MSE 最低的学习率比较逐条和整批更新，统一对照 512 条样本处理量。整批每次用 8 条，因此对应 64 次优化器更新。
+
+汇总结果、实验范围和可点击的机器报告在 [本轮结果](../results/prm-evaluation-20261124/README.md)。
 
 ## 输入与命令
 
@@ -88,10 +107,8 @@ tokenizer 文件与模板 SHA 在 CLI 加载前核对。模型身份、eval/no-d
 
 当前具体设备预算、优化器和停止标准由 Zqqq 整合 Yuxiao/How 的实际原件后冻结；按最新分工由Yuxiao承接技术核验，保留Jun已交原型来源。此文档不自动批准1200–1500步，也不修改已有模型协议。
 
-## How 待交原件
+## 归档状态
 
-1. 原8条 inputs/labels/评分位和原512更新控制器、核心源码、配置/命令、日志、每64步预测、最终checkpoint/reference、新进程输出、optimizer/RNG。
-2. 表示诊断的原提取脚本、实际模型/tokenizer身份、原始逐步特征或F、SVD求解命令与完整数值结果。
-3. Release明确链接与每文件 SHA；缺项如实列出。现有三臂384更新的归档不能替代这两次新实验。
+8 样本记录、重提的聚合特征和第 512 步原优化器状态均可用上述命令核验。首轮特征未落盘，逐步 logits 和第 64 至 448 步的优化器/RNG 文件仍未归档。重提脚本和配置已归档，设备提取时检出的源码身份及前向运行仍需独立证据。保存输出相符的核验覆盖现有记录，CUDA 续训需单独实测。
 
 测试夹具均是显式合成，不包含用户对话、真实模型特征或实验结果。实际数据保留集复核和旧证据复算另列在 `results/prm-evaluation-20261124/`，不能混写为新的8样本诊断已经验收。
