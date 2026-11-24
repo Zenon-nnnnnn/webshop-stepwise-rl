@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import statistics
 import subprocess
+import sys
 
 
 def memory_metrics(predictions, labels):
@@ -32,6 +33,8 @@ def sha(path):
 
 
 def evaluate(plan, output):
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from prm_reload_validation import compare_predictions
     from webshop_lab.prm.config import load_config
     from webshop_lab.prm.runtime import build_prm
     from webshop_lab.prm.train import load_samples,predict
@@ -43,19 +46,14 @@ def evaluate(plan, output):
     if rejected or len(rows)!=8:
         raise ValueError('Memory probe must retain exactly eight complete inputs')
     predictions=predict(model,tok,rows)
-    reference={r['task_id']:r for r in json.loads((output/'reference-predictions.json').read_text())}
-    difference=0.
-    for r in predictions:
-        old=reference[r['task_id']]
-        if r['turn_end_indices']!=old['turn_end_indices'] or len(r['step_scores'])!=len(old['step_scores']):
-            raise ValueError('Independent reload step alignment differs')
-        difference=max(difference,max(abs(a-b) for a,b in zip(r['step_scores'],old['step_scores'])))
-    if difference>1e-5:
-        raise ValueError('Independent reload predictions differ')
-    metrics=memory_metrics(predictions,{int(k):v for k,v in plan['labels'].items()})
+    reference=json.loads((output/'reference-predictions.json').read_text())
+    labels={int(k):v for k,v in plan['labels'].items()}
+    comparison=compare_predictions(predictions,reference,list(labels),atol=1e-5,rtol=0.0)
+    metrics=memory_metrics(predictions,labels)
     with (output/'memory-independent-reload.json').open('x') as stream:
-        json.dump({'metrics':metrics,'max_step_difference':difference,'predictions':predictions},stream,indent=2)
-    print(json.dumps({'metrics':metrics,'max_step_difference':difference}),flush=True)
+        json.dump({'metrics':metrics,'max_step_difference':comparison['max_step_difference'],
+                   'reload_comparison':comparison,'predictions':predictions},stream,indent=2,allow_nan=False)
+    print(json.dumps({'metrics':metrics,'reload_comparison':comparison},allow_nan=False),flush=True)
 
 
 def run(plan_path):
@@ -78,6 +76,9 @@ def run(plan_path):
         p=root/'progress.tmp.json';p.write_text(json.dumps(state,indent=2)+'\n');p.replace(root/'progress.json')
 
     def verify():
+        helper=str(Path(__file__).resolve().with_name('prm_reload_validation.py'))
+        if plan['input_sha256'].get(helper)!=sha(helper):
+            raise ValueError('Freeze the reload validator SHA in a new attempt plan; preserve old plans')
         for p,h in plan['input_sha256'].items():
             if sha(p)!=h:raise ValueError('Frozen probe input changed: '+p)
         revision=subprocess.check_output(['git','-C',plan['source'],'rev-parse','HEAD'],text=True).strip()
@@ -121,8 +122,15 @@ def run(plan_path):
             subprocess.run([plan['python'],'-u',str(Path(__file__).resolve()),'--plan',str(plan_path),
                             '--evaluate',str(previous)],cwd=plan['cwd'],env=env,
                            stdout=log,stderr=subprocess.STDOUT,check=True)
-        state['status']='complete';state['memory_test_passed']=metrics['passed']
-        state['stop_reason']='fit threshold met' if metrics['passed'] else 'fixed update cap reached without fit'
+        reloaded=json.loads((previous/'memory-independent-reload.json').read_text())
+        state['independent_reload_metrics']=reloaded['metrics']
+        state['status']='complete';state['memory_test_passed']=reloaded['metrics']['passed']
+        if state['memory_test_passed']:
+            state['stop_reason']='fit threshold met and independently reloaded'
+        elif target==plan['max_updates']:
+            state['stop_reason']='fixed update cap reached without independently verified fit'
+        else:
+            state['stop_reason']='saved fit threshold met but independent reload fit threshold not met'
     except BaseException as error:
         state.update(status='failed',error_type=type(error).__name__,error=str(error));raise
     finally:save()

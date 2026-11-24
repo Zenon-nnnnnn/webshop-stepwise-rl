@@ -24,6 +24,9 @@ def read_rows(path):
 
 
 def assess(plan, arm):
+    # Sibling import also works when this script is copied to the device folder.
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from prm_reload_validation import compare_predictions, validate_predictions
     import torch
     from webshop_lab.prm.config import load_config
     from webshop_lab.prm.runtime import build_prm, tensor_batch
@@ -33,7 +36,9 @@ def assess(plan, arm):
     allowed=set(json.loads(Path(plan['train_ids']).read_text()))
     policy=cfg.sft_adapter_files_sha256['adapter_model.safetensors']
     predictions={}
+    expected_ids={}
     for split in ('fit','dev'):
+        expected_ids[split]=[row['task_id'] for row in read_rows(Path(plan[split]))]
         rows,rejected,_=load_samples(Path(plan[split]),tok,cfg.max_length,allowed,True,policy)
         if rejected:
             raise ValueError('Diagnostic inputs unexpectedly rejected')
@@ -43,8 +48,11 @@ def assess(plan, arm):
             with torch.inference_mode():
                 out=model(**batch)
             result.append({'task_id':task_id,'prediction':float(out['totals'][0]),
+                           'total':float(out['totals'][0]),
                            'label':row['terminal_reward'],'turns':len(row['turn_end_indices']),
+                           'turn_end_indices':row['turn_end_indices'],
                            'step_scores':out['step_scores'][0].cpu().tolist()})
+        validate_predictions(result,expected_ids[split])
         predictions[split]=result
     fit=predictions['fit'];dev=predictions['dev']
     mean=statistics.mean(r['label'] for r in fit)
@@ -57,15 +65,15 @@ def assess(plan, arm):
              'length_mse':statistics.mean((length_means.get(r['turns'],mean)-r['label'])**2 for r in dev)}
     for split,rows in predictions.items():
         p=[r['prediction'] for r in rows]; t=[r['turns'] for r in rows]
-        metrics[split+'_prediction_turns_correlation']=statistics.correlation(p,t) if len(set(p))>1 else None
-    reference={r['task_id']:r for r in json.loads((Path(arm['output'])/'reference-predictions.json').read_text())}
-    delta=max(abs(a-b) for r in fit for a,b in zip(r['step_scores'],reference[r['task_id']]['step_scores']))
-    metrics['independent_reload_max_step_difference']=delta
-    if delta>1e-5:
-        raise ValueError('Independent checkpoint reload mismatch')
+        metrics[split+'_prediction_turns_correlation']=statistics.correlation(p,t) if len(set(p))>1 and len(set(t))>1 else None
+    reference=json.loads((Path(arm['output'])/'reference-predictions.json').read_text())
+    comparison=compare_predictions(fit,reference,expected_ids['fit'],atol=1e-5,rtol=0.0)
+    metrics['independent_reload_max_step_difference']=comparison['max_step_difference']
+    metrics['independent_reload_max_total_difference']=comparison['max_total_difference']
+    metrics['independent_reload_comparison']=comparison
     target=Path(arm['output'])/'diagnostic-evaluation.json'
     with target.open('x') as stream:
-        json.dump({'metrics':metrics,'predictions':predictions},stream,indent=2)
+        json.dump({'metrics':metrics,'predictions':predictions},stream,indent=2,allow_nan=False)
     print(json.dumps(metrics),flush=True)
 
 
@@ -88,6 +96,9 @@ def run(plan_path):
         tmp=root/'progress.tmp.json';tmp.write_text(json.dumps(state,indent=2)+'\n');tmp.replace(state_path)
 
     def verify_inputs():
+        helper=str(Path(__file__).resolve().with_name('prm_reload_validation.py'))
+        if plan['input_sha256'].get(helper)!=digest(helper):
+            raise ValueError('Freeze the reload validator SHA in a new attempt plan; preserve old plans')
         for path,expected in plan['input_sha256'].items():
             if digest(path)!=expected:
                 raise ValueError('Frozen diagnostic input changed: '+path)
