@@ -1,0 +1,41 @@
+{
+  "run_id": "1ed67684-a2b2-4fcf-b1a3-2385653ec7a6",
+  "config": {
+    "model": "Qwen/Qwen2.5-1.5B-Instruct",
+    "adapter": null,
+    "load_in_4bit": true,
+    "seed": 42,
+    "temperature": 0.0,
+    "top_p": 0.9,
+    "context_length": 2048,
+    "max_new_tokens": 128,
+    "max_steps": 10,
+    "environment_url": "http://127.0.0.1:8765",
+    "goal_fingerprint": "e69c9ae2a0aad88977c44a7baf49f1f5ef7918ba8317923c4ae24dcc1f5638d8"
+  },
+  "config_sha256": "2a61cd099b4228e09e1f5ebff58b87820a2cf9bb91dd6ac77185c43fbd349908",
+  "ids_sha256": "29585dc7d4cf86da697437e23ae0bb8d04584294985836f4ba95aecbd5e18de8",
+  "selected_ids": [
+    16,
+    75,
+    104
+  ],
+  "repeats": 1,
+  "health": {
+    "ready": true,
+    "n_goals": 12087,
+    "goal_fingerprint": "e69c9ae2a0aad88977c44a7baf49f1f5ef7918ba8317923c4ae24dcc1f5638d8",
+    "alignment_checked": 1624,
+    "alignment_mismatches": 0,
+    "split_status": {
+      "verified": true,
+      "instruction_overlaps": {
+        "0-1": 0,
+        "0-2": 0,
+        "1-2": 0
+      }
+    }
+  },
+  "torch_version": "2.8.0+cu128",
+  "started_utc": "2026-11-17T10:27:49.827197+00:00"
+}

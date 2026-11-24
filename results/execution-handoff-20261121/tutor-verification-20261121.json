@@ -1,0 +1,45 @@
+{
+  "passed": true,
+  "checks": [
+    "six run chains/configs/counters",
+    "token/mask/logprob alignment",
+    "terminal vs potential rewards",
+    "suffix returns/advantages/end masks",
+    "fresh-process supplement identity records",
+    "proposed 16 IDs train-only",
+    "shared endpoint evaluation derivatives"
+  ],
+  "results": {
+    "terminal": {
+      "updates": 3,
+      "turns": 14,
+      "environment_calls": 14,
+      "generated_tokens": 794
+    },
+    "candidate": {
+      "updates": 3,
+      "turns": 14,
+      "environment_calls": 14,
+      "generated_tokens": 794
+    },
+    "terminal_evaluation": {
+      "purchases": 8,
+      "successes": 5,
+      "terminal_mean": 0.7125,
+      "turns": 29,
+      "invalid": 1
+    },
+    "potential_evaluation": {
+      "purchases": 8,
+      "successes": 5,
+      "terminal_mean": 0.7125,
+      "turns": 29,
+      "invalid": 1
+    }
+  },
+  "limitations": [
+    "no GPU replay or tensor payload rehash",
+    "new B1 baseline raw files not in shared ZIP",
+    "recorded state restoration not elementwise independently replayed"
+  ]
+}

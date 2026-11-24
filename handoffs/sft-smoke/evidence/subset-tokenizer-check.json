@@ -1,0 +1,21 @@
+{
+  "context": 2048,
+  "datasets": {
+    "train": {
+      "examples": 53,
+      "skipped": 0,
+      "trimmed": 2,
+      "max_length": 1934,
+      "label_invariants_passed": true
+    },
+    "val": {
+      "examples": 15,
+      "skipped": 0,
+      "trimmed": 2,
+      "max_length": 1995,
+      "label_invariants_passed": true
+    }
+  },
+  "gpu_training_executed": false,
+  "padding_contract_passed": true
+}

@@ -1,0 +1,74 @@
+{
+  "date": "2026-11-17",
+  "release_url": "https://github.com/Zqqq-qq/webshop-stepwise-rl/releases/tag/data-v1",
+  "release_id": 448383889,
+  "tag": "data-v1",
+  "private_repository": true,
+  "all_asset_server_sha256_match": true,
+  "assets": [
+    {
+      "name": "webshop_sft.json",
+      "id": 758379032,
+      "size": 9312587,
+      "sha256": "721e46dba410cff900e187bccea91a456c38b105b6d14d068d7762afb7791de3",
+      "remote_digest": "sha256:721e46dba410cff900e187bccea91a456c38b105b6d14d068d7762afb7791de3",
+      "browser_download_url": "https://github.com/Zqqq-qq/webshop-stepwise-rl/releases/download/untagged-d154230ba3ff559a1ac6/webshop_sft.json"
+    },
+    {
+      "name": "dataset-manifest.json",
+      "id": 758379191,
+      "size": 985,
+      "sha256": "455d0d290e48f944a7b11b852006d1eeb91bd83f2ca20f0cc3225c0db6c478dc",
+      "remote_digest": "sha256:455d0d290e48f944a7b11b852006d1eeb91bd83f2ca20f0cc3225c0db6c478dc",
+      "browser_download_url": "https://github.com/Zqqq-qq/webshop-stepwise-rl/releases/download/untagged-d154230ba3ff559a1ac6/dataset-manifest.json"
+    },
+    {
+      "name": "verify_and_join.py",
+      "id": 758379312,
+      "size": 2644,
+      "sha256": "73b944ab0481d14a8d64598b0754801682c4e0183b6054bbf31a8272960855bb",
+      "remote_digest": "sha256:73b944ab0481d14a8d64598b0754801682c4e0183b6054bbf31a8272960855bb",
+      "browser_download_url": "https://github.com/Zqqq-qq/webshop-stepwise-rl/releases/download/untagged-d154230ba3ff559a1ac6/verify_and_join.py"
+    },
+    {
+      "name": "UPLOAD_README.md",
+      "id": 758379411,
+      "size": 1983,
+      "sha256": "7252ce371a77b97d37807cc1931ce547b53d98a4058deffaeeefb9eaaed768f8",
+      "remote_digest": "sha256:7252ce371a77b97d37807cc1931ce547b53d98a4058deffaeeefb9eaaed768f8",
+      "browser_download_url": "https://github.com/Zqqq-qq/webshop-stepwise-rl/releases/download/untagged-d154230ba3ff559a1ac6/UPLOAD_README.md"
+    },
+    {
+      "name": "data.zip",
+      "id": 758379525,
+      "size": 1242271168,
+      "sha256": "9d96abd8c6626d6d4d9a9552cee70ef4a21a5c72b2edc3efde246bc8a510cb91",
+      "remote_digest": "sha256:9d96abd8c6626d6d4d9a9552cee70ef4a21a5c72b2edc3efde246bc8a510cb91",
+      "browser_download_url": "https://github.com/Zqqq-qq/webshop-stepwise-rl/releases/download/untagged-d154230ba3ff559a1ac6/data.zip"
+    },
+    {
+      "name": "indexes.zip.part01",
+      "id": 758387001,
+      "size": 1500000000,
+      "sha256": "c75eb420ac9f71beb05dcd44ae571febb213841a10e281f446c1fc4294380a6d",
+      "remote_digest": "sha256:c75eb420ac9f71beb05dcd44ae571febb213841a10e281f446c1fc4294380a6d",
+      "browser_download_url": "https://github.com/Zqqq-qq/webshop-stepwise-rl/releases/download/untagged-d154230ba3ff559a1ac6/indexes.zip.part01"
+    },
+    {
+      "name": "indexes.zip.part02",
+      "id": 758397128,
+      "size": 1319730135,
+      "sha256": "d2f93ed90373863324c9d2d96bbf0a56f2578615221510ec397880994991cb5a",
+      "remote_digest": "sha256:d2f93ed90373863324c9d2d96bbf0a56f2578615221510ec397880994991cb5a",
+      "browser_download_url": "https://github.com/Zqqq-qq/webshop-stepwise-rl/releases/download/untagged-d154230ba3ff559a1ac6/indexes.zip.part02"
+    }
+  ],
+  "merge_tool_validation": [
+    "byte-exact reconstruction on a synthetic fixture",
+    "repeat verification without overwrite",
+    "corrupted part rejection",
+    "corrupted existing index rejection",
+    "unexpected manifest file rejection"
+  ],
+  "limits": "Upload integrity and script logic verified. Teammate download, full extraction, WebShop environment alignment, training and evaluation remain separate checks."
+}

@@ -1,0 +1,65 @@
+{
+  "source_commit": "0312ef9924b28bc1fd8d779adebe8872ca4d6b03",
+  "ids": [
+    192,
+    432,
+    1865,
+    2247,
+    2584,
+    9254,
+    9693,
+    10216
+  ],
+  "identities": {
+    "config.json": {
+      "local_path": "/root/webshop-stepwise-rl/artifacts/b1-same8-baseline-tv_u_vyo/config.json",
+      "sha256": "e345a4beb09bf3f9b030e45da3250777d026451c4f690863444c66f183a00192"
+    },
+    "ids.json": {
+      "local_path": "/root/webshop-stepwise-rl/artifacts/b1-same8-baseline-tv_u_vyo/ids.json",
+      "sha256": "edffd0837ee01abeb824a835b512d6793e5d7cb8dc1b79d13849ab9cebf7e934"
+    },
+    "b1.meta.json": {
+      "local_path": "/root/webshop-stepwise-rl/artifacts/b1-same8-baseline-tv_u_vyo/b1.meta.json",
+      "sha256": "d1f01150fb2a8d5f53e123a8fa110d3cc537a94cd105e2e5f9241216fd64e11e"
+    },
+    "b1.jsonl": {
+      "local_path": "/root/webshop-stepwise-rl/artifacts/b1-same8-baseline-tv_u_vyo/b1.jsonl",
+      "sha256": "f5fd63b062a16506e29712879e5b5ac26ce2b67f3978df65de61d4d4267fc7bd"
+    },
+    "runner.py": {
+      "local_path": "/root/webshop-stepwise-rl/artifacts/b1-same8-baseline-tv_u_vyo/runner.py",
+      "sha256": "ff91196a99813656469c769c2bb2562026e16b717101094b9f5ffb0aa136a89e"
+    },
+    "check.json": {
+      "local_path": "/root/webshop-stepwise-rl/artifacts/b1-same8-baseline-tv_u_vyo/check.json",
+      "sha256": "0ffb91411595d9fb26e48749ffc143177fb8cc02824352ae3e68d6050a88ebd8"
+    }
+  },
+  "results": {
+    "B1": {
+      "purchases": 7,
+      "full_successes": 5,
+      "mean_terminal_reward": 0.6708333333333333,
+      "turns": 37,
+      "invalid": 8,
+      "episode_seconds": 122.55704966899975
+    },
+    "terminal": {
+      "purchases": 8,
+      "full_successes": 5,
+      "mean_terminal_reward": 0.7125,
+      "turns": 29,
+      "invalid": 1,
+      "episode_seconds": 101.96700635799999
+    },
+    "potential": {
+      "purchases": 8,
+      "full_successes": 5,
+      "mean_terminal_reward": 0.7125,
+      "turns": 29,
+      "invalid": 1,
+      "episode_seconds": 96.68531200799976
+    }
+  }
+}

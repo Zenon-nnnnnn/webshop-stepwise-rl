@@ -1,0 +1,75 @@
+{
+  "date": "2026-11-17",
+  "status": "provisional_offline_only",
+  "execution": "Codex demonstrated execution at the user request; not an independent student run or learner-comprehension assessment.",
+  "source_commit": "eb76f4efe35f71842ae80a8020875148ff10cd1f",
+  "source_sha256": "721e46dba410cff900e187bccea91a456c38b105b6d14d068d7762afb7791de3",
+  "seed": 42,
+  "python": "3.13.16 (main, Oct  1 2026, 20:54:04) [Clang 22.1.3 ]",
+  "platform": "macOS-26.6-arm64-arm-64bit-Mach-O",
+  "counts": {
+    "source_rows": 1624,
+    "unique_source_ids": 1624,
+    "unique_normalized_source_instructions": 1599,
+    "train_rows": 1451,
+    "val_rows": 160,
+    "reserved_test_task_ids": 200,
+    "excluded_total": 13,
+    "excluded_test_id_overlap": 12,
+    "excluded_additional_instruction_duplicates": [
+      1746
+    ],
+    "additional_duplicate_matches": {
+      "1746": [
+        5413
+      ]
+    }
+  },
+  "checks": {
+    "source_matches_private_release": true,
+    "train_val_id_disjoint": true,
+    "train_test_id_disjoint": true,
+    "val_test_id_disjoint": true,
+    "train_val_normalized_instruction_disjoint": true,
+    "train_known_test_instruction_disjoint": true,
+    "val_known_test_instruction_disjoint": true,
+    "excluded_extra_rows_match_known_test_instruction": true,
+    "all_retained_rows_structurally_equal_source": true,
+    "every_source_row_accounted_for": true,
+    "same_seed_files_identical": true
+  },
+  "files": {
+    "train.json": {
+      "sha256": "00e9a068f90011ba85eb42e26dc3e048241f94a77820c4e64b8df999f54b045e",
+      "bytes": 7874012
+    },
+    "val.json": {
+      "sha256": "2ac4dcb4388735c031be4ffc46eb3454301340238f15c9bef01f616b2216b8b3",
+      "bytes": 902390
+    },
+    "train_ids.json": {
+      "sha256": "8c85e56b3ac2e1f0a09b54560ad0f9bf77eedddb241d73617c7ff32416522e20",
+      "bytes": 11468
+    },
+    "val_ids.json": {
+      "sha256": "45440d724b33e69e13916d0adbe243cc63ce3bd67677b8220feff9f30b866c36",
+      "bytes": 1269
+    },
+    "test_ids.json": {
+      "sha256": "823eb6f68270b3b83695415c8ee008a1c86fc86977ac6d316e44590f2f0f97c7",
+      "bytes": 1626
+    },
+    "split-manifest.json": {
+      "sha256": "59efc75ca23c3e256f8caeb124709f67d4143dd3bfa52919faad75152eddc5b1",
+      "bytes": 114939
+    }
+  },
+  "not_verified": [
+    "Environment goal ordering/instruction mapping",
+    "Instructions of reserved test tasks absent from the SFT file",
+    "Full environment startup",
+    "Final split freeze",
+    "Training or agent benchmark performance"
+  ],
+  "note": "Normalization groups budget variants. All overlap checks concern available SFT instructions only; final environment mapping is still required."
+}

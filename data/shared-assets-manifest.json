@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "release_tag": "data-v1",
+  "repository": "Zqqq-qq/webshop-stepwise-rl",
+  "visibility": "private repository members only",
+  "files": [
+    {
+      "name": "data.zip",
+      "bytes": 1242271168,
+      "sha256": "9d96abd8c6626d6d4d9a9552cee70ef4a21a5c72b2edc3efde246bc8a510cb91"
+    },
+    {
+      "name": "indexes.zip",
+      "bytes": 2819730135,
+      "sha256": "9c6db284bef87d7ab3a108c978825c9ccd71578b1c41ba0dfa15a570ec6c3759"
+    },
+    {
+      "name": "webshop_sft.json",
+      "bytes": 9312587,
+      "sha256": "721e46dba410cff900e187bccea91a456c38b105b6d14d068d7762afb7791de3",
+      "rows": 1624
+    }
+  ],
+  "index_parts": [
+    {
+      "name": "indexes.zip.part01",
+      "bytes": 1500000000,
+      "sha256": "c75eb420ac9f71beb05dcd44ae571febb213841a10e281f446c1fc4294380a6d"
+    },
+    {
+      "name": "indexes.zip.part02",
+      "bytes": 1319730135,
+      "sha256": "d2f93ed90373863324c9d2d96bbf0a56f2578615221510ec397880994991cb5a"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "revision": "989aa7980e4cf806f80c7fef2b1adb7bc71aa306",
+  "adapter": null,
+  "load_in_4bit": true,
+  "seed": 42,
+  "temperature": 0.0,
+  "top_p": 0.9,
+  "context_length": 2048,
+  "max_new_tokens": 128,
+  "max_steps": 10,
+  "environment_url": "http://127.0.0.1:8765",
+  "goal_fingerprint": null
+}

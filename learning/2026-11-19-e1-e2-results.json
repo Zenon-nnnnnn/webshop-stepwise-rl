@@ -1,0 +1,55 @@
+{
+  "date": "2026-11-19",
+  "status": "synthetic CPU teaching example, not PPO training or student-independent work",
+  "e1": [
+    {
+      "advantage": 0.3,
+      "old_probability": 0.2,
+      "logit_gradient_ascent": 0.24,
+      "new_probability": 0.20386766151695146
+    },
+    {
+      "advantage": -0.3,
+      "old_probability": 0.2,
+      "logit_gradient_ascent": -0.24,
+      "new_probability": 0.1961876320412086
+    },
+    {
+      "advantage": 0.0,
+      "old_probability": 0.2,
+      "logit_gradient_ascent": 0.0,
+      "new_probability": 0.2
+    }
+  ],
+  "e2": {
+    "rewards": [
+      0.1,
+      0.3,
+      0.4
+    ],
+    "values_including_terminal": [
+      0.5,
+      0.4,
+      0.2,
+      0.0
+    ],
+    "gamma": 0.9,
+    "lambda": 0.95,
+    "deltas": [
+      -0.039999999999999925,
+      0.07999999999999996,
+      0.2
+    ],
+    "gae": [
+      0.17460500000000007,
+      0.251,
+      0.2
+    ],
+    "value_targets": [
+      0.6746050000000001,
+      0.651,
+      0.4
+    ]
+  },
+  "boundary": "finite-horizon terminal: no bootstrap; all three actions are hypothetical"
+}

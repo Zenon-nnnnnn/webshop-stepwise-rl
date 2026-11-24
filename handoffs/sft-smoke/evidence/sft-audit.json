@@ -1,0 +1,42 @@
+{
+  "upstream_train_tasks": 1624,
+  "upstream_test_tasks": 200,
+  "upstream_train_test_overlap": [
+    818,
+    978,
+    2640,
+    2933,
+    4161,
+    5413,
+    5900,
+    7475,
+    7603,
+    7624,
+    7999,
+    8573
+  ],
+  "upstream_exploration_trajectories": 78,
+  "upstream_exploration_unique_tasks": 26,
+  "upstream_exploration_reward_one": 1,
+  "upstream_progress_train_equals_validation": true,
+  "upstream_ppo_trajectories": 41,
+  "warning": "These are audit counts, NOT trained-agent benchmark results. Task IDs depend on the exact environment goal ordering.",
+  "sft": {
+    "rows": 1624,
+    "unique_ids": 1624,
+    "unique_instructions": 1599,
+    "reward_distribution": {
+      "1.0": 969,
+      "0.75": 315,
+      "0.8": 47,
+      "0.5": 3,
+      "0.8333333333333334": 12,
+      "0.8571428571428571": 3,
+      "0.7142857142857143": 1,
+      "0.6666666666666666": 273,
+      "0.625": 1
+    },
+    "reward_true_reward_disagreements": 8,
+    "sha256": "721e46dba410cff900e187bccea91a456c38b105b6d14d068d7762afb7791de3"
+  }
+}

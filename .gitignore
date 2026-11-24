@@ -1,0 +1,33 @@
+# Local credentials and environments
+.env
+.env.*
+!.env.example
+.venv*/
+venv*/
+__pycache__/
+*.py[cod]
+.DS_Store
+.ipynb_checkpoints/
+*.egg-info/
+# Datasets, assets, weights and run logs stay outside Git history
+/data/raw/
+/data/processed/
+/data/asset-manifest.json
+/artifacts/*
+!/artifacts/README.md
+/upstream/envs/webshop/data/
+/upstream/envs/webshop/search_index/
+/upstream/models/
+/upstream/ckpt/
+/upstream/ckt/
+/upstream/records/
+/upstream/eval/webshop_eval/
+/upstream/sft/ckpt/
+*.safetensors
+*.pt
+*.pth
+*.bin
+*.zip
+wandb/
+.cache/
+/hf-cache/

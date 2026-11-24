@@ -1,0 +1,17 @@
+# Python 3.10 CPU simulator venv; independent from GPU training dependencies.
+# Candidate environment; full JVM/Lucene smoke test still required on target machine.
+numpy==1.26.4
+beautifulsoup4==4.11.1
+cleantext==1.1.4
+Flask==2.1.2
+Werkzeug==2.0.3
+gym==0.24.0
+pyserini==0.17.0
+rank_bm25==0.2.2
+scikit-learn==1.2.2
+spacy==3.6.1
+thinc==8.1.12
+thefuzz==0.20.0
+selenium==4.2.0
+rich==13.9.4
+tqdm==4.67.1

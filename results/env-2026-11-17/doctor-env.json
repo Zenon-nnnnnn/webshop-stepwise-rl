@@ -1,0 +1,27 @@
+{
+  "python": "3.10.22 (main, Oct 29 2026, 20:33:25) [GCC 14.3.0]",
+  "platform": "Linux-6.18.40.1-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+  "executable": "/root/miniconda3/envs/webshop-env/bin/python",
+  "disk_free_gb": 1007.77,
+  "packages": {
+    "torch": "2.8.0+cpu",
+    "transformers": "5.20.2",
+    "peft": null,
+    "accelerate": null,
+    "bitsandbytes": null,
+    "gym": "0.24.0",
+    "pyserini": "0.17.0",
+    "spacy": "3.6.1"
+  },
+  "assets": {
+    "data/raw/webshop_sft.json": false,
+    "data/processed/train.json": false,
+    "upstream/envs/webshop/data/items_shuffle.json": false,
+    "upstream/envs/webshop/data/items_ins_v2.json": false,
+    "upstream/envs/webshop/data/items_human_ins.json": false,
+    "upstream/envs/webshop/search_index/indexes/segments_1": false
+  },
+  "torch_cuda_build": null,
+  "cuda_available": false,
+  "java": "openjdk version \"11.0.30-internal\" 2026-01-20\nOpenJDK Runtime Environment (build 11.0.30-internal+0-adhoc.conda.src)\nOpenJDK 64-Bit Server VM (build 11.0.30-internal+0-adhoc.conda.src, mixed mode)"
+}

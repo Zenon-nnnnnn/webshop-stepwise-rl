@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If using the underlying SPA method, cite the original paper; course experiments are separate."
+title: "WebShop Stepwise RL: resource-constrained course experiments"
+type: software
+version: 0.1.0
+repository-code: "https://github.com/Zqqq-qq/webshop-stepwise-rl"
+license: MIT
+preferred-citation:
+  type: article
+  title: "SPA-RL: Reinforcing LLM Agents via Stepwise Progress Attribution"
+  authors:
+    - family-names: Wang
+      given-names: Hanlin
+    - family-names: Leong
+      given-names: Chak Tou
+    - family-names: Wang
+      given-names: Jiashuo
+    - family-names: Wang
+      given-names: Jian
+    - family-names: Li
+      given-names: Wenjie
+  year: 2025
+  doi: "10.48550/arXiv.2505.20732"
+  url: "https://arxiv.org/abs/2505.20732"
