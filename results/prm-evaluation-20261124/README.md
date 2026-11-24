@@ -13,7 +13,7 @@
 - 合并各summary后更新记录恰为1–512，无缺失/重复。每64步的8条预测、MSE、最大误差均独立复算一致。
 - 512步MSE **0.1385312484**、最大绝对误差 **0.6487203240**，未过MSE<0.001且每条绝对误差<0.1。8个检查点全部未过。最低已保存MSE在256步，约0.13330；这条曲线不能解释为已证明只需更多预算。
 - 原件中的reference与另存独立重载预测逐步完全相同，差0；这是核对既有保存记录，本机未独立运行模型重载。
-- 8个checkpoint的LoRA safetensors头均为F32；head.pt安全检查pickle指令包含FloatStorage，没有执行pickle。运行中的参数/梯度/optimizer状态精度不能只据此完全签收，由Jun继续核实。
+- 8个checkpoint的LoRA safetensors头均为F32；head.pt安全检查pickle指令包含FloatStorage，没有执行pickle。运行中的参数/梯度/optimizer状态精度不能只据此完全签收；按Zqqq最新分工由Yuxiao承接，保留Jun已有方案来源。
 - 核心5文件SHA与旧包中a67db6a源码一致。原8个checkpoint manifest均引用training-state.pt，但包里均缺失；文件缺失和校验不匹配分开记录，未将其当完整可恢复归档。
 
 ## 表示诊断：仍缺原F，不能签收独立SVD
