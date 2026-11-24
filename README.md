@@ -1,4 +1,4 @@
-# WebShop Stepwise RL：五人 LLM 课程项目
+# WebShop Stepwise RL：LLM 课程项目
 
 [![CPU checks](https://github.com/Zqqq-qq/webshop-stepwise-rl/actions/workflows/checks.yml/badge.svg)](https://github.com/Zqqq-qq/webshop-stepwise-rl/actions/workflows/checks.yml)
 
