@@ -19,7 +19,7 @@ from webshop_lab.prm.runtime import build_prm, tensor_batch, sha
 from webshop_lab.prm.model_core import restore_head, save_prm
 from webshop_lab.prm.tokenize import tokenize_trajectory
 from webshop_lab.prm.infer import compare_predictions
-from webshop_lab.prm.train import load_samples
+from webshop_lab.prm.train import cosine_lr_multiplier, load_samples
 
 REV='989aa7980e4cf806f80c7fef2b1adb7bc71aa306'
 
@@ -178,6 +178,96 @@ class RuntimeTests(unittest.TestCase):
             rejected=subprocess.run(rejected_train,capture_output=True,text=True,env=env,timeout=120)
             self.assertNotEqual(rejected.returncode,0)
             self.assertIn('续训梯度累积、样本计数或 AdamW 超参数不一致',rejected.stderr)
+
+    def test_split_head_lora_lr_and_cosine_schedule_with_resume(self):
+        self.assertAlmostEqual(cosine_lr_multiplier(0, 3), 1.0, places=12)
+        self.assertAlmostEqual(cosine_lr_multiplier(1, 3), 0.75, places=12)
+        self.assertAlmostEqual(cosine_lr_multiplier(2, 3), 0.25, places=12)
+        with self.assertRaises(ValueError):
+            cosine_lr_multiplier(3, 3)
+        with self.assertRaises(ValueError):
+            cosine_lr_multiplier(-1, 3)
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            original=self.make_fixture(root)
+            config_data=original.to_dict()
+            config_data.update(schema_version='prm-qwen-config-v2',
+                               representation='final_hidden_state',
+                               output_dir=str(root/'split-cos-part1'))
+            config=root/'split-cos.json'
+            config.write_text(json.dumps(config_data))
+            messages=[{'role':'system','content':'Shop carefully.'},
+                      {'role':'user','content':'Find blue shoes.'},
+                      {'role':'assistant','content':'Action: search[blue shoes]'}]
+            sample=root/'samples.jsonl'
+            template={'messages':messages,
+                'terminal_reward':1.,'done':True,'termination':'purchase',
+                'policy_adapter_sha256':original.sft_adapter_files_sha256['adapter_model.safetensors'],
+                'source_sha256':'a'*64}
+            sample.write_text(''.join(json.dumps(dict(template, task_id=i, terminal_reward=reward))+'\n'
+                for i, reward in ((111, 1.), (112, .5), (113, 0.))))
+            ids=root/'train-ids.json';ids.write_text('[111,112,113]')
+            env={**os.environ,'HF_HUB_OFFLINE':'1','TRANSFORMERS_OFFLINE':'1',
+                 'OMP_NUM_THREADS':'1','MKL_NUM_THREADS':'1'}
+            cmd=[sys.executable,'-m','webshop_lab.prm.train','--config',str(config),
+                 '--samples',str(sample),'--train-ids',str(ids),'--steps','2','--device','cpu',
+                 '--gradient-accumulation-steps','3','--learning-rate','2e-4',
+                 '--head-learning-rate','1e-5','--lr-scheduler','cosine',
+                 '--cosine-total-steps','3','--weight-decay','0.01']
+            part1=subprocess.run(cmd,capture_output=True,text=True,env=env,timeout=120)
+            self.assertEqual(part1.returncode,0,part1.stderr)
+            ckpt1=Path(config_data['output_dir'])
+            summary1=json.loads((ckpt1/'summary.json').read_text())
+            opt1=summary1['optimization']
+            self.assertTrue(opt1['separate_head_learning_rate'])
+            self.assertEqual(opt1['learning_rate'],2e-4)
+            self.assertEqual(opt1['head_learning_rate'],1e-5)
+            self.assertEqual(opt1['lr_scheduler'],'cosine')
+            self.assertEqual(opt1['cosine_total_steps'],3)
+            self.assertAlmostEqual(summary1['records'][0]['learning_rate'],2e-4,places=12)
+            self.assertAlmostEqual(summary1['records'][0]['head_learning_rate'],1e-5,places=12)
+            self.assertAlmostEqual(summary1['records'][1]['learning_rate'],1.5e-4,places=12)
+            self.assertAlmostEqual(summary1['records'][1]['head_learning_rate'],7.5e-6,places=12)
+            state1=torch.load(ckpt1/'training-state.pt',weights_only=True,map_location='cpu')
+            self.assertEqual(len(state1['optimizer']['param_groups']),2)
+
+            infer=[sys.executable,'-m','webshop_lab.prm.infer','--config',str(config),
+                   '--checkpoint',str(ckpt1),'--samples',str(sample),
+                   '--output',str(root/'reloaded.json'),
+                   '--reference',str(ckpt1/'reference-predictions.json'),'--device','cpu']
+            reloaded=subprocess.run(infer,capture_output=True,text=True,env=env,timeout=120)
+            self.assertEqual(reloaded.returncode,0,reloaded.stderr)
+            self.assertTrue(json.loads((root/'reloaded.json').read_text())['reference_match'])
+
+            cfg2=root/'split-cos-part2.json'
+            cfg2.write_text(json.dumps(dict(config_data,output_dir=str(root/'split-cos-part2'))))
+            cmd2=cmd.copy()
+            cmd2[cmd2.index(str(config))]=str(cfg2)
+            cmd2[cmd2.index('--steps')+1]='1'
+            cmd2+=['--resume',str(ckpt1)]
+            part2=subprocess.run(cmd2,capture_output=True,text=True,env=env,timeout=120)
+            self.assertEqual(part2.returncode,0,part2.stderr)
+            summary2=json.loads((root/'split-cos-part2/summary.json').read_text())
+            self.assertEqual(summary2['optimizer_steps'],3)
+            self.assertAlmostEqual(summary2['records'][0]['learning_rate'],5e-5,places=12)
+            self.assertAlmostEqual(summary2['records'][0]['head_learning_rate'],2.5e-6,places=12)
+
+            for bad_name, flag, bad_val in (
+                ('bad-head', '--head-learning-rate', '2e-5'),
+                ('bad-sched', '--lr-scheduler', 'constant'),
+                ('bad-horizon', '--cosine-total-steps', '4'),
+                ('over-budget', '--steps', '2'),
+            ):
+                bad_cfg=root/f'{bad_name}.json'
+                bad_cfg.write_text(json.dumps(dict(config_data,output_dir=str(root/bad_name))))
+                bad_cmd=cmd2.copy()
+                bad_cmd[bad_cmd.index(str(cfg2))]=str(bad_cfg)
+                if bad_name == 'bad-sched':
+                    idx=bad_cmd.index('--cosine-total-steps')
+                    del bad_cmd[idx:idx+2]
+                bad_cmd[bad_cmd.index(flag)+1]=bad_val
+                failed=subprocess.run(bad_cmd,capture_output=True,text=True,env=env,timeout=120)
+                self.assertNotEqual(failed.returncode,0,bad_name)
 
     def test_logits_rejects_cross_schema_before_loading_backbone(self):
         with tempfile.TemporaryDirectory() as tmp:
