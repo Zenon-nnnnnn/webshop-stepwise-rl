@@ -11,11 +11,13 @@
 1. **首步全坐标符号跳步与预训练 RMSNorm 缩放叠加**：`score_head`（`Linear(1536, 1)`）采用全零初始化，第 1 步反向传播至底层 `LoRA` 的梯度严格为 `0`，仅有 `score_head` 更新。AdamW 首步更新幅度与梯度模长无关，对全部 `1,536` 个权重坐标同时施加 `±lr` 位移；乘上预训练 `Qwen2.5-1.5B-Instruct` 末层 `RMSNorm` 的通道缩放权重（单回合 $\|h_t\|_1 \approx 4.05 \times 10^3$）后，`lr=3e-4` 使单回合预测跃升约 `1.21`，在 3 回合与 10 回合轨迹上分别累积为 `3.65` 与 `12.04`。
 2. **线性头稳态抖动与 LoRA 特征分离速度冲突**：若将共用恒定学习率统一压低至 `1e-7 ~ 1e-6`，底层 `LoRA` 在 120 次更新预算内位移过小，难以将同为 3 回合的满分购买（`0, 6225`）与错误购买零分轨迹（`5031, 95`）拉开；若对 `score_head` 维持较大恒定学习率，末期每步符号翻转仍会在跨回合求和后产生显著抖动，阻碍训练误差收敛至 `MSE < 0.001`。
 
-为此，`webshop_lab.prm.train` 在不改动 `model_core.py`、`schema_version=2` 检查点结构、评分位置或损失定义的前提下，新增可选参数 `--head-learning-rate`、`--lr-scheduler {constant,cosine}` 与 `--cosine-total-steps`（未指定时默认保持单参数组 `constant`，与既有配置及检查点完全兼容）：
+为此，`webshop_lab.prm.train` 在不改动 `model_core.py`、`prm-manifest.json` 的 `schema_version=2` 清单契约、评分位置或损失定义的前提下，新增可选参数 `--head-learning-rate`、`--lr-scheduler {constant,cosine}` 与 `--cosine-total-steps`：
 
 - 将 `head_lr` 设为 `1e-5`（较 `3e-4` 缩小 30 倍），使第 2 步初始 `totals` 按比例落入 `0.12–0.40` 区间，消除初始超调；
 - 将底层 `LoRA` 初始学习率设为 `2e-4`，保留充足的特征调整步长；
 - 采用 `cosine` 余弦退火在总更新步数内平滑衰减两组学习率，消除训练末期线性头的稳态抖动。
+
+默认路径与检查点身份边界：省略上述新参数时，默认保持单参数组 `constant` 学习率，延续旧 CLI 的数值更新行为；但 `training-state.pt` 新增了 `head_learning_rate`、`lr_scheduler`、`cosine_total_steps` 三个调度状态字段（并非训练状态文件逐字节不变），且 `checkpoint_identity` 仍严格绑定检查点生成时的 `source_commit` 与源码 SHA-256。因此，既有检查点（如 PR #52 原链）按设计不会跨源码版本直接互载——PR #52 继续在其原始生成 checkout 上恢复续训，本方案（PR #54）以独立新运行起点执行，保留严格身份门禁不放宽。
 
 ## 对照与预算
 
@@ -27,7 +29,7 @@
 | `hidden-split-cos-acc8` | `2e-4` | `1e-5` | `cosine` | 8 | 120 | 960 |
 | `hidden-split-cos-acc1` | `2e-4` | `1e-5` | `cosine` | 1 | 960 | 960 |
 
-第一组保留原低学习率常数基线；第二组检验分离头/LoRA 学习率配合余弦退火与 8 轨迹累积下的 8 样本记忆收敛；第三组在相同轨迹呈现次数（960 次）与相同起止学习率退火下对照单轨迹更新（`acc=1`）与整组累积更新（`acc=8`）。比较相同轨迹呈现次数下的整组 MSE 时，使用对应检查点独立评分并报告各组已消耗轨迹数。历史 [#49](https://github.com/Zqqq-qq/webshop-stepwise-rl/pull/49) 为固定 `vocab_logits` 特征的独立实验；本组结果须以目标设备实跑为准。
+第一组保留原低学习率常数基线；第二组检验“分离头/LoRA 学习率 + 余弦退火”组合在 8 轨迹累积下的 8 样本记忆拟合能力（本组验证组合有效性，未在同一批预算内单独拆解分组学习率与余弦退火各自的单因素贡献）；第三组在相同轨迹呈现预算（960 次）及每消费 `8k` 条轨迹后下一次更新起点的余弦相位对齐（`k/120 = 8k/960`）下，对照单轨迹逐步更新（`acc=1, 960 updates`）与整组均值梯度更新（`acc=8, 120 updates`）。比较相同轨迹呈现次数下的整组 MSE 时，使用对应检查点独立评分并同时报告各组已消耗轨迹数、优化器更新次数与裁剪次数。历史 [#49](https://github.com/Zqqq-qq/webshop-stepwise-rl/pull/49) 为固定 `vocab_logits` 特征的独立实验；本组结果须以目标设备实跑为准。
 
 ## 在训练设备运行
 
@@ -79,6 +81,25 @@ PY
 run_arm hidden-lr-low-acc8 1e-7 same constant 8 120 &&
 run_arm hidden-split-cos-acc8 2e-4 1e-5 cosine 8 120 &&
 run_arm hidden-split-cos-acc1 2e-4 1e-5 cosine 1 960
+```
+
+若在同一干净源码 checkout 上分阶段执行 `cosine` 断点续训（如先跑 48 次更新、再续训 72 次更新至总计 120 次），两段均须显式传入完整总周期 `--cosine-total-steps 120` 并输出至新目录，`--steps` 仅传当前分段增量步数：
+
+```bash
+# 第 1 段（0 -> 48 步）
+python -m webshop_lab.prm.train \
+  --config "$config_part1" --samples "$samples" --train-ids "$train_ids" \
+  --device cuda --seed 42 --steps 48 --learning-rate 2e-4 --head-learning-rate 1e-5 \
+  --lr-scheduler cosine --cosine-total-steps 120 \
+  --weight-decay 0.01 --gradient-accumulation-steps 8
+
+# 第 2 段（48 -> 120 步，同一源码 checkout 恢复）
+python -m webshop_lab.prm.train \
+  --config "$config_part2" --samples "$samples" --train-ids "$train_ids" \
+  --device cuda --seed 42 --steps 72 --learning-rate 2e-4 --head-learning-rate 1e-5 \
+  --lr-scheduler cosine --cosine-total-steps 120 \
+  --weight-decay 0.01 --gradient-accumulation-steps 8 \
+  --resume "$checkpoint_part1"
 ```
 
 原始 8 条 `samples.jsonl` 的 SHA-256 是 `9c88beffaef277f519712ab4a07c45766212579770d6292572c7f189bca4d8fe`。冻结 `train_ids.json` 的 SHA-256 是 `8c85e56b3ac2e1f0a09b54560ad0f9bf77eedddb241d73617c7ff32416522e20`。

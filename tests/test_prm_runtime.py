@@ -269,6 +269,119 @@ class RuntimeTests(unittest.TestCase):
                 failed=subprocess.run(bad_cmd,capture_output=True,text=True,env=env,timeout=120)
                 self.assertNotEqual(failed.returncode,0,bad_name)
 
+    def test_continuous_vs_resumed_exact_equivalence_and_tampered_saved_lr_rejection(self):
+        from safetensors.torch import load_file
+        from webshop_lab.prm.runtime import finalize_manifest
+        import shutil
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            original=self.make_fixture(root)
+            base_cfg=original.to_dict()
+            base_cfg.update(schema_version='prm-qwen-config-v2',
+                            representation='final_hidden_state')
+            messages=[{'role':'system','content':'Shop carefully.'},
+                      {'role':'user','content':'Find blue shoes.'},
+                      {'role':'assistant','content':'Action: search[blue shoes]'}]
+            sample=root/'samples.jsonl'
+            template={'messages':messages,
+                'terminal_reward':1.,'done':True,'termination':'purchase',
+                'policy_adapter_sha256':original.sft_adapter_files_sha256['adapter_model.safetensors'],
+                'source_sha256':'a'*64}
+            sample.write_text(''.join(json.dumps(dict(template, task_id=i, terminal_reward=reward))+'\n'
+                for i, reward in ((111, 1.), (112, .5), (113, 0.))))
+            ids=root/'train-ids.json';ids.write_text('[111,112,113]')
+            env={**os.environ,'HF_HUB_OFFLINE':'1','TRANSFORMERS_OFFLINE':'1',
+                 'OMP_NUM_THREADS':'1','MKL_NUM_THREADS':'1'}
+
+            def run_train(name, steps, head_lr, scheduler, cosine_total, resume=None):
+                out_dir=root/name
+                cfg_path=root/f'{name}.json'
+                cfg_path.write_text(json.dumps(dict(base_cfg, output_dir=str(out_dir))))
+                cmd=[sys.executable,'-m','webshop_lab.prm.train','--config',str(cfg_path),
+                     '--samples',str(sample),'--train-ids',str(ids),'--steps',str(steps),
+                     '--device','cpu','--seed','42','--gradient-accumulation-steps','3',
+                     '--learning-rate','2e-4','--lr-scheduler',scheduler,'--weight-decay','0.01']
+                if head_lr is not None:
+                    cmd+=['--head-learning-rate',head_lr]
+                if cosine_total is not None:
+                    cmd+=['--cosine-total-steps',cosine_total]
+                if resume is not None:
+                    cmd+=['--resume',str(resume)]
+                proc=subprocess.run(cmd,capture_output=True,text=True,env=env,timeout=120)
+                self.assertEqual(proc.returncode,0,f'{name}: {proc.stderr}')
+                return out_dir
+
+            split_cos_part1=None
+            for tag, head_lr, scheduler, cosine_total in (
+                ('single-const', None, 'constant', None),
+                ('split-const', '1e-5', 'constant', None),
+                ('single-cos', None, 'cosine', '4'),
+                ('split-cos', '1e-5', 'cosine', '4'),
+            ):
+                cont=run_train(f'{tag}-cont4', 4, head_lr, scheduler, cosine_total)
+                part1=run_train(f'{tag}-part1', 2, head_lr, scheduler, cosine_total)
+                part2=run_train(f'{tag}-part2', 2, head_lr, scheduler, cosine_total, resume=part1)
+                if tag == 'split-cos':
+                    split_cos_part1=part1
+
+                head_cont=torch.load(cont/'head.pt',weights_only=True,map_location='cpu')
+                head_res=torch.load(part2/'head.pt',weights_only=True,map_location='cpu')
+                for k in ('weight','bias'):
+                    self.assertTrue(torch.equal(head_cont[k],head_res[k]),f'{tag} head.{k}')
+
+                lora_cont=load_file(str(cont/'adapter/adapter_model.safetensors'))
+                lora_res=load_file(str(part2/'adapter/adapter_model.safetensors'))
+                self.assertEqual(set(lora_cont),set(lora_res))
+                for k in lora_cont:
+                    self.assertTrue(torch.equal(lora_cont[k],lora_res[k]),f'{tag} {k}')
+
+                ref_cont=json.loads((cont/'reference-predictions.json').read_text())
+                ref_res=json.loads((part2/'reference-predictions.json').read_text())
+                self.assertEqual(ref_cont,ref_res,f'{tag} reference-predictions')
+
+                sum_cont=json.loads((cont/'summary.json').read_text())
+                sum_res=json.loads((part2/'summary.json').read_text())
+                self.assertEqual(sum_cont['optimizer_steps'],4)
+                self.assertEqual(sum_res['optimizer_steps'],4)
+                self.assertEqual(sum_cont['samples_consumed'],12)
+                self.assertEqual(sum_res['samples_consumed'],12)
+                self.assertEqual(sum_cont['parameters_after'],sum_res['parameters_after'],f'{tag} digest')
+                for rec_c, rec_r in zip(sum_cont['records'][2:], sum_res['records']):
+                    for field in ('optimizer_step','samples_consumed','task_ids','terminal_rewards',
+                                  'loss','gradient_norm','totals_before_update','learning_rate',
+                                  'head_learning_rate','head_gradient_l1','lora_gradient_l1'):
+                        self.assertEqual(rec_c[field],rec_r[field],f'{tag} {field}')
+
+                st_cont=torch.load(cont/'training-state.pt',weights_only=True,map_location='cpu')
+                st_res=torch.load(part2/'training-state.pt',weights_only=True,map_location='cpu')
+                self.assertTrue(torch.equal(st_cont['cpu_rng'],st_res['cpu_rng']),f'{tag} cpu_rng')
+                self.assertEqual(st_cont['optimizer']['param_groups'],st_res['optimizer']['param_groups'])
+                self.assertEqual(set(st_cont['optimizer']['state']),set(st_res['optimizer']['state']))
+                for pid in st_cont['optimizer']['state']:
+                    for sk in ('step','exp_avg','exp_avg_sq'):
+                        self.assertTrue(torch.equal(st_cont['optimizer']['state'][pid][sk],
+                                                    st_res['optimizer']['state'][pid][sk]),
+                                        f'{tag} state[{pid}][{sk}]')
+
+            for idx, bad_lr in ((0, 9.9e-6), (1, 1.9e-4)):
+                tampered=root/f'tampered-group-{idx}'
+                shutil.copytree(split_cos_part1, tampered)
+                st=torch.load(tampered/'training-state.pt',weights_only=True,map_location='cpu')
+                st['optimizer']['param_groups'][idx]['lr']=bad_lr
+                torch.save(st, tampered/'training-state.pt')
+                finalize_manifest(tampered)
+                bad_cfg=root/f'tampered-resume-{idx}.json'
+                bad_cfg.write_text(json.dumps(dict(base_cfg, output_dir=str(root/f'tampered-out-{idx}'))))
+                bad_cmd=[sys.executable,'-m','webshop_lab.prm.train','--config',str(bad_cfg),
+                         '--samples',str(sample),'--train-ids',str(ids),'--steps','2',
+                         '--device','cpu','--seed','42','--gradient-accumulation-steps','3',
+                         '--learning-rate','2e-4','--head-learning-rate','1e-5',
+                         '--lr-scheduler','cosine','--cosine-total-steps','4',
+                         '--weight-decay','0.01','--resume',str(tampered)]
+                rejected=subprocess.run(bad_cmd,capture_output=True,text=True,env=env,timeout=120)
+                self.assertNotEqual(rejected.returncode,0)
+                self.assertIn('续训梯度累积、样本计数或 AdamW 超参数不一致',rejected.stderr)
+
     def test_logits_rejects_cross_schema_before_loading_backbone(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp)
