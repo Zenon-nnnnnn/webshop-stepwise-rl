@@ -41,8 +41,8 @@ def option_potential(instruction, selected_options):
     return 0.25 * len(option & goal) / len(option) if option else 0.0
 
 
-def assign_episode_rewards(turns, purchased, score, progress_model=None, *, shaping=False):
-    progress = None
+def assign_episode_rewards(turns, purchased, score, progress_model=None, *, shaping=False, prefix_rewards=None):
+    progress = prefix_rewards
     if progress_model is not None:
         steps = [{"observation": turn["observation"], "response": turn["response_text_parsed"],
                   "grounding": turn["grounding"], "action": turn.get("parsed_action")}
@@ -81,6 +81,15 @@ def load_progress_model(cfg, split_dir):
         if "progress_model" in cfg or "progress_model_sha256" in cfg:
             raise ValueError("Only progress mode accepts a progress model")
         return None
+    if mode == "neural_progress":
+        from .prm.prefix_reward import OnlinePrefixReward
+
+        config = Path(cfg["prm_config"])
+        checkpoint = Path(cfg["prm_checkpoint"])
+        if (file_hash(config) != cfg["prm_config_sha256"]
+                or file_hash(checkpoint / "prm-manifest.json") != cfg["prm_manifest_sha256"]):
+            raise ValueError("Arm 4 config or checkpoint manifest hash mismatch")
+        return OnlinePrefixReward(config, checkpoint)
     if mode != "progress":
         raise ValueError("Unknown PPO reward mode")
     path = Path(cfg["progress_model"])
@@ -175,6 +184,9 @@ def collect(model, tokenizer, critic, generation, base, task, cfg, expected_inst
                 {"role": "user", "content": state["observation"]}]
     turns = []
     shaping = cfg.get("reward_mode") == "option_potential"
+    online = cfg.get("reward_mode") == "neural_progress"
+    prefix_rewards = [] if online else None
+    previous_value = 0.0
     purchased, score = False, 0.0
     eos = generation.eos_token_id
     eos = {eos} if isinstance(eos, int) else set(eos or [])
@@ -205,6 +217,12 @@ def collect(model, tokenizer, critic, generation, base, task, cfg, expected_inst
         turn["old_value"] = float(value)
         if shaping:
             turn["potential_before"] = option_potential(instruction, state["available"].get("selected_options"))
+        if online:
+            prefix = messages + [{"role": "assistant", "content": text}]
+            value, fallback = progress_model(prefix)
+            prefix_rewards.append(value - previous_value)
+            previous_value = value
+            turn.update(prm_prefix_value=value, prm_asin_length_fallback=fallback)
         action, error = None, None
         try:
             action = parse_action(text)
@@ -228,7 +246,8 @@ def collect(model, tokenizer, critic, generation, base, task, cfg, expected_inst
         messages.extend([{"role": "assistant", "content": text}, {"role": "user", "content": feedback}])
         if purchased:
             break
-    reward = assign_episode_rewards(turns, purchased, score, progress_model, shaping=shaping)
+    reward = assign_episode_rewards(turns, purchased, score, None if online else progress_model,
+                                    shaping=shaping, prefix_rewards=prefix_rewards)
     return {"task_id": task, "turns": turns, "purchase_completed": purchased,
             "terminal_reward": reward, "environment_final_score": score,
             "end": "purchase" if purchased else "max_steps"}
@@ -383,6 +402,9 @@ def run(args):
         episode = collect(model, tokenizer, critic, generation, base, task, cfg, goals[task], progress_model)
         episodes.append(episode)
         print(f"Collected task={task} turns={len(episode['turns'])} R={episode['terminal_reward']}", flush=True)
+    if cfg.get("reward_mode") == "neural_progress":
+        del progress_model
+        torch.cuda.empty_cache()
     write_json(out / "episodes.json", episodes)
     turns = [turn for ep in episodes for turn in ep["turns"]]
     report = update(model, critic, turns, optimizer, parameters)
