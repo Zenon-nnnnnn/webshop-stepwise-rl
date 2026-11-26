@@ -89,7 +89,7 @@ def load_progress_model(cfg, split_dir):
         if (file_hash(config) != cfg["prm_config_sha256"]
                 or file_hash(checkpoint / "prm-manifest.json") != cfg["prm_manifest_sha256"]):
             raise ValueError("Arm 4 config or checkpoint manifest hash mismatch")
-        return OnlinePrefixReward(config, checkpoint)
+        return OnlinePrefixReward(config, checkpoint, cfg["prm_runtime"])
     if mode != "progress":
         raise ValueError("Unknown PPO reward mode")
     path = Path(cfg["progress_model"])
@@ -332,7 +332,6 @@ def run(args):
             or not health["split_status"]["verified"] or health["goal_fingerprint"] != cfg["goal_fingerprint"]):
         raise ValueError("WebShop health, split or goal fingerprint mismatch")
     ids, splits, goals = training_tasks(args, health)
-    progress_model = load_progress_model(cfg, args.split_dir)
     adapter = Path(cfg["adapter"])
     snapshot = Path(cfg["model"])
     if snapshot.name != cfg["revision"] or not snapshot.is_dir():
@@ -397,14 +396,16 @@ def run(args):
                       "joint_logprob_tolerance": JOINT_LOGPROB_TOLERANCE,
                       "token_logprob_tolerance": TOKEN_LOGPROB_TOLERANCE},
         "actor_before": actor_before, "critic_before": critic_before})
+    progress_model = load_progress_model(cfg, args.split_dir)
     episodes = []
-    for task in ids:
-        episode = collect(model, tokenizer, critic, generation, base, task, cfg, goals[task], progress_model)
-        episodes.append(episode)
-        print(f"Collected task={task} turns={len(episode['turns'])} R={episode['terminal_reward']}", flush=True)
-    if cfg.get("reward_mode") == "neural_progress":
-        del progress_model
-        torch.cuda.empty_cache()
+    try:
+        for task in ids:
+            episode = collect(model, tokenizer, critic, generation, base, task, cfg, goals[task], progress_model)
+            episodes.append(episode)
+            print(f"Collected task={task} turns={len(episode['turns'])} R={episode['terminal_reward']}", flush=True)
+    finally:
+        if cfg.get("reward_mode") == "neural_progress":
+            progress_model.close()
     write_json(out / "episodes.json", episodes)
     turns = [turn for ep in episodes for turn in ep["turns"]]
     report = update(model, critic, turns, optimizer, parameters)

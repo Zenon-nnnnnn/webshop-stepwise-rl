@@ -17,9 +17,10 @@ import torch
 
 from webshop_lab.prm.config import load_config
 from webshop_lab.prm.predictions import compare_predictions, validate_predictions
-from webshop_lab.prm.runtime import build_prm, tensor_batch, verify_runtime_inputs, write_json
 from webshop_lab.prm.prefix_reward import encode_trajectory_for_pv
+from webshop_lab.prm.runtime import build_prm, tensor_batch, verify_runtime_inputs, write_json
 from webshop_lab.prm.tokenize import TrajectoryTooLong
+
 
 def load_pv_samples(path: Path, tokenizer, max_length: int, attach_asin_context: bool):
     raw_rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]

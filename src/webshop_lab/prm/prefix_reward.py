@@ -1,8 +1,13 @@
 """Arm 4 ASIN context and current-prefix value scoring."""
+import json
 import math
+import os
+from pathlib import Path
 import re
+import subprocess
+import sys
 
-from .tokenize import TrajectoryTooLong, tokenize_trajectory
+from webshop_lab.prm.tokenize import TrajectoryTooLong, tokenize_trajectory
 
 
 ASIN_CLICK_RE = re.compile(r"click\[(b[0-9a-z]{9})\]", flags=re.IGNORECASE)
@@ -100,24 +105,63 @@ def encode_current_prefix(tokenizer, messages, max_length):
 
 
 class OnlinePrefixReward:
-    """Frozen Arm 4 inference with one immutable value per observed action."""
-    def __init__(self, config, checkpoint):
-        import torch
-        from .config import load_config
-        from .runtime import build_prm
+    """Send one current prefix at a time to the checkpoint's pinned runtime."""
+    def __init__(self, config, checkpoint, runtime):
+        runtime = Path(runtime).resolve()
+        self.worker = subprocess.Popen(
+            [sys.executable, str(Path(__file__).resolve()), str(config.resolve()), str(checkpoint.resolve())],
+            cwd=runtime, env={**os.environ, "PYTHONPATH": str(runtime / "src")},
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, encoding="utf-8",
+        )
+        try:
+            if self._receive() != {"ready": True}:
+                raise RuntimeError("Unexpected Arm 4 worker handshake")
+        except BaseException:
+            self.close()
+            raise
 
-        self.config = load_config(config)
-        self.model, self.tokenizer, _, _ = build_prm(self.config, checkpoint, "cuda", False)
-        self.device = next(self.model.parameters()).device
-        self.inference_mode = torch.no_grad
+    def _receive(self):
+        line = self.worker.stdout.readline()
+        if not line:
+            raise RuntimeError("Arm 4 worker stopped before returning a value. See its traceback.")
+        return json.loads(line)
 
     def __call__(self, messages):
-        from .runtime import tensor_batch
+        self.worker.stdin.write(json.dumps(messages, ensure_ascii=False) + "\n")
+        self.worker.stdin.flush()
+        result = self._receive()
+        return result["value"], result["asin_length_fallback"]
 
-        encoded, fallback = encode_current_prefix(self.tokenizer, messages, self.config.max_length)
-        batch = tensor_batch([encoded], self.tokenizer.pad_token_id, self.device, False)
-        with self.inference_mode():
-            value = float(self.model(**batch)["step_scores"][0, -1])
+    def close(self):
+        self.worker.stdin.close()
+        try:
+            self.worker.wait(timeout=15)
+        except subprocess.TimeoutExpired:
+            self.worker.kill()
+            self.worker.wait()
+        finally:
+            self.worker.stdout.close()
+
+
+def serve(config, checkpoint):
+    import torch
+    from webshop_lab.prm.config import load_config
+    from webshop_lab.prm.runtime import build_prm, tensor_batch
+
+    cfg = load_config(config)
+    model, tokenizer, _, _ = build_prm(cfg, checkpoint, "cuda", False)
+    device = next(model.parameters()).device
+    print(json.dumps({"ready": True}), flush=True)
+    for line in sys.stdin:
+        prefix = json.loads(line)
+        encoded, fallback = encode_current_prefix(tokenizer, prefix, cfg.max_length)
+        batch = tensor_batch([encoded], tokenizer.pad_token_id, device, False)
+        with torch.no_grad():
+            value = float(model(**batch)["step_scores"][0, -1])
         if not math.isfinite(value):
             raise ValueError("Arm 4 returned a non-finite prefix value")
-        return value, fallback
+        print(json.dumps({"value": value, "asin_length_fallback": fallback}), flush=True)
+
+
+if __name__ == "__main__":
+    serve(Path(sys.argv[1]), Path(sys.argv[2]))
