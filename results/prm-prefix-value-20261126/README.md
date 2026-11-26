@@ -2,6 +2,8 @@
 
 本目录归档针对 `#55–#58` 暴露的「选品点击步模型打分几乎恒定（同对平均分差 `0.001~0.004`）、退化为回合位置先验」问题的五组受控消融非权重 JSON 原件、运行日志及零依赖离线校验脚本 [recompute.py](recompute.py)；执行入口见 [scripts/run_prefix_value_prm_ablation.py](../../scripts/run_prefix_value_prm_ablation.py)。
 
+- **最优组（`Arm 4: arm4_pv_asin_context_fit501`）跨机重载、新 `dev` 评分与 `7544` 溯源交接单**：见 [ARM4_HANDOFF.md](ARM4_HANDOFF.md)，独立只读评分 CLI 见 [scripts/score_prefix_value_prm.py](../../scripts/score_prefix_value_prm.py)。
+
 > **证据边界与盲标隔离声明**：
 > 1. **全程零特权信息**：五组实验 **100% 仅使用轨迹终局标量奖励 `terminal_reward`（$R \in [0, 1]$）**，未读取任何模拟器中间步奖励或隐藏目标属性，预留 `test200` 未触碰（`test_authorization=false`）。
 > 2. **严守 `#58` 盲标隔离**：本目录仅在已公开揭盲的 `#57` 独立 `dev`（32 对有分差选品分叉 + `7544` 单列回归）与 `#55` `new_dev`（保留 `107` 条）上汇报指标，**不包含也不披露 `#58` 六道训练侧试标题的任何逐题判断或答案**。
