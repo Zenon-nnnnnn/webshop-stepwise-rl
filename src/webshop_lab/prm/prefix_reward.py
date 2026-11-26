@@ -109,7 +109,8 @@ class OnlinePrefixReward:
     def __init__(self, config, checkpoint, runtime):
         runtime = Path(runtime).resolve()
         self.worker = subprocess.Popen(
-            [sys.executable, str(Path(__file__).resolve()), str(config.resolve()), str(checkpoint.resolve())],
+            [sys.executable, "-c", 'import runpy, sys; sys.argv.pop(0); runpy.run_path(sys.argv[0], run_name="__main__")',
+             str(Path(__file__).resolve()), str(config.resolve()), str(checkpoint.resolve())],
             cwd=runtime, env={**os.environ, "PYTHONPATH": str(runtime / "src")},
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, encoding="utf-8",
         )
