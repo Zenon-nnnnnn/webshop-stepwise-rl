@@ -17,7 +17,10 @@ import torch
 
 from webshop_lab.prm.config import load_config
 from webshop_lab.prm.predictions import compare_predictions, validate_predictions
-from webshop_lab.prm.prefix_reward import encode_trajectory_for_pv
+from webshop_lab.prm.prefix_reward import (
+    encode_trajectory_for_pv,
+    extract_preclick_asin_snippet as extract_preclick_asin_snippet,
+)
 from webshop_lab.prm.runtime import build_prm, tensor_batch, verify_runtime_inputs, write_json
 from webshop_lab.prm.tokenize import TrajectoryTooLong
 
